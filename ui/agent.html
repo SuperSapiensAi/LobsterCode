@@ -1338,7 +1338,7 @@
             <p>Agente di sviluppo AI locale. Posso leggere, scrivere e modificare file,
                eseguire comandi nella shell, cercare nel codice e molto altro.</p>
             <div style="font-size:12px;color:var(--text-dim);margin-top:4px;">
-                Motore: <span id="welcomeEngine" style="color:var(--accent-light);font-weight:500;">auto</span>
+                Powered by <span id="welcomeEngine" style="color:var(--accent-light);font-weight:500;">Ollama</span>
             </div>
             <div class="welcome-tools">
                 <span class="welcome-tool">bash</span>
@@ -1371,15 +1371,8 @@
 </div>
 
 <!-- ENGINE SELECTOR -->
-<div class="modal-overlay" id="engineModal">
-    <div class="modal" style="max-width: 440px; background: #ffffff;">
-        <h3 style="margin-bottom:12px; color: var(--text-primary);">Scegli Motore</h3>
-        <p style="color:var(--text-dim);font-size:13px;margin-bottom:16px;">
-            Il motore determina come Lobster Code comunica con l'AI.
-        </p>
-        <div id="engineOptions" style="display:flex;flex-direction:column;gap:8px;"></div>
-    </div>
-</div>
+<!-- Engine modal rimosso: V1 usa solo Ollama nativo -->
+<div class="modal-overlay" id="engineModal" style="display:none;"></div>
 
 <!-- PERMISSION SELECTOR -->
 <div class="modal-overlay" id="permissionModal">
@@ -2115,11 +2108,9 @@
     }
 
     function getModelToolSupport(name) {
-        const n = name.toLowerCase();
-        // Verificati con test reale su Ollama 0.20+
-        if (n.includes('gemma4') || n.includes('qwen3'))
-            return true;
-        return false;
+        // Ollama 0.20+ supporta tool calling per la maggior parte dei modelli.
+        // Mostra tutti i modelli installati — l'utente sceglie.
+        return true;
     }
 
     async function loadModels() {
@@ -2137,16 +2128,8 @@
                 return;
             }
 
-            // Mostra solo modelli con tool calling verificato
-            const toolModels = models.filter(m => getModelToolSupport(m.name));
-
-            if (toolModels.length === 0) {
-                list.innerHTML = `
-                    <p style="color:var(--text-dim);font-size:13px;margin-bottom:12px;">Nessun modello con tool calling trovato.<br>Installa <b>gemma4</b> o <b>qwen3</b> per usare l'agente.</p>
-                    <button class="model-card-btn download" style="width:100%;" onclick="document.getElementById('modelModal').classList.remove('active'); openSetupWizard();">Apri Setup Wizard</button>
-                `;
-                return;
-            }
+            // Mostra tutti i modelli installati
+            const toolModels = models;
 
             list.innerHTML = toolModels.map(m => {
                 const sizeGB = (m.size / 1e9).toFixed(1) + ' GB';
@@ -2225,25 +2208,12 @@
         if (e.target === this) this.classList.remove('active');
     });
 
-    // ============ ENGINE SELECTOR ============
-    // Engine fisso: Ollama nativo (unico affidabile)
+    // ============ ENGINE (V1: Ollama fisso) ============
     let currentEngine = 'ollama';
-    function openEngineSelector() {} // no-op
+    function openEngineSelector() {} // no-op — V1 usa solo Ollama
     function selectEngine() {} // no-op
     function updateEngineDisplay() {} // no-op
     try { localStorage.removeItem('lobster-engine'); } catch(e) {}
-
-    function updateEngineDisplay(engine) {
-        document.getElementById('engineIcon').textContent = ENGINE_ICONS[engine] || '⚡';
-        document.getElementById('engineName').textContent = ENGINE_LABELS[engine] || engine;
-        const welcomeEl = document.getElementById('welcomeEngine');
-        if (welcomeEl) welcomeEl.textContent = ENGINE_LABELS[engine] || engine;
-    }
-
-    // Close engine modal on backdrop click
-    document.getElementById('engineModal').addEventListener('click', function(e) {
-        if (e.target === this) this.classList.remove('active');
-    });
 
     // ============ PERMISSION SELECTOR ============
     let currentPermission = 'workspace-write';

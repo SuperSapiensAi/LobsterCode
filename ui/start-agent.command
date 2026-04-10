@@ -22,7 +22,7 @@ else
 fi
 
 # 2. Controlla che il modello sia disponibile
-MODEL="${CLAW_MODEL:-qwen2.5-coder:14b}"
+MODEL="${CLAW_MODEL:-gemma4:latest}"
 echo "  📦 Modello: $MODEL"
 
 if ! ollama list 2>/dev/null | grep -q "$MODEL"; then
