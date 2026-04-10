@@ -7,12 +7,12 @@
     <meta name="description" content="Lobster Code — agente AI locale e open source per sviluppo. Come Cursor e Claude Code, ma gratuito e privato. Powered by Ollama.">
     <meta name="theme-color" content="#d63a28">
     <meta property="og:title" content="Lobster Code — Agente AI per sviluppo, gratuito e open source">
-    <meta property="og:description" content="Come Cursor e Claude Code, ma locale e gratuito. Tre motori, zero cloud, zero costi. Powered by Ollama.">
+    <meta property="og:description" content="Come Cursor e Claude Code, ma locale e gratuito. 100% locale, zero cloud, zero costi. Powered by Ollama.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://github.com/SuperSapiensAi/LobsterCode">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="Lobster Code — Agente AI per sviluppo">
-    <meta name="twitter:description" content="Come Cursor e Claude Code, ma locale e gratuito. Project DNA, Smart Routing, Workflow Recipes. Powered by Ollama.">
+    <meta name="twitter:description" content="Come Cursor e Claude Code, ma locale e gratuito. 7 tool nativi, agent loop multi-turn, git integrato. Powered by Ollama.">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦞</text></svg>">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -162,37 +162,7 @@
         }
         .install-copy:hover { background: rgba(255,255,255,0.2); }
 
-        /* ENGINES */
-        .engines { padding: 100px 40px; background: var(--white); }
-        .engines-inner { max-width: 1100px; margin: 0 auto; }
-        .engines-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; }
-        .engine-card {
-            background: var(--cream); border: 2px solid var(--border);
-            border-radius: 16px; padding: 32px; transition: all 0.3s;
-            position: relative;
-        }
-        .engine-card:hover {
-            border-color: transparent;
-            box-shadow: 0 12px 40px rgba(0,0,0,0.08);
-            transform: translateY(-4px);
-        }
-        .engine-card.recommended { border-color: var(--red); }
-        .engine-card.recommended::after {
-            content: 'Consigliato'; position: absolute; top: -12px; right: 20px;
-            background: var(--red); color: white; font-size: 11px; font-weight: 600;
-            padding: 3px 12px; border-radius: 10px;
-        }
-        .engine-emoji { font-size: 36px; margin-bottom: 16px; display: block; }
-        .engine-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
-        .engine-card .engine-sub { font-size: 13px; color: var(--text-dim); margin-bottom: 16px; }
-        .engine-card ul {
-            list-style: none; padding: 0;
-        }
-        .engine-card ul li {
-            font-size: 14px; color: var(--text-soft); padding: 4px 0;
-            display: flex; align-items: center; gap: 8px;
-        }
-        .engine-card ul li::before { content: '✓'; color: var(--green); font-weight: 700; }
+        /* ENGINES section removed */
 
         /* FEATURES */
         .features { padding: 100px 40px; max-width: 1200px; margin: 0 auto; }
@@ -401,12 +371,12 @@
         @media (max-width: 768px) {
             .hero h1 { font-size: 36px; }
             .hero p { font-size: 16px; }
-            .features-grid, .engines-grid { grid-template-columns: 1fr; }
+            .features-grid { grid-template-columns: 1fr; }
             .stack-grid { grid-template-columns: repeat(2, 1fr); }
             .models-grid, .usecases-grid { grid-template-columns: 1fr; }
             nav { padding: 12px 20px; }
             .nav-links a:not(.nav-cta) { display: none; }
-            .hero, .features, .stack, .cta, .engines, .comparison { padding-left: 20px; padding-right: 20px; }
+            .hero, .features, .stack, .cta, .comparison { padding-left: 20px; padding-right: 20px; }
             .comparison-table { font-size: 12px; }
             .comparison-table th, .comparison-table td { padding: 10px 12px; }
         }
@@ -417,7 +387,6 @@
 <nav id="nav">
     <a href="#" class="nav-brand"><span>🦞</span><strong>Lobster Code</strong></a>
     <div class="nav-links">
-        <a href="#engines">Motori</a>
         <a href="#features">Funzionalit&agrave;</a>
         <a href="#models">Modelli</a>
         <a href="#comparison">Confronto</a>
@@ -429,11 +398,11 @@
 <section class="hero">
     <div class="hero-content">
         <span class="hero-emoji">🦞</span>
-        <h1>Tre motori AI, zero costi.<br><span class="highlight">Il coding agent che vive sul tuo computer.</span></h1>
-        <p>Un agente AI che scrive codice, gestisce file, usa git e automatizza il lavoro. Tre motori, zero cloud, zero costi. Il tuo codice resta sul tuo computer.</p>
+        <h1>AI locale, zero costi.<br><span class="highlight">Il coding agent che vive sul tuo computer.</span></h1>
+        <p>Un agente AI che scrive codice, gestisce file, usa git e automatizza il lavoro. 100% locale, zero cloud, zero costi. Il tuo codice resta sul tuo computer.</p>
         <div class="hero-badges">
             <div class="hero-badge open">&#10022; Open Source &mdash; MIT License</div>
-            <div class="hero-badge engine-list">&#9889; 3 Motori: Ollama &middot; Ollama Pro &middot; Claw Rust &mdash; tutti locali</div>
+            <div class="hero-badge engine-list">&#9889; Powered by Ollama &mdash; 100% locale, zero configurazione</div>
         </div>
         <div class="hero-actions">
             <a href="https://github.com/SuperSapiensAi/LobsterCode" target="_blank" class="btn btn-github">
@@ -441,7 +410,7 @@
                 Scarica da GitHub
             </a>
             <a href="#install" class="btn btn-primary">Installazione rapida &rarr;</a>
-            <a href="#engines" class="btn btn-secondary">Scopri i motori</a>
+            <a href="#features" class="btn btn-secondary">Scopri le funzionalit&agrave;</a>
         </div>
     </div>
 </section>
@@ -454,63 +423,16 @@
         <div><span class="cmd">git clone</span> https://github.com/SuperSapiensAi/LobsterCode.git</div>
         <div><span class="cmd">cd</span> LobsterCode/ui</div>
         <br>
-        <div><span class="comment"># Installa Ollama (ollama.ai) e scarica un modello</span></div>
-        <div><span class="cmd">ollama pull</span> <span class="flag">qwen2.5-coder:14b</span></div>
+        <div><span class="comment"># Installa Ollama (ollama.ai) e scarica un modello con tool calling</span></div>
+        <div><span class="cmd">ollama pull</span> <span class="flag">gemma4:latest</span></div>
         <br>
-        <div><span class="comment"># Avvia Lobster Code (auto-detect del miglior motore)</span></div>
+        <div><span class="comment"># Avvia Lobster Code</span></div>
         <div><span class="cmd">bash</span> start-agent.command</div>
-        <br>
-        <div><span class="comment"># [Opzionale] Compila il motore Claw per performance massime</span></div>
-        <div><span class="cmd">cd</span> ../rust &amp;&amp; <span class="cmd">cargo build</span> <span class="flag">--workspace</span></div>
     </div>
 </section>
 
 <!-- ENGINES -->
-<section class="engines" id="engines">
-    <div class="engines-inner">
-        <div class="section-label">Architettura</div>
-        <h2 class="section-title">Tre motori, un'interfaccia</h2>
-        <p class="section-desc">Lobster Code auto-rileva il miglior motore disponibile. Puoi cambiarlo in qualsiasi momento dalla UI.</p>
-        <div class="engines-grid">
-            <div class="engine-card recommended">
-                <span class="engine-emoji">&#9889;</span>
-                <h3>Ollama Pro</h3>
-                <div class="engine-sub">100% locale &middot; Ollama v0.14+ &middot; protocollo avanzato</div>
-                <ul>
-                    <li>Tool calling nativo senza fallback</li>
-                    <li>Streaming SSE ad alta precisione</li>
-                    <li>Formato tool_use strutturato</li>
-                    <li>Zero parsing euristico</li>
-                    <li>Compatibile con tutti i modelli Ollama</li>
-                </ul>
-            </div>
-            <div class="engine-card">
-                <span class="engine-emoji">🦞</span>
-                <h3>Claw Engine</h3>
-                <div class="engine-sub">Binario Rust &middot; 48K+ LOC</div>
-                <ul>
-                    <li>Runtime nativo ad alte prestazioni</li>
-                    <li>Permission system a 3 livelli</li>
-                    <li>MCP Tool Bridge</li>
-                    <li>LSP Client integrato</li>
-                    <li>Plugin system ed estensioni</li>
-                </ul>
-            </div>
-            <div class="engine-card">
-                <span class="engine-emoji">🦙</span>
-                <h3>Ollama Nativo</h3>
-                <div class="engine-sub">Qualsiasi versione &middot; /api/chat</div>
-                <ul>
-                    <li>Compatibilit&agrave; universale</li>
-                    <li>Fallback intelligente per text tool calls</li>
-                    <li>Funziona con Ollama 0.1+</li>
-                    <li>Streaming NDJSON</li>
-                    <li>Setup zero configurazione</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-</section>
+<!-- ENGINES section removed -->
 
 <!-- FEATURES -->
 <section class="features" id="features">
@@ -525,13 +447,13 @@
         </div>
         <div class="feature-card">
             <div class="feature-icon ocean">&#9889;</div>
-            <h3>Smart Routing</h3>
-            <p>Instrada automaticamente i task semplici su un modello veloce e quelli complessi su uno potente. Risparmi GPU e tempo senza perdere qualit&agrave;.</p>
+            <h3>Prompt Templates</h3>
+            <p>14 template intelligenti che si adattano al tuo stack. React? Ti suggerisce componenti. Python? Ti offre venv e test. Zero configurazione.</p>
         </div>
         <div class="feature-card">
-            <div class="feature-icon coral">&#127859;</div>
-            <h3>Workflow Recipes</h3>
-            <p>Ricette pronte all'uso: Setup Next.js, FastAPI, Docker, migrazione JS&rarr;TS, test automatici. Un click per eseguire. Crea le tue ricette custom.</p>
+            <div class="feature-icon coral">&#128640;</div>
+            <h3>Agent Loop Multi-Turn</h3>
+            <p>Non si ferma alla prima risposta. Esegue fino a 10 turni consecutivi di tool calling per completare task complessi in autonomia.</p>
         </div>
         <div class="feature-card">
             <div class="feature-icon green">&#128028;</div>
@@ -555,8 +477,8 @@
         </div>
         <div class="feature-card">
             <div class="feature-icon purple">&#129504;</div>
-            <h3>Memoria persistente</h3>
-            <p>Il contesto delle conversazioni sopravvive alle sessioni. L'agente ricorda decisioni, scelte architetturali e preferenze.</p>
+            <h3>Session Memory</h3>
+            <p>Salva note e contesto in <code>.lobster/context.md</code> nel tuo workspace. Appunti, decisioni e preferenze persistono tra le sessioni.</p>
         </div>
         <div class="feature-card">
             <div class="feature-icon amber">&#128203;</div>
@@ -574,9 +496,9 @@
             <p>Naviga i file del progetto dalla sidebar. Preview con syntax highlighting. Tutto senza uscire dalla UI.</p>
         </div>
         <div class="feature-card">
-            <div class="feature-icon coral">&#128640;</div>
-            <h3>Zero dipendenze</h3>
-            <p>Un file Python, un file HTML. Niente npm, niente pip, niente Docker. python3 agent_server.py e sei operativo.</p>
+            <div class="feature-icon coral">&#128302;</div>
+            <h3>Setup Wizard</h3>
+            <p>Verifica Ollama, controlla la RAM, consiglia il modello migliore e lo scarica con un click. Operativo in 2 minuti.</p>
         </div>
     </div>
 </section>
@@ -592,10 +514,10 @@
                 <div class="demo-dot r"></div>
                 <div class="demo-dot y"></div>
                 <div class="demo-dot g"></div>
-                <span>Lobster Code &mdash; &#9889; Ollama Pro &middot; qwen2.5-coder:14b</span>
+                <span>Lobster Code &mdash; &#129438; Ollama &middot; gemma4:latest</span>
             </div>
             <div class="demo-body">
-                <div class="demo-line demo-engine">&#128640; Motore: Ollama Pro (auto-detect) &middot; Permessi: workspace-write</div>
+                <div class="demo-line demo-engine">&#128640; Ollama &middot; gemma4:latest &middot; Permessi: workspace-write</div>
                 <div class="demo-line demo-user">&#128100;  Crea un componente React counter con TypeScript e test</div>
                 <div class="demo-line demo-comment">   # L'agente rileva: React + TypeScript + Jest</div>
                 <div class="demo-line demo-tool">&#128295;  bash &rarr; mkdir -p src/components</div>
@@ -611,8 +533,8 @@
 <!-- STACK -->
 <section class="stack" id="stack">
     <div class="section-label">Architettura</div>
-    <h2 class="section-title">Zero dipendenze, massima potenza</h2>
-    <p class="section-desc">Web UI in vanilla JS, backend Python stdlib, motore Rust opzionale.</p>
+    <h2 class="section-title">Architettura minima, massima potenza</h2>
+    <p class="section-desc">Web UI in vanilla JS, backend Python stdlib, Ollama per l'AI.</p>
     <div class="stack-grid">
         <div class="stack-item">
             <div class="icon">&#128013;</div>
@@ -622,17 +544,17 @@
         <div class="stack-item">
             <div class="icon">&#129438;</div>
             <h4>Ollama</h4>
-            <p>LLM locali con 2 protocolli nativi</p>
+            <p>LLM locali con tool calling nativo</p>
         </div>
         <div class="stack-item">
             <div class="icon">&#127760;</div>
             <h4>Vanilla JS</h4>
-            <p>Frontend senza framework, SSE nativo</p>
+            <p>Frontend senza framework, streaming SSE</p>
         </div>
         <div class="stack-item">
-            <div class="icon">&#129408;</div>
-            <h4>Claw (Rust)</h4>
-            <p>48K+ LOC, MCP, LSP, plugin system</p>
+            <div class="icon">&#128274;</div>
+            <h4>3 livelli di permesso</h4>
+            <p>Read-only, workspace-write, full-access</p>
         </div>
     </div>
 </section>
@@ -790,8 +712,8 @@
                 <td><span class="check">&#10003;</span></td>
             </tr>
             <tr>
-                <td>Multi-engine</td>
-                <td class="highlight-col"><span class="check">3 motori</span></td>
+                <td>Zero config</td>
+                <td class="highlight-col"><span class="check">&#10003;</span></td>
                 <td><span class="cross">&#10007;</span></td>
                 <td><span class="cross">&#10007;</span></td>
                 <td><span class="cross">&#10007;</span></td>
@@ -874,7 +796,7 @@
 <section class="philosophy">
     <div class="philosophy-inner">
         <div class="section-label">La filosofia</div>
-        <blockquote>"Il miglior tool &egrave; quello che non ti chiede mai di uscire dal tuo flusso. Lobster Code vive dove lavori tu &mdash; nei tuoi file, con i tuoi dati, con tre motori sotto il cofano. Nessun cloud che ti spia, nessun abbonamento che ti frena."</blockquote>
+        <blockquote>"Il miglior tool &egrave; quello che non ti chiede mai di uscire dal tuo flusso. Lobster Code vive dove lavori tu &mdash; nei tuoi file, con i tuoi dati, tutto locale. Nessun cloud che ti spia, nessun abbonamento che ti frena."</blockquote>
         <p class="author">&mdash; Il team di Lobster Code</p>
     </div>
 </section>
@@ -882,7 +804,7 @@
 <!-- CTA -->
 <section class="cta">
     <h2>Pronto per iniziare?</h2>
-    <p>Lobster Code &egrave; gratuito, open source e pronto in 2 minuti. Tre motori, zero configurazione, nessun account richiesto.</p>
+    <p>Lobster Code &egrave; gratuito, open source e pronto in 2 minuti. Zero configurazione, nessun account richiesto.</p>
     <div class="cta-actions">
         <a href="https://github.com/SuperSapiensAi/LobsterCode" target="_blank" class="btn btn-github">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
@@ -898,7 +820,7 @@
     <p>Agente di sviluppo AI &mdash; locale, privato, open source.</p>
     <div class="links">
         <a href="#features">Funzionalit&agrave;</a>
-        <a href="#engines">Motori</a>
+
         <a href="#comparison">Confronto</a>
         <a href="https://github.com/SuperSapiensAi/LobsterCode" target="_blank">GitHub</a>
         <a href="https://github.com/SuperSapiensAi/LobsterCode/issues" target="_blank">Segnala bug</a>
@@ -917,7 +839,7 @@
         });
     });
     function copyInstall() {
-        const text = 'git clone https://github.com/SuperSapiensAi/LobsterCode.git\ncd LobsterCode/ui\nollama pull qwen2.5-coder:14b\nbash start-agent.command';
+        const text = 'git clone https://github.com/SuperSapiensAi/LobsterCode.git\ncd LobsterCode/ui\nollama pull gemma4:latest\nbash start-agent.command';
         navigator.clipboard.writeText(text).then(() => {
             const btn = document.querySelector('.install-copy');
             btn.textContent = 'Copiato!';

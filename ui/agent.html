@@ -93,25 +93,23 @@
 
         /* ============ TAB SYSTEM ============ */
         .sidebar-tabs {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 4px;
-            padding: 8px 8px 0 8px;
+            display: flex;
+            gap: 6px;
+            padding: 12px 12px 0 12px;
             border-bottom: 1px solid var(--sidebar-border);
             margin-bottom: 8px;
         }
         .sidebar-tab {
-            padding: 5px 4px;
-            border-radius: 5px;
+            padding: 6px 12px;
+            border-radius: 6px;
             border: 1px solid transparent;
             background: transparent;
             color: var(--sidebar-text-dim);
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s;
             white-space: nowrap;
-            text-align: center;
         }
         .sidebar-tab:hover {
             background: var(--sidebar-hover);
@@ -1240,8 +1238,6 @@
     <div class="sidebar-tabs">
         <button class="sidebar-tab active" onclick="switchSidebarTab('chat')">Chat</button>
         <button class="sidebar-tab" onclick="switchSidebarTab('files')">Files</button>
-        <button class="sidebar-tab" onclick="switchSidebarTab('dna')">DNA</button>
-        <button class="sidebar-tab" onclick="switchSidebarTab('recipes')">Recipes</button>
         <button class="sidebar-tab" onclick="switchSidebarTab('git')">Git <span class="badge" id="gitBadge" style="display:none;">0</span></button>
         <button class="sidebar-tab" onclick="switchSidebarTab('modifiche')">Mod <span class="badge" id="modBadge" style="display:none;">0</span></button>
     </div>
@@ -1273,46 +1269,6 @@
         </div>
         <div class="breadcrumb" id="fileBreadcrumb"></div>
         <div class="file-list" id="fileList"></div>
-    </div>
-
-    <!-- DNA Tab -->
-    <div class="sidebar-content" id="tab-dna">
-        <div style="padding:12px;font-size:12px;color:var(--sidebar-text);">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                <span style="font-size:11px;font-weight:700;color:var(--sidebar-text-dim);text-transform:uppercase;letter-spacing:0.5px;">Project DNA</span>
-                <button onclick="regenerateDNA()" style="background:none;border:1px solid var(--sidebar-border);border-radius:6px;color:var(--accent-light);cursor:pointer;font-size:10px;padding:3px 8px;">Rigenera</button>
-            </div>
-            <div id="dnaContent" style="display:flex;flex-direction:column;gap:8px;">
-                <div style="color:var(--sidebar-text-dim);text-align:center;padding:20px;font-size:11px;">Clicca per analizzare il progetto</div>
-            </div>
-            <!-- Multi-Model Toggle -->
-            <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--sidebar-border);">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-                    <span style="font-size:11px;font-weight:700;color:var(--sidebar-text-dim);text-transform:uppercase;letter-spacing:0.5px;">Smart Routing</span>
-                    <label style="position:relative;display:inline-block;width:36px;height:20px;cursor:pointer;">
-                        <input type="checkbox" id="multiModelToggle" onchange="toggleMultiModel()" style="opacity:0;width:0;height:0;">
-                        <span style="position:absolute;inset:0;background:var(--sidebar-border);border-radius:10px;transition:.3s;"></span>
-                        <span id="multiModelSlider" style="position:absolute;left:2px;top:2px;width:16px;height:16px;background:var(--sidebar-text-dim);border-radius:50%;transition:.3s;"></span>
-                    </label>
-                </div>
-                <div id="multiModelInfo" style="font-size:10px;color:var(--sidebar-text-dim);line-height:1.4;">
-                    Task semplici → modello veloce, task complessi → modello potente. Attiva per risparmiare risorse.
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Recipes Tab -->
-    <div class="sidebar-content" id="tab-recipes">
-        <div style="padding:12px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                <span style="font-size:11px;font-weight:700;color:var(--sidebar-text-dim);text-transform:uppercase;letter-spacing:0.5px;">Workflow Recipes</span>
-                <button onclick="createCustomRecipe()" style="background:none;border:1px solid var(--sidebar-border);border-radius:6px;color:var(--accent-light);cursor:pointer;font-size:10px;padding:3px 8px;" title="Crea ricetta custom">+ Nuova</button>
-            </div>
-            <div id="recipesList" style="display:flex;flex-direction:column;gap:6px;">
-                <div style="color:var(--sidebar-text-dim);text-align:center;padding:20px;font-size:11px;">Seleziona il tab per caricare</div>
-            </div>
-        </div>
     </div>
 
     <!-- Git Tab -->
@@ -1353,14 +1309,12 @@
     <div class="topbar">
         <button class="toggle-sidebar" onclick="toggleSidebar()">&#9776;</button>
         <span class="topbar-logo" id="topbarLogo" style="display:none;font-size:18px;cursor:pointer;" onclick="toggleSidebar()">&#129438; <strong style="font-size:13px;color:var(--accent);">Lobster Code</strong></span>
-        <div class="engine-badge" onclick="openEngineSelector()" title="Motore di esecuzione">
-            <span id="engineIcon">⚡</span> <span id="engineName">auto</span>
-        </div>
+        <!-- Engine badge rimosso: motore fisso ollama -->
         <div class="permission-badge" onclick="openPermissionSelector()" title="Clicca per cambiare permessi" style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:12px;padding:3px 10px;font-size:11px;color:#f59e0b;margin-right:8px;cursor:pointer;">
             🔒 <span id="permissionMode">workspace-write</span>
         </div>
         <div class="model-badge" id="modelBadge" onclick="openModelSelector()">
-            <span id="modelName">qwen2.5-coder:14b</span>
+            <span id="modelName">gemma4:latest</span>
         </div>
         <div class="agent-badge">AGENT</div>
         <div id="projectBadges" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
@@ -1474,7 +1428,7 @@
 <script>
     // ============ STATE ============
     const API_BASE = window.location.origin;
-    let currentModel = 'qwen2.5-coder:14b';
+    let currentModel = 'gemma4:latest';
     let messages = [];
     let allChats = [];
     let currentChatId = null;
@@ -1509,7 +1463,7 @@
             document.getElementById('workspacePath').textContent = info.workspace;
             document.getElementById('workspaceLabel').textContent = info.workspace.replace(/^\/Users\/[^/]+/, '~');
             // Usa il modello del server solo se non ne abbiamo già uno selezionato
-            if (info.model && currentModel === 'qwen2.5-coder:14b' && !localStorage.getItem('claw-agent-selected-model')) {
+            if (info.model && currentModel === 'gemma4:latest' && !localStorage.getItem('claw-agent-selected-model')) {
                 currentModel = info.model;
                 document.getElementById('modelName').textContent = currentModel;
             }
@@ -2162,11 +2116,8 @@
 
     function getModelToolSupport(name) {
         const n = name.toLowerCase();
-        // Models known to support tool calling well
-        if (n.includes('qwen2.5-coder') || n.includes('qwen3') ||
-            n.includes('mistral-large') || n.includes('command-r') ||
-            n.includes('llama3.1') || n.includes('llama3.2') || n.includes('llama3.3') ||
-            n.includes('deepseek-coder-v2') || n.includes('gemma3') || n.includes('gemma4'))
+        // Verificati con test reale su Ollama 0.20+
+        if (n.includes('gemma4') || n.includes('qwen3'))
             return true;
         return false;
     }
@@ -2186,10 +2137,20 @@
                 return;
             }
 
-            list.innerHTML = models.map(m => {
+            // Mostra solo modelli con tool calling verificato
+            const toolModels = models.filter(m => getModelToolSupport(m.name));
+
+            if (toolModels.length === 0) {
+                list.innerHTML = `
+                    <p style="color:var(--text-dim);font-size:13px;margin-bottom:12px;">Nessun modello con tool calling trovato.<br>Installa <b>gemma4</b> o <b>qwen3</b> per usare l'agente.</p>
+                    <button class="model-card-btn download" style="width:100%;" onclick="document.getElementById('modelModal').classList.remove('active'); openSetupWizard();">Apri Setup Wizard</button>
+                `;
+                return;
+            }
+
+            list.innerHTML = toolModels.map(m => {
                 const sizeGB = (m.size / 1e9).toFixed(1) + ' GB';
                 const cat = getModelCategory(m.name);
-                const hasTools = getModelToolSupport(m.name);
                 return `
                     <div class="model-option ${m.name === currentModel ? 'active' : ''}"
                          onclick="selectModel('${m.name}')">
@@ -2201,7 +2162,7 @@
                             </div>
                             <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;">
                                 <span style="background:${cat.color}22;color:${cat.color};font-size:10px;padding:2px 8px;border-radius:8px;font-weight:600;">${cat.label}</span>
-                                ${hasTools ? '<span style="background:rgba(63,185,80,0.15);color:#3fb950;font-size:10px;padding:2px 8px;border-radius:8px;font-weight:600;">Tool ✓</span>' : '<span style="background:rgba(248,81,73,0.1);color:#f85149;font-size:10px;padding:2px 8px;border-radius:8px;font-weight:600;">No Tool</span>'}
+                                <span style="background:rgba(63,185,80,0.15);color:#3fb950;font-size:10px;padding:2px 8px;border-radius:8px;font-weight:600;">Tool ✓</span>
                             </div>
                         </div>
                     </div>
@@ -2265,64 +2226,12 @@
     });
 
     // ============ ENGINE SELECTOR ============
-    let currentEngine = 'auto';
-
-    // Ripristina motore da localStorage al caricamento
-    try {
-        const savedEngine = localStorage.getItem('lobster-engine');
-        if (savedEngine && ['auto', 'ollama-pro', 'ollama', 'claw'].includes(savedEngine)) {
-            currentEngine = savedEngine;
-        }
-    } catch(e) {}
-
-    const ENGINE_LIST = [
-        { id: 'auto', icon: '🔄', name: 'Auto-detect', desc: 'Sceglie il miglior motore disponibile' },
-        { id: 'ollama-pro', icon: '⚡', name: 'Ollama Pro', desc: '100% locale — Ollama v0.14+ con tool calling nativo, più preciso' },
-        { id: 'ollama', icon: '🦙', name: 'Ollama Nativo', desc: 'API /api/chat — compatibile con tutte le versioni' },
-        { id: 'claw', icon: '🦞', name: 'Claw Engine', desc: 'Binario Rust — permessi, MCP, plugin, LSP' },
-    ];
-    const ENGINE_ICONS = { 'auto': '🔄', 'ollama-pro': '⚡', 'ollama': '🦙', 'claw': '🦞' };
-    const ENGINE_LABELS = { 'auto': 'auto', 'ollama-pro': 'Ollama Pro', 'ollama': 'Ollama', 'claw': 'Claw' };
-
-    function openEngineSelector() {
-        const modal = document.getElementById('engineModal');
-        const container = document.getElementById('engineOptions');
-
-        container.innerHTML = ENGINE_LIST.map(e => `
-            <div class="model-option ${e.id === currentEngine ? 'active' : ''}"
-                 onclick="selectEngine('${e.id}')"
-                 style="padding:12px;cursor:pointer;border-radius:8px;border:1px solid var(--border);margin-bottom:4px;background:#ffffff;">
-                <span style="font-size:18px;margin-right:8px;">${e.icon}</span>
-                <strong style="color:var(--text-primary);">${e.name}</strong>
-                <div style="font-size:12px;color:var(--text-dim);margin-top:2px;">${e.desc}</div>
-            </div>
-        `).join('');
-        modal.classList.add('active');
-    }
-
-    async function selectEngine(id) {
-        // Aggiorna UI immediatamente
-        currentEngine = id;
-        updateEngineDisplay(id);
-        document.getElementById('engineModal').classList.remove('active');
-        try { localStorage.setItem('lobster-engine', id); } catch(e) {}
-        showToast('Motore: ' + (ENGINE_LABELS[id] || id));
-        // Notifica il backend (best-effort)
-        try {
-            const resp = await safeFetch(`${API_BASE}/api/set-engine`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ engine: id })
-            });
-            const data = await resp.json();
-            if (data.success && data.engine !== id) {
-                currentEngine = data.engine;
-                updateEngineDisplay(data.engine);
-            }
-        } catch(e) {
-            console.warn('Engine backend not available, using local selection:', e.message);
-        }
-    }
+    // Engine fisso: Ollama nativo (unico affidabile)
+    let currentEngine = 'ollama';
+    function openEngineSelector() {} // no-op
+    function selectEngine() {} // no-op
+    function updateEngineDisplay() {} // no-op
+    try { localStorage.removeItem('lobster-engine'); } catch(e) {}
 
     function updateEngineDisplay(engine) {
         document.getElementById('engineIcon').textContent = ENGINE_ICONS[engine] || '⚡';
@@ -2438,13 +2347,6 @@
                 loadGrantedWorkspaces();
             }
         }
-        if (tabName === 'dna') {
-            loadProjectDNA();
-            loadMultiModelStatus();
-        }
-        if (tabName === 'recipes') {
-            loadRecipes();
-        }
         if (tabName === 'modifiche') {
             loadModifiedFiles();
             // Reset badge quando l'utente vede le modifiche
@@ -2558,278 +2460,6 @@
             }
         } catch (e) {
             alert('Errore di rete: ' + e.message);
-        }
-    }
-
-    // ============ PROJECT DNA ============
-
-    async function loadProjectDNA() {
-        const container = document.getElementById('dnaContent');
-        container.innerHTML = '<div style="color:var(--sidebar-text-dim);text-align:center;padding:20px;font-size:11px;">Analisi in corso...</div>';
-        try {
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 10000);
-            const res = await safeFetch(`${API_BASE}/api/project-dna`, { signal: controller.signal });
-            clearTimeout(timeout);
-            const dna = await res.json();
-            if (dna && (dna.languages || dna.stack)) {
-                renderDNA(dna);
-            } else {
-                container.innerHTML = '<div style="color:var(--sidebar-text-dim);text-align:center;padding:12px;font-size:11px;">Nessun workspace attivo. Seleziona una cartella nel tab Files.</div>';
-            }
-        } catch (e) {
-            container.innerHTML = '<div style="color:var(--sidebar-text-dim);text-align:center;padding:12px;font-size:11px;">Impossibile caricare il DNA.<br><span style="font-size:10px;opacity:0.7;">Verifica che il server sia attivo e un workspace sia selezionato.</span></div>';
-        }
-    }
-
-    function renderDNA(dna) {
-        const container = document.getElementById('dnaContent');
-        let html = '';
-
-        // Stack & Languages
-        if (dna.stack && dna.stack.length) {
-            html += _dnaSection('Stack', dna.stack.join(', '));
-        }
-        if (dna.languages && dna.languages.length) {
-            html += _dnaSection('Languages', dna.languages.join(', '));
-        }
-        if (dna.frameworks && dna.frameworks.length) {
-            html += _dnaSection('Frameworks', dna.frameworks.join(', '));
-        }
-        if (dna.package_manager) {
-            html += _dnaSection('Package Manager', dna.package_manager);
-        }
-
-        // Git
-        const git = dna.git || {};
-        if (git.enabled) {
-            let gitInfo = `branch: ${git.branch || '?'}`;
-            if (git.dirty_files) gitInfo += ` (${git.dirty_files} modified)`;
-            html += _dnaSection('Git', gitInfo);
-        }
-
-        // Conventions
-        const conv = dna.conventions || {};
-        if (Object.keys(conv).filter(k => !k.startsWith('_')).length) {
-            let convHtml = '';
-            if (conv.indent) convHtml += `<div>Indent: <strong>${conv.indent}</strong></div>`;
-            if (conv.type_checking) convHtml += `<div>Types: <strong>${conv.type_checking}</strong></div>`;
-            if (conv.test_framework) convHtml += `<div>Tests: <strong>${conv.test_framework}</strong></div>`;
-            if (conv.linter) convHtml += `<div>Linter: <strong>${conv.linter}</strong></div>`;
-            if (conv.formatter) convHtml += `<div>Formatter: <strong>${conv.formatter}</strong></div>`;
-            if (conv.css_approach) convHtml += `<div>CSS: <strong>${conv.css_approach}</strong></div>`;
-            if (conv.api_style) convHtml += `<div>API: <strong>${conv.api_style}</strong></div>`;
-            if (conv.naming_style) convHtml += `<div>Files: <strong>${conv.naming_style}</strong></div>`;
-            if (convHtml) {
-                html += `<div style="background:var(--sidebar-hover);border-radius:6px;padding:8px 10px;">
-                    <div style="font-size:10px;color:var(--accent-light);font-weight:600;margin-bottom:4px;">Conventions</div>
-                    <div style="font-size:11px;color:var(--sidebar-text);line-height:1.6;">${convHtml}</div>
-                </div>`;
-            }
-        }
-
-        // Structure
-        const struct = dna.structure || {};
-        if (struct.total_files) {
-            let structHtml = `<div>${struct.total_files} files (${struct.size_estimate})</div>`;
-            if (struct.key_dirs && struct.key_dirs.length) {
-                structHtml += `<div style="margin-top:4px;">${struct.key_dirs.map(d => `<span style="background:var(--sidebar-active);padding:1px 6px;border-radius:4px;margin:1px 2px;display:inline-block;font-size:10px;">${escapeHtml(d.name)}</span>`).join(' ')}</div>`;
-            }
-            html += `<div style="background:var(--sidebar-hover);border-radius:6px;padding:8px 10px;">
-                <div style="font-size:10px;color:var(--accent-light);font-weight:600;margin-bottom:4px;">Structure</div>
-                <div style="font-size:11px;color:var(--sidebar-text);line-height:1.6;">${structHtml}</div>
-            </div>`;
-        }
-
-        // Fingerprint & timestamp
-        if (dna._generated_at) {
-            html += `<div style="font-size:9px;color:var(--sidebar-text-dim);text-align:center;margin-top:4px;">Generated: ${dna._generated_at} · ${dna._fingerprint || ''}</div>`;
-        }
-
-        container.innerHTML = html || '<div style="color:var(--sidebar-text-dim);text-align:center;padding:12px;">Nessun progetto rilevato</div>';
-    }
-
-    function _dnaSection(label, value) {
-        return `<div style="background:var(--sidebar-hover);border-radius:6px;padding:6px 10px;">
-            <span style="font-size:10px;color:var(--sidebar-text-dim);">${label}:</span>
-            <span style="font-size:11px;color:var(--sidebar-text);font-weight:500;margin-left:4px;">${escapeHtml(value)}</span>
-        </div>`;
-    }
-
-    async function regenerateDNA() {
-        try {
-            document.getElementById('dnaContent').innerHTML = '<div style="color:var(--accent-light);text-align:center;padding:12px;">Rigenerazione in corso...</div>';
-            const res = await safeFetch(`${API_BASE}/api/regenerate-dna`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: '{}' });
-            const data = await res.json();
-            if (data.success && data.dna) {
-                renderDNA(data.dna);
-            }
-        } catch (e) {
-            document.getElementById('dnaContent').innerHTML = '<div style="color:var(--error);text-align:center;padding:12px;">Errore</div>';
-        }
-    }
-
-    // ============ MULTI-MODEL ORCHESTRATION ============
-
-    async function loadMultiModelStatus() {
-        try {
-            const res = await safeFetch(`${API_BASE}/api/multi-model-status`);
-            const data = await res.json();
-            const toggle = document.getElementById('multiModelToggle');
-            const slider = document.getElementById('multiModelSlider');
-            toggle.checked = data.enabled;
-            if (data.enabled) {
-                slider.style.left = '18px';
-                slider.style.background = 'var(--accent-light)';
-                slider.parentElement.querySelector('span:first-of-type').style.background = 'var(--accent)';
-            }
-            document.getElementById('multiModelInfo').innerHTML = data.enabled
-                ? `<span style="color:var(--accent-light);">Attivo</span> · Veloce: ${data.small_model} · Potente: ${data.large_model}`
-                : 'Task semplici → modello veloce, task complessi → modello potente. Attiva per risparmiare risorse.';
-        } catch (e) {}
-    }
-
-    async function toggleMultiModel() {
-        const toggle = document.getElementById('multiModelToggle');
-        const slider = document.getElementById('multiModelSlider');
-        const enabled = toggle.checked;
-        if (enabled) {
-            slider.style.left = '18px';
-            slider.style.background = 'var(--accent-light)';
-            slider.parentElement.querySelector('span:first-of-type').style.background = 'var(--accent)';
-        } else {
-            slider.style.left = '2px';
-            slider.style.background = 'var(--sidebar-text-dim)';
-            slider.parentElement.querySelector('span:first-of-type').style.background = 'var(--sidebar-border)';
-        }
-        try {
-            await safeFetch(`${API_BASE}/api/toggle-multi-model`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ enabled })
-            });
-            loadMultiModelStatus();
-        } catch (e) {}
-    }
-
-    // ============ WORKFLOW RECIPES ============
-
-    async function loadRecipes() {
-        const container = document.getElementById('recipesList');
-        container.innerHTML = '<div style="color:var(--sidebar-text-dim);text-align:center;padding:20px;font-size:11px;">Caricamento...</div>';
-        try {
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 10000);
-            const res = await safeFetch(`${API_BASE}/api/recipes`, { signal: controller.signal });
-            clearTimeout(timeout);
-            const data = await res.json();
-            renderRecipes(data.recipes || []);
-        } catch (e) {
-            container.innerHTML = '<div style="color:var(--sidebar-text-dim);text-align:center;padding:12px;font-size:11px;">Impossibile caricare le ricette.<br><span style="font-size:10px;opacity:0.7;">Verifica che il server sia attivo.</span></div>';
-        }
-    }
-
-    function renderRecipes(recipes) {
-        const container = document.getElementById('recipesList');
-        if (!recipes.length) {
-            container.innerHTML = '<div style="color:var(--sidebar-text-dim);text-align:center;padding:20px;font-size:12px;">Nessuna ricetta disponibile</div>';
-            return;
-        }
-        const tagColors = { nextjs: 'var(--ocean)', react: 'var(--ocean)', python: 'var(--accent)', typescript: 'var(--ocean)', docker: 'var(--coral)', testing: 'var(--sand)', migration: 'var(--coral)', refactoring: 'var(--coral)' };
-        let html = '';
-        for (const recipe of recipes) {
-            const tags = (recipe.tags || []).map(t =>
-                `<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:${tagColors[t] || 'var(--sidebar-border)'};color:#fff;opacity:0.8;">${t}</span>`
-            ).join(' ');
-            const hasVars = recipe.variables && recipe.variables.length > 0;
-            html += `<div style="background:var(--sidebar-hover);border-radius:8px;padding:10px;cursor:pointer;border:1px solid var(--sidebar-border);transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--sidebar-border)'" onclick="runRecipe('${escapeHtml(recipe.id)}', ${hasVars})">
-                <div style="font-size:12px;font-weight:600;color:var(--sidebar-text);margin-bottom:4px;">${escapeHtml(recipe.name)}</div>
-                <div style="font-size:10px;color:var(--sidebar-text-dim);margin-bottom:6px;line-height:1.4;">${escapeHtml(recipe.description)}</div>
-                <div style="display:flex;gap:3px;flex-wrap:wrap;">${tags}</div>
-                <div style="font-size:9px;color:var(--sidebar-text-dim);margin-top:4px;">${recipe.steps ? recipe.steps.length : 0} steps · ${recipe._source === 'builtin' ? 'Built-in' : 'Custom'}</div>
-            </div>`;
-        }
-        container.innerHTML = html;
-    }
-
-    async function runRecipe(recipeId, hasVariables) {
-        let variables = {};
-        if (hasVariables) {
-            // Chiedi le variabili all'utente
-            try {
-                const res = await safeFetch(`${API_BASE}/api/recipes`);
-                const data = await res.json();
-                const recipe = (data.recipes || []).find(r => r.id === recipeId);
-                if (recipe && recipe.variables) {
-                    for (const v of recipe.variables) {
-                        const val = prompt(v.prompt || v.name, v.default || '');
-                        if (val === null) return; // Annullato
-                        variables[v.name] = val || v.default || '';
-                    }
-                }
-            } catch (e) {
-                alert('Errore nel caricamento della ricetta');
-                return;
-            }
-        }
-        try {
-            const res = await safeFetch(`${API_BASE}/api/execute-recipe`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ recipe_id: recipeId, variables })
-            });
-            const data = await res.json();
-            if (data.success && data.prompt) {
-                // Inietta il prompt nella chat e invia
-                const input = document.getElementById('input');
-                input.value = `🍳 Recipe: ${data.recipe_name}\n\n${data.prompt}`;
-                // Switch alla tab chat
-                document.querySelectorAll('.sidebar-content').forEach(el => el.classList.remove('active'));
-                document.querySelectorAll('.sidebar-tab').forEach(el => el.classList.remove('active'));
-                document.getElementById('tab-chat').classList.add('active');
-                document.querySelector('.sidebar-tab').classList.add('active');
-                sendMessage();
-            }
-        } catch (e) {
-            alert('Errore nell\'esecuzione della ricetta: ' + e.message);
-        }
-    }
-
-    async function createCustomRecipe() {
-        const name = prompt('Nome della ricetta:', '');
-        if (!name) return;
-        const description = prompt('Descrizione breve:', '');
-        if (description === null) return;
-        const stepsText = prompt('Step (prompt che l\'agente eseguirà).\nPuoi separare più step con "---":', '');
-        if (!stepsText) return;
-        const tags = prompt('Tag separati da virgola (es: python, testing):', '');
-
-        const steps = stepsText.split('---').map(s => s.trim()).filter(Boolean).map(s => ({
-            type: 'prompt',
-            action: s
-        }));
-
-        const recipe = {
-            name: name,
-            description: description || name,
-            tags: tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [],
-            steps: steps
-        };
-
-        try {
-            const res = await safeFetch(`${API_BASE}/api/save-recipe`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(recipe)
-            });
-            const data = await res.json();
-            if (data.success) {
-                loadRecipes();
-            } else {
-                alert('Errore: ' + (data.error || 'salvataggio fallito'));
-            }
-        } catch (e) {
-            alert('Errore nel salvataggio: ' + e.message);
         }
     }
 

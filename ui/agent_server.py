@@ -11,11 +11,9 @@ Zero dipendenze esterne - usa solo la standard library di Python.
 
 import difflib
 import glob as _glob
-import hashlib
 import http.server
 import json
 import os
-import re as _re
 import shlex
 import subprocess
 import sys
@@ -35,7 +33,7 @@ from urllib.parse import parse_qs, urlparse
 # ---------------------------------------------------------------------------
 
 OLLAMA_BASE = os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
-DEFAULT_MODEL = os.environ.get("CLAW_MODEL", "qwen2.5-coder:14b")
+DEFAULT_MODEL = os.environ.get("CLAW_MODEL", "gemma4:latest")
 WORKSPACE_ROOT = os.environ.get("CLAW_WORKSPACE", os.path.expanduser("~"))
 MAX_AGENT_TURNS = 10  # massimo numero di turni tool-call consecutivi
 SERVER_PORT = int(os.environ.get("CLAW_PORT", "8899"))
@@ -364,651 +362,6 @@ def get_project_context():
     _project_context_cache["data"] = ctx
     _project_context_cache["timestamp"] = now
     return ctx
-
-
-# ---------------------------------------------------------------------------
-# PROJECT DNA — Scan profondo e contesto persistente
-# ---------------------------------------------------------------------------
-
-_DNA_VERSION = 1
-
-def _compute_project_fingerprint(workspace: str) -> str:
-    """Calcola un fingerprint veloce del progetto basato su file chiave."""
-    ws = Path(workspace)
-    sig_parts = []
-    # File chiave che, se cambiano, invalidano il DNA
-    key_files = [
-        "package.json", "requirements.txt", "pyproject.toml", "Cargo.toml",
-        "go.mod", "Gemfile", "composer.json", "tsconfig.json", "vite.config.ts",
-        "vite.config.js", "next.config.js", "next.config.mjs",
-        ".eslintrc.json", ".prettierrc", "tailwind.config.js", "tailwind.config.ts",
-    ]
-    for kf in key_files:
-        p = ws / kf
-        if p.exists():
-            try:
-                sig_parts.append(f"{kf}:{p.stat().st_mtime}")
-            except Exception:
-                pass
-    # Conta file per estensione (struttura) — max 2000 file per sicurezza
-    ext_counts = {}
-    try:
-        count = 0
-        for item in ws.rglob("*"):
-            count += 1
-            if count > 2000:
-                break  # Safety: non scansionare troppi file
-            if item.is_file() and not any(part.startswith(".") or part in ("node_modules", "__pycache__", "target", "dist", "build", ".next", "venv") for part in item.parts):
-                ext = item.suffix.lower()
-                if ext:
-                    ext_counts[ext] = ext_counts.get(ext, 0) + 1
-    except Exception:
-        pass
-    for ext in sorted(ext_counts.keys())[:20]:
-        sig_parts.append(f"{ext}:{ext_counts[ext]}")
-    raw = "|".join(sig_parts)
-    return hashlib.md5(raw.encode()).hexdigest()[:12]
-
-
-def _scan_coding_conventions(workspace: str) -> dict:
-    """Rileva convenzioni di codice: indentazione, naming, pattern comuni."""
-    ws = Path(workspace)
-    conventions = {
-        "indent": None,  # "tabs" | "2-spaces" | "4-spaces"
-        "naming_style": None,  # "camelCase" | "snake_case" | "kebab-case"
-        "test_framework": None,
-        "test_pattern": None,  # es. "*.test.ts", "test_*.py"
-        "linter": None,
-        "formatter": None,
-        "type_checking": None,  # "strict" | "loose" | None
-        "css_approach": None,  # "tailwind" | "css-modules" | "styled-components" | "plain"
-        "api_style": None,  # "REST" | "GraphQL" | "tRPC"
-    }
-
-    # Detect da config files
-    try:
-        if (ws / ".eslintrc.json").exists() or (ws / ".eslintrc.js").exists() or (ws / ".eslintrc").exists():
-            conventions["linter"] = "ESLint"
-        if (ws / ".prettierrc").exists() or (ws / ".prettierrc.json").exists() or (ws / "prettier.config.js").exists():
-            conventions["formatter"] = "Prettier"
-        if (ws / "biome.json").exists():
-            conventions["linter"] = "Biome"
-            conventions["formatter"] = "Biome"
-        if (ws / "ruff.toml").exists() or (ws / ".ruff.toml").exists():
-            conventions["linter"] = "Ruff"
-        if (ws / "mypy.ini").exists() or (ws / ".mypy.ini").exists():
-            conventions["type_checking"] = "mypy"
-    except Exception:
-        pass
-
-    # Detect da tsconfig
-    try:
-        tsc = ws / "tsconfig.json"
-        if tsc.exists():
-            content = tsc.read_text()
-            if '"strict": true' in content or '"strict":true' in content:
-                conventions["type_checking"] = "TypeScript strict"
-            else:
-                conventions["type_checking"] = "TypeScript"
-    except Exception:
-        pass
-
-    # Detect test framework e pattern
-    try:
-        pj = ws / "package.json"
-        if pj.exists():
-            pkg = json.loads(pj.read_text())
-            deps = {**pkg.get("dependencies", {}), **pkg.get("devDependencies", {})}
-            if "vitest" in deps:
-                conventions["test_framework"] = "Vitest"
-                conventions["test_pattern"] = "*.test.ts"
-            elif "jest" in deps:
-                conventions["test_framework"] = "Jest"
-                conventions["test_pattern"] = "*.test.ts"
-            elif "mocha" in deps:
-                conventions["test_framework"] = "Mocha"
-            if "@testing-library/react" in deps:
-                conventions["test_framework"] = (conventions["test_framework"] or "") + " + Testing Library"
-            # CSS approach
-            if "tailwindcss" in deps:
-                conventions["css_approach"] = "Tailwind CSS"
-            elif "styled-components" in deps:
-                conventions["css_approach"] = "styled-components"
-            elif "@emotion/react" in deps:
-                conventions["css_approach"] = "Emotion"
-            # API style
-            if "graphql" in deps or "@apollo/client" in deps:
-                conventions["api_style"] = "GraphQL"
-            elif "@trpc/server" in deps or "@trpc/client" in deps:
-                conventions["api_style"] = "tRPC"
-            # Scripts per capire workflow
-            scripts = pkg.get("scripts", {})
-            if scripts:
-                conventions["_scripts"] = {k: v for k, v in list(scripts.items())[:10]}
-    except Exception:
-        pass
-
-    # Python: detect test framework
-    try:
-        if (ws / "pytest.ini").exists() or (ws / "pyproject.toml").exists():
-            try:
-                pyp = (ws / "pyproject.toml").read_text()
-                if "[tool.pytest" in pyp:
-                    conventions["test_framework"] = "pytest"
-            except Exception:
-                pass
-        if any((ws / d).is_dir() for d in ["tests", "test"]):
-            conventions["test_pattern"] = conventions["test_pattern"] or "test_*.py"
-            conventions["test_framework"] = conventions["test_framework"] or "pytest"
-    except Exception:
-        pass
-
-    # Detect indentazione da un sample di file
-    try:
-        sample_exts = {".py", ".js", ".ts", ".tsx", ".jsx", ".rs", ".go"}
-        tab_count = 0
-        space2_count = 0
-        space4_count = 0
-        files_checked = 0
-        for item in ws.rglob("*"):
-            if files_checked >= 10:
-                break
-            if item.is_file() and item.suffix in sample_exts and not any(p.startswith(".") for p in item.parts):
-                try:
-                    lines = item.read_text(errors="ignore").split("\n")[:50]
-                    for line in lines:
-                        if line.startswith("\t"):
-                            tab_count += 1
-                        elif line.startswith("    "):
-                            space4_count += 1
-                        elif line.startswith("  ") and not line.startswith("   "):
-                            space2_count += 1
-                    files_checked += 1
-                except Exception:
-                    pass
-        if tab_count > space2_count and tab_count > space4_count:
-            conventions["indent"] = "tabs"
-        elif space2_count > space4_count:
-            conventions["indent"] = "2-spaces"
-        elif space4_count > 0:
-            conventions["indent"] = "4-spaces"
-    except Exception:
-        pass
-
-    # Detect naming style da nomi file
-    try:
-        sample_names = []
-        src_dirs = [ws / "src", ws / "app", ws / "lib", ws / "components"]
-        for sd in src_dirs:
-            if sd.is_dir():
-                for item in sd.iterdir():
-                    if item.is_file() and item.suffix in {".js", ".ts", ".tsx", ".jsx", ".py", ".rs"}:
-                        sample_names.append(item.stem)
-                        if len(sample_names) >= 10:
-                            break
-        if sample_names:
-            kebab = sum(1 for n in sample_names if "-" in n)
-            camel = sum(1 for n in sample_names if n[0].isupper() and not "-" in n and not "_" in n)
-            snake = sum(1 for n in sample_names if "_" in n)
-            if kebab > camel and kebab > snake:
-                conventions["naming_style"] = "kebab-case files"
-            elif camel > snake:
-                conventions["naming_style"] = "PascalCase files"
-            elif snake > 0:
-                conventions["naming_style"] = "snake_case files"
-    except Exception:
-        pass
-
-    # Pulisci None values
-    return {k: v for k, v in conventions.items() if v is not None}
-
-
-def _scan_project_structure(workspace: str) -> dict:
-    """Scansione approfondita della struttura del progetto."""
-    ws = Path(workspace)
-    structure = {
-        "total_files": 0,
-        "total_dirs": 0,
-        "file_types": {},  # ext -> count
-        "key_dirs": [],    # directory importanti
-        "entry_points": [],
-        "config_files": [],
-        "size_estimate": "small",  # small (<50 files), medium (<500), large (500+)
-    }
-
-    known_dirs = {
-        "src": "source code", "app": "application", "lib": "library",
-        "components": "UI components", "pages": "pages/routes", "api": "API routes",
-        "utils": "utilities", "hooks": "React hooks", "styles": "stylesheets",
-        "public": "static assets", "assets": "assets", "tests": "tests",
-        "test": "tests", "__tests__": "tests", "docs": "documentation",
-        "scripts": "scripts", "migrations": "DB migrations", "models": "data models",
-        "services": "services", "controllers": "controllers", "middleware": "middleware",
-    }
-
-    entry_candidates = [
-        "index.ts", "index.js", "main.ts", "main.js", "app.ts", "app.js",
-        "main.py", "app.py", "manage.py", "main.rs", "lib.rs", "main.go",
-        "index.html", "server.ts", "server.js", "server.py",
-    ]
-
-    config_candidates = [
-        "tsconfig.json", "vite.config.ts", "vite.config.js",
-        "next.config.js", "next.config.mjs", "nuxt.config.ts",
-        "webpack.config.js", "rollup.config.js", "esbuild.config.js",
-        "tailwind.config.js", "tailwind.config.ts",
-        "docker-compose.yml", "docker-compose.yaml", "Dockerfile",
-        ".env.example", ".env.local",
-    ]
-
-    try:
-        scan_count = 0
-        for item in ws.rglob("*"):
-            scan_count += 1
-            if scan_count > 5000:
-                break  # Safety: non scansionare troppi file
-            # Skip hidden dirs e node_modules
-            parts = item.relative_to(ws).parts
-            if any(p.startswith(".") or p in ("node_modules", "__pycache__", "target", "dist", "build", ".next", "venv") for p in parts):
-                continue
-            if item.is_file():
-                structure["total_files"] += 1
-                ext = item.suffix.lower()
-                if ext:
-                    structure["file_types"][ext] = structure["file_types"].get(ext, 0) + 1
-            elif item.is_dir():
-                structure["total_dirs"] += 1
-    except Exception:
-        pass
-
-    # Key dirs
-    for d in ws.iterdir():
-        if d.is_dir() and d.name in known_dirs and not d.name.startswith("."):
-            structure["key_dirs"].append({"name": d.name, "role": known_dirs[d.name]})
-
-    # Entry points
-    for ep in entry_candidates:
-        # Cerca in root e in src/
-        for base in [ws, ws / "src", ws / "app"]:
-            if (base / ep).exists():
-                rel = str((base / ep).relative_to(ws))
-                if rel not in structure["entry_points"]:
-                    structure["entry_points"].append(rel)
-
-    # Config files
-    for cf in config_candidates:
-        if (ws / cf).exists():
-            structure["config_files"].append(cf)
-
-    # Size estimate
-    n = structure["total_files"]
-    structure["size_estimate"] = "small" if n < 50 else ("medium" if n < 500 else "large")
-
-    # Top file types (top 8)
-    sorted_types = sorted(structure["file_types"].items(), key=lambda x: -x[1])[:8]
-    structure["file_types"] = dict(sorted_types)
-
-    return structure
-
-
-def _generate_project_dna(workspace: str) -> dict:
-    """Genera il DNA completo del progetto."""
-    ctx = _detect_project_context(workspace)
-    conventions = _scan_coding_conventions(workspace)
-    structure = _scan_project_structure(workspace)
-
-    dna = {
-        "_version": _DNA_VERSION,
-        "_fingerprint": _compute_project_fingerprint(workspace),
-        "_generated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
-        "workspace": workspace,
-        "stack": ctx.get("stack", []),
-        "languages": ctx.get("languages", []),
-        "frameworks": ctx.get("frameworks", []),
-        "package_manager": ctx.get("package_manager"),
-        "git": {
-            "enabled": ctx.get("has_git", False),
-            "branch": ctx.get("git_branch"),
-            "dirty_files": ctx.get("git_dirty", 0),
-        },
-        "conventions": conventions,
-        "structure": structure,
-    }
-    return dna
-
-
-def _get_dna_path(workspace: str) -> str:
-    """Path del file DNA persistente."""
-    return os.path.join(workspace, ".lobster", "project-dna.json")
-
-
-def get_project_dna(workspace: str = None) -> dict:
-    """
-    Ritorna il DNA del progetto. Se il file esiste ed è aggiornato, lo usa.
-    Altrimenti rigenera e salva.
-    """
-    ws = workspace or WORKSPACE_ROOT
-
-    # Safety: NON scansionare la home directory o root — troppo grande
-    home = os.path.expanduser("~")
-    if ws in (home, "/", home + "/"):
-        return {}  # Nessun DNA per workspace troppo grandi
-
-    dna_path = _get_dna_path(ws)
-    current_fingerprint = _compute_project_fingerprint(ws)
-
-    # Prova a caricare DNA esistente
-    if os.path.isfile(dna_path):
-        try:
-            with open(dna_path, "r", encoding="utf-8") as f:
-                existing = json.load(f)
-            # Se il fingerprint corrisponde, il DNA è ancora valido
-            if existing.get("_fingerprint") == current_fingerprint and existing.get("_version") == _DNA_VERSION:
-                return existing
-        except Exception:
-            pass
-
-    # Rigenera
-    dna = _generate_project_dna(ws)
-
-    # Salva persistente
-    try:
-        dna_dir = os.path.dirname(dna_path)
-        os.makedirs(dna_dir, exist_ok=True)
-        # Atomic write
-        fd, tmp_path = tempfile.mkstemp(dir=dna_dir, suffix=".json")
-        try:
-            with os.fdopen(fd, "w", encoding="utf-8") as f:
-                json.dump(dna, f, indent=2, ensure_ascii=False)
-            os.replace(tmp_path, dna_path)
-        except Exception:
-            try:
-                os.unlink(tmp_path)
-            except OSError:
-                pass
-    except Exception as e:
-        sys.stderr.write(f"[dna] Errore salvataggio DNA: {e}\n")
-
-    return dna
-
-
-def format_dna_for_prompt(dna: dict) -> str:
-    """Formatta il DNA come testo leggibile per il system prompt."""
-    lines = ["PROJECT DNA (auto-rilevato):"]
-
-    if dna.get("stack"):
-        lines.append(f"  Stack: {', '.join(dna['stack'])}")
-    if dna.get("languages"):
-        lines.append(f"  Languages: {', '.join(dna['languages'])}")
-    if dna.get("frameworks"):
-        lines.append(f"  Frameworks: {', '.join(dna['frameworks'])}")
-    if dna.get("package_manager"):
-        lines.append(f"  Package manager: {dna['package_manager']}")
-
-    git = dna.get("git", {})
-    if git.get("enabled"):
-        g = f"  Git: branch '{git.get('branch', '?')}'"
-        if git.get("dirty_files"):
-            g += f" ({git['dirty_files']} file modificati)"
-        lines.append(g)
-
-    conv = dna.get("conventions", {})
-    if conv:
-        lines.append("  Conventions:")
-        if conv.get("indent"):
-            lines.append(f"    Indent: {conv['indent']}")
-        if conv.get("naming_style"):
-            lines.append(f"    Files: {conv['naming_style']}")
-        if conv.get("type_checking"):
-            lines.append(f"    Types: {conv['type_checking']}")
-        if conv.get("test_framework"):
-            lines.append(f"    Tests: {conv['test_framework']} (pattern: {conv.get('test_pattern', '?')})")
-        if conv.get("linter"):
-            lines.append(f"    Linter: {conv['linter']}")
-        if conv.get("formatter"):
-            lines.append(f"    Formatter: {conv['formatter']}")
-        if conv.get("css_approach"):
-            lines.append(f"    CSS: {conv['css_approach']}")
-        if conv.get("api_style"):
-            lines.append(f"    API: {conv['api_style']}")
-
-    struct = dna.get("structure", {})
-    if struct:
-        lines.append(f"  Project size: {struct.get('size_estimate', '?')} ({struct.get('total_files', 0)} files)")
-        if struct.get("key_dirs"):
-            dirs = ", ".join(f"{d['name']} ({d['role']})" for d in struct["key_dirs"][:8])
-            lines.append(f"  Key dirs: {dirs}")
-        if struct.get("entry_points"):
-            lines.append(f"  Entry points: {', '.join(struct['entry_points'][:5])}")
-        if struct.get("config_files"):
-            lines.append(f"  Config: {', '.join(struct['config_files'][:6])}")
-
-    lines.append("")
-    lines.append("REGOLE: Rispetta SEMPRE queste convenzioni. Usa lo stesso stile di indentazione,")
-    lines.append("naming, test framework e strumenti che il progetto già usa. Non introdurre")
-    lines.append("dipendenze o pattern estranei allo stack rilevato.")
-
-    return "\n".join(lines)
-
-
-# ---------------------------------------------------------------------------
-# Multi-Model Orchestration — Routing intelligente
-# ---------------------------------------------------------------------------
-
-# Modello piccolo per task semplici (lettura, navigazione, domande)
-SMALL_MODEL = os.environ.get("LOBSTER_SMALL_MODEL", "qwen2.5-coder:3b")
-# Modello grande per task complessi (scrittura codice, refactoring, debug)
-LARGE_MODEL = os.environ.get("LOBSTER_LARGE_MODEL", DEFAULT_MODEL)
-
-# Flag per attivare il multi-model (disabilitato di default)
-MULTI_MODEL_ENABLED = os.environ.get("LOBSTER_MULTI_MODEL", "false").lower() == "true"
-
-_SIMPLE_TASK_PATTERNS = [
-    # Domande informative
-    r"(?:cos['\u2019]?\s*[eè]|what\s+is|explain|spiega|come\s+funziona|how\s+does)",
-    # Lettura file
-    r"(?:leggi|mostra|read|show|cat|visualizza|apri)\s+(?:il\s+)?(?:file|contenuto)",
-    # Navigazione
-    r"(?:elenca|list|ls|mostra)\s+(?:i\s+)?(?:file|cartell|director)",
-    # Status / info
-    r"(?:git\s+status|git\s+log|git\s+diff|stato|status)",
-    # Ricerca semplice
-    r"(?:cerca|find|search|grep)\s+",
-    # Domande sì/no
-    r"(?:esiste|exists|c['\u2019]\s*[eè])\s+",
-]
-
-_COMPLEX_TASK_PATTERNS = [
-    # Creazione progetto
-    r"(?:crea|create|genera|generate|scaffold|setup|inizializza|init)\s+(?:un\s+)?(?:progetto|project|app)",
-    # Refactoring
-    r"(?:refactor|rifattorizza|migra|migrate|converti|convert|trasforma|transform)",
-    # Scrittura codice complesso
-    r"(?:implementa|implement|scrivi|write|aggiungi|add)\s+(?:un\s+|una\s+|il\s+|la\s+)?(?:component|funzion|class|service|api|endpoint|pagina|page|feature)",
-    # Debug
-    r"(?:debug|fix|risolvi|resolve|correggi|ripara|repair)\s+(?:il\s+|l['\u2019])?(?:bug|error|problema|issue|crash)",
-    # Modifica multi-file
-    r"(?:tutti\s+i\s+file|all\s+files|across|ovunque|everywhere|ogni\s+file)",
-    # Test
-    r"(?:scrivi|write|aggiungi|add|crea|create)\s+(?:i\s+|dei\s+)?test",
-]
-
-_compiled_simple = [_re.compile(p, _re.IGNORECASE) for p in _SIMPLE_TASK_PATTERNS]
-_compiled_complex = [_re.compile(p, _re.IGNORECASE) for p in _COMPLEX_TASK_PATTERNS]
-
-
-def classify_task_complexity(user_message: str) -> str:
-    """
-    Classifica il task come 'simple' o 'complex'.
-    Ritorna il nome del modello da usare.
-    """
-    if not MULTI_MODEL_ENABLED:
-        return DEFAULT_MODEL
-
-    msg = user_message.strip()
-
-    # Messaggi molto corti sono spesso semplici
-    if len(msg) < 30:
-        # Ma verifica che non sia un comando complesso abbreviato
-        for pat in _compiled_complex:
-            if pat.search(msg):
-                return LARGE_MODEL
-        return SMALL_MODEL
-
-    # Check complex patterns prima (hanno priorità)
-    for pat in _compiled_complex:
-        if pat.search(msg):
-            return LARGE_MODEL
-
-    # Check simple patterns
-    for pat in _compiled_simple:
-        if pat.search(msg):
-            return SMALL_MODEL
-
-    # Default: usa il modello grande per sicurezza
-    return LARGE_MODEL
-
-
-# ---------------------------------------------------------------------------
-# Workflow Recipes — Sistema ricette condivisibili
-# ---------------------------------------------------------------------------
-
-_RECIPES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "recipes")
-_USER_RECIPES_DIR = os.path.join(WORKSPACE_ROOT, ".lobster", "recipes")
-
-def _load_recipes() -> list:
-    """Carica tutte le ricette disponibili (built-in + user)."""
-    recipes = []
-    for rdir in [_RECIPES_DIR, _USER_RECIPES_DIR]:
-        if not os.path.isdir(rdir):
-            continue
-        for fname in os.listdir(rdir):
-            if fname.endswith(".json"):
-                try:
-                    with open(os.path.join(rdir, fname), "r", encoding="utf-8") as f:
-                        recipe = json.load(f)
-                    recipe["_source"] = "builtin" if rdir == _RECIPES_DIR else "user"
-                    recipe["_file"] = fname
-                    recipes.append(recipe)
-                except Exception:
-                    pass
-    return recipes
-
-
-def _get_recipe(recipe_id: str) -> dict:
-    """Trova una ricetta per ID."""
-    for recipe in _load_recipes():
-        if recipe.get("id") == recipe_id:
-            return recipe
-    return None
-
-
-def _execute_recipe_step(step: dict, workspace: str, variables: dict) -> str:
-    """Esegui un singolo step di una ricetta."""
-    action = step.get("action", "")
-    # Sostituisci variabili nel template
-    for key, val in variables.items():
-        action = action.replace(f"{{{{{key}}}}}", str(val))
-
-    step_type = step.get("type", "prompt")
-
-    if step_type == "prompt":
-        # Lo step è un prompt da inviare all'agente
-        return action
-    elif step_type == "bash":
-        # Esegui direttamente un comando bash
-        try:
-            result = subprocess.run(
-                action, shell=True, capture_output=True, text=True,
-                timeout=30, cwd=workspace
-            )
-            return result.stdout + result.stderr
-        except Exception as e:
-            return f"Errore: {e}"
-    elif step_type == "write":
-        # Scrivi un file
-        path = os.path.join(workspace, step.get("path", ""))
-        try:
-            os.makedirs(os.path.dirname(path), exist_ok=True)
-            with open(path, "w", encoding="utf-8") as f:
-                f.write(action)
-            return f"File scritto: {path}"
-        except Exception as e:
-            return f"Errore: {e}"
-
-    return "Step type non riconosciuto"
-
-
-# Crea directory ricette built-in se non esiste
-os.makedirs(_RECIPES_DIR, exist_ok=True)
-
-# Genera ricette built-in di esempio se non esistono
-_BUILTIN_RECIPES = [
-    {
-        "id": "init-nextjs",
-        "name": "Setup Next.js + Tailwind",
-        "description": "Crea un progetto Next.js con Tailwind CSS, TypeScript strict e struttura best-practice",
-        "tags": ["nextjs", "react", "tailwind", "typescript"],
-        "variables": [
-            {"name": "project_name", "prompt": "Nome del progetto", "default": "my-app"}
-        ],
-        "steps": [
-            {"type": "prompt", "action": "Crea un nuovo progetto Next.js chiamato '{{project_name}}' con: npx create-next-app@latest {{project_name}} --typescript --tailwind --eslint --app --src-dir --import-alias '@/*'. Poi entra nella directory e verifica che funzioni con npm run dev (fermalo subito dopo)."},
-            {"type": "prompt", "action": "Nel progetto {{project_name}}, configura TypeScript strict in tsconfig.json (strict: true, noUncheckedIndexedAccess: true). Aggiungi un .prettierrc con semi:false, singleQuote:true, tabWidth:2. Crea la struttura: src/components/, src/lib/, src/hooks/, src/types/. Poi fermati."}
-        ]
-    },
-    {
-        "id": "init-python-api",
-        "name": "Setup Python API (FastAPI)",
-        "description": "Crea un progetto FastAPI con struttura pulita, pytest e tipo hints",
-        "tags": ["python", "fastapi", "api"],
-        "variables": [
-            {"name": "project_name", "prompt": "Nome del progetto", "default": "my-api"}
-        ],
-        "steps": [
-            {"type": "prompt", "action": "Crea un progetto Python API chiamato '{{project_name}}' con questa struttura:\n{{project_name}}/\n  app/\n    __init__.py\n    main.py (FastAPI app con health check endpoint)\n    routers/ (__init__.py)\n    models/ (__init__.py)\n    services/ (__init__.py)\n  tests/\n    __init__.py\n    test_main.py (test base)\n  requirements.txt (fastapi, uvicorn, pytest, httpx)\n  .gitignore\n  README.md\nPoi fermati."}
-        ]
-    },
-    {
-        "id": "add-tests",
-        "name": "Aggiungi test al progetto",
-        "description": "Analizza il progetto e genera test per i file principali",
-        "tags": ["testing", "quality"],
-        "variables": [],
-        "steps": [
-            {"type": "prompt", "action": "Analizza il progetto corrente. Identifica i 3-5 file più importanti che non hanno test. Per ognuno, scrivi test completi usando il framework di test già presente nel progetto (o il più appropriato per lo stack). Metti i test nella directory test/tests convenzionale del progetto. Poi esegui i test e correggi eventuali errori. Fermati quando tutti i test passano."}
-        ]
-    },
-    {
-        "id": "js-to-ts",
-        "name": "Migra JavaScript → TypeScript",
-        "description": "Converti file .js/.jsx in .ts/.tsx con type safety",
-        "tags": ["typescript", "migration", "refactoring"],
-        "variables": [],
-        "steps": [
-            {"type": "prompt", "action": "Analizza il progetto. Se non c'è tsconfig.json, creane uno con strict:true. Elenca tutti i file .js e .jsx nella directory src/. Per ciascuno, convertilo in .ts/.tsx aggiungendo tipi appropriati (no 'any' dove evitabile). Rinomina i file. Poi verifica che il progetto compili senza errori con tsc --noEmit. Correggi errori fino a quando non compila. Fermati."}
-        ]
-    },
-    {
-        "id": "docker-setup",
-        "name": "Aggiungi Docker al progetto",
-        "description": "Genera Dockerfile e docker-compose.yml ottimizzati per lo stack rilevato",
-        "tags": ["docker", "devops", "deploy"],
-        "variables": [],
-        "steps": [
-            {"type": "prompt", "action": "Analizza lo stack del progetto corrente. Crea un Dockerfile ottimizzato (multi-stage build, layer caching, .dockerignore) e un docker-compose.yml appropriato. Se il progetto usa un database, aggiungi il servizio DB nel compose. Testa che docker build funzioni. Fermati."}
-        ]
-    },
-]
-
-for recipe in _BUILTIN_RECIPES:
-    rpath = os.path.join(_RECIPES_DIR, f"{recipe['id']}.json")
-    if not os.path.isfile(rpath):
-        try:
-            with open(rpath, "w", encoding="utf-8") as f:
-                json.dump(recipe, f, indent=2, ensure_ascii=False)
-        except Exception:
-            pass
 
 
 # ---------------------------------------------------------------------------
@@ -1938,61 +1291,76 @@ def call_ollama_streaming(model: str, messages: list, use_tools: bool = True):
 
 def call_ollama_pro_streaming(model: str, messages: list, use_tools: bool = True):
     """
-    Chiama Ollama via OpenAI-compatible API (/v1/chat/completions) in streaming.
-    Fornisce tool calling nativo tramite l'API OpenAI-compatible di Ollama.
+    Chiama Ollama via Messages API (/v1/messages) in streaming SSE.
+    Disponibile da Ollama v0.14+. Fornisce tool calling nativo senza fallback.
     Yield tuples: ("text", str) | ("tool_call", dict) | ("done", dict)
     """
-    # Converti messaggi nel formato OpenAI
-    oai_messages = []
+    # Convert messages to /v1/messages format
+    pro_messages = []
+    system_content = ""
     for msg in messages:
         role = msg.get("role", "")
         if role == "system":
-            oai_messages.append({"role": "system", "content": msg.get("content", "")})
+            system_content = msg.get("content", "")
+            continue
         elif role == "user":
-            oai_messages.append({"role": "user", "content": msg.get("content", "")})
+            pro_messages.append({"role": "user", "content": msg.get("content", "")})
         elif role == "assistant":
-            oai_msg = {"role": "assistant", "content": msg.get("content", "") or ""}
-            # Converti tool_calls se presenti
-            if msg.get("tool_calls"):
-                oai_msg["tool_calls"] = []
-                for i, tc in enumerate(msg["tool_calls"]):
-                    fn = tc.get("function", {})
-                    oai_msg["tool_calls"].append({
-                        "id": f"call_{i}_{int(time.time()*1000)}",
-                        "type": "function",
-                        "function": {
-                            "name": fn.get("name", ""),
-                            "arguments": json.dumps(fn.get("arguments", {}))
-                        }
-                    })
-            oai_messages.append(oai_msg)
+            content_blocks = []
+            text = msg.get("content", "")
+            if text:
+                content_blocks.append({"type": "text", "text": text})
+            # Add tool_use blocks if present
+            for tc in msg.get("tool_calls", []):
+                fn = tc.get("function", {})
+                content_blocks.append({
+                    "type": "tool_use",
+                    "id": f"toolu_{int(time.time()*1000)}_{fn.get('name','')}",
+                    "name": fn.get("name", ""),
+                    "input": fn.get("arguments", {})
+                })
+            if content_blocks:
+                pro_messages.append({"role": "assistant", "content": content_blocks})
         elif role == "tool":
-            oai_messages.append({
-                "role": "tool",
-                "content": msg.get("content", ""),
-                "tool_call_id": f"call_{int(time.time()*1000)}"
+            # Convert tool result to /v1/messages format
+            pro_messages.append({
+                "role": "user",
+                "content": [{
+                    "type": "tool_result",
+                    "tool_use_id": f"toolu_result_{int(time.time()*1000)}",
+                    "content": msg.get("content", "")
+                }]
             })
 
-    # Build OpenAI-format tools
-    oai_tools = []
+    # Build /v1/messages-format tools
+    pro_tools = []
     if use_tools:
-        oai_tools = TOOLS  # Già in formato OpenAI
+        for t in TOOLS:
+            fn = t.get("function", {})
+            pro_tools.append({
+                "name": fn.get("name", ""),
+                "description": fn.get("description", ""),
+                "input_schema": fn.get("parameters", {})
+            })
 
     payload = {
         "model": model,
-        "messages": oai_messages,
+        "max_tokens": 4096,
+        "messages": pro_messages,
         "stream": True,
     }
-    if oai_tools:
-        payload["tools"] = oai_tools
+    if system_content:
+        payload["system"] = system_content
+    if pro_tools:
+        payload["tools"] = pro_tools
 
     data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(
-        f"{OLLAMA_BASE}/v1/chat/completions",
+        f"{OLLAMA_BASE}/v1/messages",
         data=data,
         headers={
             "Content-Type": "application/json",
-            "Authorization": "Bearer ollama",  # Ollama accetta qualsiasi key
+            "anthropic-version": "2023-06-01",
         },
         method="POST"
     )
@@ -2000,8 +1368,9 @@ def call_ollama_pro_streaming(model: str, messages: list, use_tools: bool = True
     try:
         with urllib.request.urlopen(req, timeout=300) as resp:
             buffer = ""
-            # Accumula tool call in corso (OpenAI streaming li manda a pezzi)
-            active_tool_calls = {}  # index -> {"name": str, "arguments_json": str}
+            current_tool_name = ""
+            current_tool_id = ""
+            current_tool_json = ""
 
             for raw_chunk in iter(lambda: resp.read(4096), b""):
                 buffer += raw_chunk.decode("utf-8", errors="replace")
@@ -2013,20 +1382,12 @@ def call_ollama_pro_streaming(model: str, messages: list, use_tools: bool = True
                     if not line or line.startswith(":"):
                         continue
 
+                    if line.startswith("event:"):
+                        continue
+
                     if line.startswith("data: "):
                         json_str = line[6:]
                         if json_str.strip() == "[DONE]":
-                            # Emetti tutti i tool call accumulati
-                            for idx in sorted(active_tool_calls.keys()):
-                                tc = active_tool_calls[idx]
-                                try:
-                                    args = json.loads(tc["arguments_json"]) if tc["arguments_json"] else {}
-                                except json.JSONDecodeError:
-                                    args = {}
-                                yield ("tool_call", {
-                                    "name": tc["name"],
-                                    "arguments": args
-                                })
                             yield ("done", {})
                             return
 
@@ -2035,64 +1396,91 @@ def call_ollama_pro_streaming(model: str, messages: list, use_tools: bool = True
                         except json.JSONDecodeError:
                             continue
 
-                        choices = event.get("choices", [])
-                        if not choices:
-                            continue
-                        delta = choices[0].get("delta", {})
-                        finish = choices[0].get("finish_reason")
+                        event_type = event.get("type", "")
 
-                        # Testo
-                        content = delta.get("content")
-                        if content:
-                            yield ("text", content)
+                        if event_type == "content_block_start":
+                            block = event.get("content_block", {})
+                            if block.get("type") == "tool_use":
+                                current_tool_name = block.get("name", "")
+                                current_tool_id = block.get("id", "")
+                                current_tool_json = ""
 
-                        # Tool calls (streaming: arrivano a pezzi)
-                        for tc_delta in delta.get("tool_calls", []):
-                            idx = tc_delta.get("index", 0)
-                            if idx not in active_tool_calls:
-                                active_tool_calls[idx] = {"name": "", "arguments_json": ""}
-                            fn = tc_delta.get("function", {})
-                            if fn.get("name"):
-                                active_tool_calls[idx]["name"] = fn["name"]
-                            if fn.get("arguments"):
-                                active_tool_calls[idx]["arguments_json"] += fn["arguments"]
+                        elif event_type == "content_block_delta":
+                            delta = event.get("delta", {})
+                            delta_type = delta.get("type", "")
 
-                        # Fine (stop o tool_calls)
-                        if finish in ("stop", "tool_calls"):
-                            for idx in sorted(active_tool_calls.keys()):
-                                tc = active_tool_calls[idx]
+                            if delta_type == "text_delta":
+                                text = delta.get("text", "")
+                                if text:
+                                    yield ("text", text)
+
+                            elif delta_type == "input_json_delta":
+                                current_tool_json += delta.get("partial_json", "")
+
+                        elif event_type == "content_block_stop":
+                            if current_tool_name:
                                 try:
-                                    args = json.loads(tc["arguments_json"]) if tc["arguments_json"] else {}
+                                    args = json.loads(current_tool_json) if current_tool_json else {}
                                 except json.JSONDecodeError:
                                     args = {}
                                 yield ("tool_call", {
-                                    "name": tc["name"],
-                                    "arguments": args
+                                    "name": current_tool_name,
+                                    "arguments": args,
+                                    "id": current_tool_id
                                 })
-                            if finish == "stop" and not active_tool_calls:
+                                current_tool_name = ""
+                                current_tool_id = ""
+                                current_tool_json = ""
+
+                        elif event_type == "message_stop":
+                            yield ("done", {})
+                            return
+
+                    # Also handle NDJSON format (Ollama might use this instead of SSE)
+                    elif line.startswith("{"):
+                        try:
+                            event = json.loads(line)
+                            event_type = event.get("type", "")
+
+                            # Same handling as above for NDJSON
+                            if event_type == "content_block_start":
+                                block = event.get("content_block", {})
+                                if block.get("type") == "tool_use":
+                                    current_tool_name = block.get("name", "")
+                                    current_tool_id = block.get("id", "")
+                                    current_tool_json = ""
+                            elif event_type == "content_block_delta":
+                                delta = event.get("delta", {})
+                                if delta.get("type") == "text_delta":
+                                    text = delta.get("text", "")
+                                    if text:
+                                        yield ("text", text)
+                                elif delta.get("type") == "input_json_delta":
+                                    current_tool_json += delta.get("partial_json", "")
+                            elif event_type == "content_block_stop":
+                                if current_tool_name:
+                                    try:
+                                        args = json.loads(current_tool_json) if current_tool_json else {}
+                                    except json.JSONDecodeError:
+                                        args = {}
+                                    yield ("tool_call", {
+                                        "name": current_tool_name,
+                                        "arguments": args,
+                                        "id": current_tool_id
+                                    })
+                                    current_tool_name = ""
+                                    current_tool_id = ""
+                                    current_tool_json = ""
+                            elif event_type == "message_stop":
                                 yield ("done", {})
                                 return
-                            elif finish == "tool_calls":
-                                # Non emettere done — il loop agente continuerà
-                                return
-                            active_tool_calls = {}
-
-            # Fine stream senza [DONE] esplicito
-            for idx in sorted(active_tool_calls.keys()):
-                tc = active_tool_calls[idx]
-                try:
-                    args = json.loads(tc["arguments_json"]) if tc["arguments_json"] else {}
-                except json.JSONDecodeError:
-                    args = {}
-                yield ("tool_call", {
-                    "name": tc["name"],
-                    "arguments": args
-                })
-            yield ("done", {})
+                        except json.JSONDecodeError:
+                            continue
 
     except urllib.error.HTTPError as e:
         if e.code == 404:
-            yield ("text", "\n\n⚠️ Ollama Pro API non disponibile. Aggiorna Ollama o usa il motore 'ollama' nativo.")
+            # Ollama Pro API not available on this Ollama version
+            yield ("text", "\n\n⚠️ Ollama Pro non disponibile. Aggiorna Ollama a v0.14+ o usa il motore nativo.")
         else:
             yield ("text", f"\n\n❌ Errore Ollama Pro: {e.code} {e.reason}")
         yield ("done", {})
@@ -2126,9 +1514,7 @@ def call_claw_subprocess(model: str, messages: list, use_tools: bool = True):
     try:
         env = os.environ.copy()
         env["OPENAI_BASE_URL"] = f"{OLLAMA_BASE}/v1"
-        env["OPENAI_API_KEY"] = "ollama"  # Key fittizia — Ollama accetta qualsiasi valore
-        # Rimuovi chiavi Anthropic per forzare il path OpenAI-compat
-        env.pop("ANTHROPIC_API_KEY", None)
+        env.pop("OPENAI_API_KEY", None)  # Ollama non richiede API key
 
         proc = subprocess.Popen(
             [CLAW_BINARY, "--model", model, "--output-format", "json",
@@ -2181,50 +1567,8 @@ def call_claw_subprocess(model: str, messages: list, use_tools: bool = True):
 
 
 def _detect_best_engine():
-    """Auto-rileva il miglior motore disponibile."""
+    """Motore fisso: solo Ollama nativo (unico affidabile con tool calling)."""
     global ENGINE_MODE
-    if ENGINE_MODE != "auto":
-        return ENGINE_MODE
-
-    # 1. Try Ollama Pro via OpenAI-compatible /v1/chat/completions (tool calling nativo)
-    try:
-        test_req = urllib.request.Request(
-            f"{OLLAMA_BASE}/v1/chat/completions",
-            data=json.dumps({
-                "model": DEFAULT_MODEL,
-                "messages": [{"role": "user", "content": "test"}],
-                "max_tokens": 5,
-                "stream": False,
-            }).encode(),
-            headers={"Content-Type": "application/json", "Authorization": "Bearer ollama"},
-            method="POST"
-        )
-        with urllib.request.urlopen(test_req, timeout=10) as resp:
-            if resp.status == 200:
-                ENGINE_MODE = "ollama-pro"
-                return "ollama-pro"
-    except Exception:
-        pass
-
-    # 2. Fallback: native Ollama /api/chat (funziona sempre con tool calling)
-    try:
-        test_req2 = urllib.request.Request(
-            f"{OLLAMA_BASE}/api/tags",
-            method="GET"
-        )
-        with urllib.request.urlopen(test_req2, timeout=3) as resp:
-            if resp.status == 200:
-                ENGINE_MODE = "ollama"
-                return "ollama"
-    except Exception:
-        pass
-
-    # 3. Check claw binary (ultimo resort)
-    if os.path.isfile(CLAW_BINARY) and os.access(CLAW_BINARY, os.X_OK):
-        ENGINE_MODE = "claw"
-        return "claw"
-
-    # 4. Default: ollama anche senza verifica
     ENGINE_MODE = "ollama"
     return "ollama"
 
@@ -2236,6 +1580,8 @@ def get_active_engine():
         _active_engine = _detect_best_engine()
     return _active_engine
 
+
+import re as _re
 
 
 TOOL_NAMES = {t["function"]["name"] for t in TOOLS}
@@ -2292,6 +1638,7 @@ def _looks_like_final_response(text: str) -> bool:
         return True
 
     # Se c'è molto testo discorsivo rispetto ai blocchi JSON
+    # (il modello sta spiegando, non invocando tool)
     non_json_text = _re.sub(r'\{[^}]*\}', '', t)
     if len(non_json_text) > 200:
         return True
@@ -2330,16 +1677,9 @@ def run_agent_loop(model: str, messages: list, stream_callback):
     last_user_msg = ""
     for m in reversed(messages):
         if m.get("role") == "user":
-            last_user_msg = m.get("content", "")
+            last_user_msg = m.get("content", "")[:60]
             break
-    _create_snapshot((last_user_msg or "richiesta utente")[:60])
-
-    # Multi-Model: scegli il modello in base alla complessità del task
-    if MULTI_MODEL_ENABLED and last_user_msg:
-        routed_model = classify_task_complexity(last_user_msg)
-        if routed_model != model:
-            stream_callback("text", f"⚡ Smart routing → {routed_model}\n\n")
-            model = routed_model
+    _create_snapshot(last_user_msg or "richiesta utente")
 
     turns = 0
 
@@ -2473,14 +1813,6 @@ class AgentHandler(http.server.SimpleHTTPRequestHandler):
             self._handle_grant_workspace()
         elif self.path == "/api/revoke-workspace":
             self._handle_revoke_workspace()
-        elif self.path == "/api/execute-recipe":
-            self._handle_execute_recipe()
-        elif self.path == "/api/toggle-multi-model":
-            self._handle_toggle_multi_model()
-        elif self.path == "/api/regenerate-dna":
-            self._handle_regenerate_dna()
-        elif self.path == "/api/save-recipe":
-            self._handle_save_recipe()
         else:
             self.send_error(404, "Endpoint non trovato")
 
@@ -2527,12 +1859,6 @@ class AgentHandler(http.server.SimpleHTTPRequestHandler):
             self._handle_prompt_templates()
         elif path_component == "/api/granted-workspaces":
             self._handle_granted_workspaces()
-        elif path_component == "/api/project-dna":
-            self._handle_project_dna()
-        elif path_component == "/api/recipes":
-            self._handle_list_recipes()
-        elif path_component == "/api/multi-model-status":
-            self._handle_multi_model_status()
         else:
             super().do_GET()
 
@@ -3189,150 +2515,6 @@ class AgentHandler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(response.encode())
 
-    # --- Project DNA endpoints ---
-
-    def _handle_project_dna(self):
-        """Ritorna il DNA del progetto."""
-        dna = get_project_dna()
-        response = json.dumps(dna, ensure_ascii=False)
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.end_headers()
-        self.wfile.write(response.encode())
-
-    def _handle_regenerate_dna(self):
-        """Forza rigenerazione del DNA."""
-        dna_path = _get_dna_path(WORKSPACE_ROOT)
-        try:
-            if os.path.isfile(dna_path):
-                os.unlink(dna_path)
-        except Exception:
-            pass
-        dna = get_project_dna()
-        response = json.dumps({"success": True, "dna": dna}, ensure_ascii=False)
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.end_headers()
-        self.wfile.write(response.encode())
-
-    # --- Recipes endpoints ---
-
-    def _handle_list_recipes(self):
-        """Lista tutte le ricette disponibili."""
-        recipes = _load_recipes()
-        response = json.dumps({"recipes": recipes}, ensure_ascii=False)
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.end_headers()
-        self.wfile.write(response.encode())
-
-    def _handle_execute_recipe(self):
-        """Esegui una ricetta come prompt dell'agente."""
-        request = self._read_json_body()
-        if request is None:
-            return
-        recipe_id = request.get("recipe_id", "")
-        variables = request.get("variables", {})
-        recipe = _get_recipe(recipe_id)
-        if not recipe:
-            self.send_error(404, "Ricetta non trovata")
-            return
-        # Genera il prompt combinato da tutti gli step di tipo "prompt"
-        prompts = []
-        for i, step in enumerate(recipe.get("steps", [])):
-            action = step.get("action", "")
-            for key, val in variables.items():
-                action = action.replace(f"{{{{{key}}}}}", str(val))
-            if step.get("type", "prompt") == "prompt":
-                prompts.append(action)
-        combined_prompt = "\n\n".join(prompts)
-        response = json.dumps({
-            "success": True,
-            "prompt": combined_prompt,
-            "recipe_name": recipe.get("name", ""),
-        }, ensure_ascii=False)
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.end_headers()
-        self.wfile.write(response.encode())
-
-    def _handle_save_recipe(self):
-        """Salva una ricetta custom dell'utente."""
-        request = self._read_json_body()
-        if request is None:
-            return
-        name = request.get("name", "").strip()
-        if not name:
-            self.send_response(400)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.end_headers()
-            self.wfile.write(json.dumps({"success": False, "error": "Nome obbligatorio"}).encode())
-            return
-        # Genera ID dal nome
-        recipe_id = _re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-')
-        if not recipe_id:
-            recipe_id = f"custom-{int(time.time())}"
-        recipe = {
-            "id": recipe_id,
-            "name": name,
-            "description": request.get("description", name),
-            "tags": request.get("tags", []),
-            "variables": request.get("variables", []),
-            "steps": request.get("steps", []),
-        }
-        # Salva nella directory utente
-        os.makedirs(_USER_RECIPES_DIR, exist_ok=True)
-        rpath = os.path.join(_USER_RECIPES_DIR, f"{recipe_id}.json")
-        try:
-            with open(rpath, "w", encoding="utf-8") as f:
-                json.dump(recipe, f, indent=2, ensure_ascii=False)
-            response = json.dumps({"success": True, "id": recipe_id, "path": rpath}, ensure_ascii=False)
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.end_headers()
-            self.wfile.write(response.encode())
-        except Exception as e:
-            self.send_response(500)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.end_headers()
-            self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode())
-
-    # --- Multi-Model endpoints ---
-
-    def _handle_multi_model_status(self):
-        """Stato del multi-model orchestration."""
-        response = json.dumps({
-            "enabled": MULTI_MODEL_ENABLED,
-            "small_model": SMALL_MODEL,
-            "large_model": LARGE_MODEL,
-        })
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.end_headers()
-        self.wfile.write(response.encode())
-
-    def _handle_toggle_multi_model(self):
-        """Attiva/disattiva multi-model."""
-        global MULTI_MODEL_ENABLED
-        request = self._read_json_body()
-        if request is None:
-            return
-        MULTI_MODEL_ENABLED = bool(request.get("enabled", False))
-        response = json.dumps({"success": True, "enabled": MULTI_MODEL_ENABLED})
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.end_headers()
-        self.wfile.write(response.encode())
-
     def _proxy_to_ollama(self, path):
         try:
             req = urllib.request.Request(f"{OLLAMA_BASE}{path}")
@@ -3359,14 +2541,31 @@ class AgentHandler(http.server.SimpleHTTPRequestHandler):
 
         # Aggiungi system prompt se non presente
         if not messages or messages[0].get("role") != "system":
-            # Inietta Project DNA
-            dna = get_project_dna()
-            project_info = "\n\n" + format_dna_for_prompt(dna) if dna.get("stack") else ""
+            # Inietta contesto progetto
+            ctx = get_project_context()
+            project_info = ""
+            if ctx.get("stack"):
+                project_info += f"\n\nCONTESTO PROGETTO (auto-rilevato):\n"
+                project_info += f"- Stack: {', '.join(ctx['stack'])}\n"
+                if ctx.get("languages"):
+                    project_info += f"- Linguaggi: {', '.join(ctx['languages'])}\n"
+                if ctx.get("frameworks"):
+                    project_info += f"- Framework: {', '.join(ctx['frameworks'])}\n"
+                if ctx.get("package_manager"):
+                    project_info += f"- Package manager: {ctx['package_manager']}\n"
+                if ctx.get("has_git"):
+                    project_info += f"- Git: branch '{ctx.get('git_branch', '?')}'"
+                    if ctx.get("git_dirty"):
+                        project_info += f" ({ctx['git_dirty']} file modificati)"
+                    project_info += "\n"
+                if ctx.get("structure_summary"):
+                    project_info += f"- Struttura: {ctx['structure_summary']}\n"
+                project_info += "Usa queste informazioni per dare risposte coerenti con lo stack del progetto.\n"
 
             system_msg = {
                 "role": "system",
                 "content": (
-                    f"Sei Lobster Code, un agente di sviluppo AI locale.\n"
+                    f"Sei Lobster Code, un agente di sviluppo AI con accesso COMPLETO al computer dell'utente.\n"
                     f"Directory di lavoro: {WORKSPACE_ROOT}\n"
                     f"{project_info}\n"
                     f"HAI ACCESSO AI SEGUENTI TOOL — USALI SEMPRE:\n"
@@ -3398,6 +2597,7 @@ class AgentHandler(http.server.SimpleHTTPRequestHandler):
                     f"- NON aprire applicazioni esterne.\n"
                     f"- Fai SOLO quello che l'utente ha chiesto.\n\n"
                     f"MOTORE: {get_active_engine()}\n"
+                    f"Questa sessione utilizza il motore {get_active_engine()} di Lobster Code, basato sull'architettura Claw Code.\n\n"
                     f"Rispondi in italiano se l'utente scrive in italiano."
                 )
             }
@@ -3473,23 +2673,21 @@ def main():
 
     server = http.server.HTTPServer(("0.0.0.0", SERVER_PORT), handler)
     print(f"""
-🦞 Lobster Code Agent Server
+🦞 Lobster Code Agent Server — Powered by Claw Code
 ══════════════════════════════════════
   Server:     http://localhost:{SERVER_PORT}
   Ollama:     {OLLAMA_BASE}
-  Model:      {DEFAULT_MODEL}
+  Modello:    {DEFAULT_MODEL}
   Workspace:  {WORKSPACE_ROOT}
-  Engine:     {get_active_engine()} (auto-detect)
-  Permissions:{PERMISSION_MODE}
-  Multi-Model:{"✓ ON" if MULTI_MODEL_ENABLED else "✗ OFF"} (small: {SMALL_MODEL}, large: {LARGE_MODEL})
-  Claw bin:   {"✓ " + CLAW_BINARY if os.path.isfile(CLAW_BINARY) else "✗ not found"}
+  Motore:     {get_active_engine()} (auto-detect)
+  Permessi:   {PERMISSION_MODE}
+  Claw bin:   {"✓ " + CLAW_BINARY if os.path.isfile(CLAW_BINARY) else "✗ non trovato"}
 ══════════════════════════════════════
-  Tools: bash, read_file, write_file, edit_file,
-         list_directory, search_files, glob_search
-  Engines: ollama (native), ollama-pro (v0.14+), claw (Rust)
-  Features: Project DNA, Smart Routing, Workflow Recipes
+  Tool: bash, read_file, write_file, edit_file,
+        list_directory, search_files, glob_search
+  Motori: ollama (native), ollama-pro (v0.14+), claw (Rust)
 ══════════════════════════════════════
-  Press Ctrl+C to stop
+  Premi Ctrl+C per chiudere
 """)
 
     try:
