@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lobster Code — Agente AI per sviluppo, gratuito e open source</title>
+    <meta name="description" content="Lobster Code — agente AI locale e open source per sviluppo. Come Cursor e Claude Code, ma gratuito e privato. Powered by Ollama.">
+    <meta name="theme-color" content="#d63a28">
+    <meta property="og:title" content="Lobster Code — Agente AI per sviluppo, gratuito e open source">
+    <meta property="og:description" content="Come Cursor e Claude Code, ma locale e gratuito. Tre motori, zero cloud, zero costi. Powered by Ollama.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://github.com/SuperSapiensAi/LobsterCode">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Lobster Code — Agente AI per sviluppo">
+    <meta name="twitter:description" content="Come Cursor e Claude Code, ma locale e gratuito. Project DNA, Smart Routing, Workflow Recipes. Powered by Ollama.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦞</text></svg>">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --red: #d63a28;
+            --red-light: #e95a45;
+            --red-dark: #b52d1e;
+            --cream: #faf7f5;
+            --white: #ffffff;
+            --dark: #1c1214;
+            --text: #2a1a17;
+            --text-soft: #7a6560;
+            --text-dim: #b0a09a;
+            --border: #e8e0dc;
+            --ocean: #2a8fb5;
+            --coral: #e87554;
+            --sand: #c4a35a;
+            --green: #2e8b57;
+            --emerald: #10b981;
+            --amber: #f59e0b;
+            --purple: #8b5cf6;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--cream);
+            color: var(--text);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* NAV */
+        nav {
+            position: fixed; top: 0; width: 100%; z-index: 100;
+            padding: 16px 40px;
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(250, 247, 245, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            transition: box-shadow 0.3s;
+        }
+        nav.scrolled { box-shadow: 0 2px 20px rgba(0,0,0,0.06); }
+        .nav-brand {
+            display: flex; align-items: center; gap: 10px;
+            text-decoration: none; color: var(--text);
+        }
+        .nav-brand span { font-size: 28px; }
+        .nav-brand strong {
+            font-size: 18px; font-weight: 700;
+            background: linear-gradient(135deg, var(--red), var(--red-light));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .nav-links { display: flex; align-items: center; gap: 32px; }
+        .nav-links a {
+            text-decoration: none; color: var(--text-soft);
+            font-size: 14px; font-weight: 500; transition: color 0.2s;
+        }
+        .nav-links a:hover { color: var(--red); }
+        .nav-cta {
+            background: var(--red) !important; color: var(--white) !important;
+            padding: 8px 20px; border-radius: 8px; font-weight: 600 !important;
+            box-shadow: 0 2px 8px rgba(214,58,40,0.2); transition: all 0.2s !important;
+        }
+        .nav-cta:hover {
+            background: var(--red-dark) !important;
+            box-shadow: 0 4px 16px rgba(214,58,40,0.3) !important;
+            transform: translateY(-1px);
+        }
+
+        /* HERO */
+        .hero {
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            padding: 120px 40px 80px; position: relative; overflow: hidden;
+        }
+        .hero::before {
+            content: ''; position: absolute; top: -200px; right: -200px;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(214,58,40,0.06) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .hero::after {
+            content: ''; position: absolute; bottom: -150px; left: -150px;
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(42,143,181,0.05) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .hero-content { max-width: 840px; text-align: center; position: relative; z-index: 1; }
+        .hero-emoji {
+            font-size: 80px; display: block; margin-bottom: 24px;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 8px 32px rgba(214,58,40,0.15));
+        }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+        .hero h1 { font-size: 56px; font-weight: 800; line-height: 1.1; margin-bottom: 20px; letter-spacing: -1px; }
+        .hero h1 .highlight {
+            background: linear-gradient(135deg, var(--red), var(--coral));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .hero p { font-size: 20px; color: var(--text-soft); max-width: 640px; margin: 0 auto 16px; line-height: 1.7; }
+        .hero-badges { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            border-radius: 20px; padding: 6px 16px; font-size: 13px; font-weight: 500;
+        }
+        .hero-badge.open { background: rgba(46,139,87,0.08); border: 1px solid rgba(46,139,87,0.2); color: var(--green); }
+        .hero-badge.engine { background: rgba(214,58,40,0.08); border: 1px solid rgba(214,58,40,0.2); color: var(--red); }
+        .hero-badge.engine-list { background: rgba(42,143,181,0.08); border: 1px solid rgba(42,143,181,0.2); color: var(--ocean); }
+        .hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+        .btn {
+            padding: 14px 32px; border-radius: 12px; font-size: 16px; font-weight: 600;
+            text-decoration: none; transition: all 0.3s; cursor: pointer; border: none;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--red), var(--red-light)); color: var(--white);
+            box-shadow: 0 4px 20px rgba(214,58,40,0.3);
+        }
+        .btn-primary:hover { box-shadow: 0 8px 32px rgba(214,58,40,0.4); transform: translateY(-2px); }
+        .btn-secondary {
+            background: var(--white); color: var(--text);
+            border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .btn-secondary:hover { border-color: var(--red); color: var(--red); transform: translateY(-2px); }
+        .btn-github {
+            background: var(--dark); color: var(--white);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+        .btn-github:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.2); transform: translateY(-2px); }
+
+        /* INSTALL */
+        .install { padding: 60px 40px; max-width: 700px; margin: 0 auto; }
+        .install-box {
+            background: var(--dark); border-radius: 14px; padding: 24px 28px;
+            font-family: 'SF Mono', 'Fira Code', monospace; font-size: 14px;
+            color: #e0d5d0; position: relative; overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+        }
+        .install-box .comment { color: #5a4a44; }
+        .install-box .cmd { color: var(--coral); }
+        .install-box .flag { color: var(--ocean); }
+        .install-copy {
+            position: absolute; top: 16px; right: 16px;
+            background: rgba(255,255,255,0.1); border: none;
+            border-radius: 6px; padding: 6px 12px; color: #e0d5d0;
+            font-size: 12px; cursor: pointer; font-family: inherit;
+            transition: background 0.2s;
+        }
+        .install-copy:hover { background: rgba(255,255,255,0.2); }
+
+        /* ENGINES */
+        .engines { padding: 100px 40px; background: var(--white); }
+        .engines-inner { max-width: 1100px; margin: 0 auto; }
+        .engines-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; }
+        .engine-card {
+            background: var(--cream); border: 2px solid var(--border);
+            border-radius: 16px; padding: 32px; transition: all 0.3s;
+            position: relative;
+        }
+        .engine-card:hover {
+            border-color: transparent;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+            transform: translateY(-4px);
+        }
+        .engine-card.recommended { border-color: var(--red); }
+        .engine-card.recommended::after {
+            content: 'Consigliato'; position: absolute; top: -12px; right: 20px;
+            background: var(--red); color: white; font-size: 11px; font-weight: 600;
+            padding: 3px 12px; border-radius: 10px;
+        }
+        .engine-emoji { font-size: 36px; margin-bottom: 16px; display: block; }
+        .engine-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+        .engine-card .engine-sub { font-size: 13px; color: var(--text-dim); margin-bottom: 16px; }
+        .engine-card ul {
+            list-style: none; padding: 0;
+        }
+        .engine-card ul li {
+            font-size: 14px; color: var(--text-soft); padding: 4px 0;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .engine-card ul li::before { content: '✓'; color: var(--green); font-weight: 700; }
+
+        /* FEATURES */
+        .features { padding: 100px 40px; max-width: 1200px; margin: 0 auto; }
+        .section-label {
+            text-align: center; font-size: 13px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 2px;
+            color: var(--red); margin-bottom: 12px;
+        }
+        .section-title {
+            text-align: center; font-size: 40px; font-weight: 700;
+            margin-bottom: 16px; letter-spacing: -0.5px;
+        }
+        .section-desc {
+            text-align: center; font-size: 18px; color: var(--text-soft);
+            max-width: 640px; margin: 0 auto 60px;
+        }
+        .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .feature-card {
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: 16px; padding: 32px; transition: all 0.3s;
+        }
+        .feature-card:hover {
+            border-color: transparent;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+            transform: translateY(-4px);
+        }
+        .feature-icon {
+            width: 48px; height: 48px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; margin-bottom: 20px;
+        }
+        .feature-icon.red { background: rgba(214,58,40,0.1); }
+        .feature-icon.ocean { background: rgba(42,143,181,0.1); }
+        .feature-icon.coral { background: rgba(232,117,84,0.1); }
+        .feature-icon.sand { background: rgba(196,163,90,0.1); }
+        .feature-icon.green { background: rgba(46,139,87,0.1); }
+        .feature-icon.dark { background: rgba(42,26,23,0.08); }
+        .feature-icon.emerald { background: rgba(16,185,129,0.1); }
+        .feature-icon.amber { background: rgba(245,158,11,0.1); }
+        .feature-icon.purple { background: rgba(139,92,246,0.1); }
+        .feature-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+        .feature-card p { font-size: 14px; color: var(--text-soft); line-height: 1.6; }
+
+        /* DEMO */
+        .demo { padding: 80px 40px; background: var(--dark); color: var(--cream); }
+        .demo-inner { max-width: 1000px; margin: 0 auto; }
+        .demo .section-label { color: var(--coral); }
+        .demo .section-title { color: var(--cream); }
+        .demo .section-desc { color: rgba(240,230,227,0.6); }
+        .demo-window {
+            background: #0f0a0a; border: 1px solid #3a2822;
+            border-radius: 12px; overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+        .demo-titlebar {
+            display: flex; align-items: center; gap: 8px;
+            padding: 12px 16px; background: #1a1210; border-bottom: 1px solid #3a2822;
+        }
+        .demo-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .demo-dot.r { background: #ff5f57; }
+        .demo-dot.y { background: #febc2e; }
+        .demo-dot.g { background: #28c840; }
+        .demo-titlebar span { flex: 1; text-align: center; font-size: 12px; color: #7a6560; font-weight: 500; }
+        .demo-body {
+            padding: 24px; font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 14px; line-height: 1.8; min-height: 260px;
+        }
+        .demo-line { margin-bottom: 4px; opacity: 0; animation: typeLine 0.3s forwards; }
+        .demo-line:nth-child(1) { animation-delay: 0.3s; }
+        .demo-line:nth-child(2) { animation-delay: 0.8s; }
+        .demo-line:nth-child(3) { animation-delay: 1.3s; }
+        .demo-line:nth-child(4) { animation-delay: 1.8s; }
+        .demo-line:nth-child(5) { animation-delay: 2.3s; }
+        .demo-line:nth-child(6) { animation-delay: 2.8s; }
+        .demo-line:nth-child(7) { animation-delay: 3.3s; }
+        .demo-line:nth-child(8) { animation-delay: 3.8s; }
+        @keyframes typeLine { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        .demo-user { color: var(--coral); }
+        .demo-tool { color: var(--sand); }
+        .demo-result { color: #28c840; }
+        .demo-comment { color: #5a4a44; }
+        .demo-engine { color: var(--emerald); }
+        .demo-diff-add { color: #28c840; }
+        .demo-diff-del { color: #ff5f57; }
+
+        /* STACK */
+        .stack { padding: 100px 40px; max-width: 1000px; margin: 0 auto; }
+        .stack-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 48px; }
+        .stack-item {
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: 12px; padding: 24px; text-align: center; transition: all 0.2s;
+        }
+        .stack-item:hover { border-color: var(--red); box-shadow: 0 4px 16px rgba(214,58,40,0.08); }
+        .stack-item .icon { font-size: 32px; margin-bottom: 12px; }
+        .stack-item h4 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+        .stack-item p { font-size: 12px; color: var(--text-soft); }
+
+        /* MODELS */
+        .models { padding: 100px 40px; background: var(--white); }
+        .models-inner { max-width: 1100px; margin: 0 auto; }
+        .models-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 48px; }
+        .model-card {
+            display: flex; align-items: center; gap: 16px;
+            padding: 20px 24px; border-radius: 12px;
+            border: 1px solid var(--border); transition: all 0.2s;
+            background: var(--cream);
+        }
+        .model-card:hover { border-color: var(--red); transform: translateX(4px); }
+        .model-badge-icon {
+            width: 44px; height: 44px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; flex-shrink: 0;
+        }
+        .model-card-info { flex: 1; min-width: 0; }
+        .model-card-info h4 { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+        .model-card-info p { font-size: 12px; color: var(--text-soft); }
+        .model-card-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+        .model-tag {
+            font-size: 10px; font-weight: 600; padding: 2px 8px;
+            border-radius: 10px; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .model-tag.coding { background: rgba(46,139,87,0.1); color: var(--green); }
+        .model-tag.general { background: rgba(42,143,181,0.1); color: var(--ocean); }
+        .model-tag.fast { background: rgba(232,117,84,0.1); color: var(--coral); }
+        .model-tag.reasoning { background: rgba(196,163,90,0.1); color: var(--sand); }
+        .model-tag.tools { background: rgba(214,58,40,0.1); color: var(--red); }
+        .model-tag.multilingua { background: rgba(139,92,246,0.1); color: var(--purple); }
+        .model-tag.context { background: rgba(16,185,129,0.1); color: var(--emerald); }
+
+        /* USE CASES */
+        .usecases { padding: 100px 40px; max-width: 1100px; margin: 0 auto; }
+        .usecases-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-top: 48px; }
+        .usecase {
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: 16px; padding: 28px; transition: all 0.3s;
+            position: relative; overflow: hidden;
+        }
+        .usecase:hover { box-shadow: 0 12px 40px rgba(0,0,0,0.06); transform: translateY(-2px); }
+        .usecase-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .usecase-emoji { font-size: 28px; }
+        .usecase h3 { font-size: 17px; font-weight: 600; }
+        .usecase p { font-size: 14px; color: var(--text-soft); line-height: 1.6; margin-bottom: 12px; }
+        .usecase-example {
+            background: var(--dark); border-radius: 8px; padding: 12px 16px;
+            font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px;
+            color: var(--coral); line-height: 1.6;
+        }
+        .usecase-example .dim { color: #5a4a44; }
+
+        /* COMPARISON */
+        .comparison { padding: 100px 40px; max-width: 900px; margin: 0 auto; }
+        .comparison-table {
+            width: 100%; border-collapse: separate; border-spacing: 0;
+            margin-top: 48px; border-radius: 16px; overflow: hidden;
+            border: 1px solid var(--border); background: var(--white);
+        }
+        .comparison-table th, .comparison-table td {
+            padding: 14px 20px; text-align: left; font-size: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        .comparison-table th { background: var(--cream); font-weight: 600; font-size: 13px; }
+        .comparison-table td:first-child { font-weight: 500; }
+        .comparison-table tr:last-child td { border-bottom: none; }
+        .check { color: var(--green); font-weight: 700; }
+        .cross { color: var(--text-dim); }
+        .highlight-col { background: rgba(214,58,40,0.03); }
+
+        /* PHILOSOPHY */
+        .philosophy {
+            padding: 80px 40px; background: linear-gradient(135deg, var(--dark) 0%, #2a1a17 100%);
+            color: var(--cream); text-align: center;
+        }
+        .philosophy-inner { max-width: 700px; margin: 0 auto; }
+        .philosophy .section-label { color: var(--coral); }
+        .philosophy blockquote {
+            font-size: 24px; font-weight: 300; line-height: 1.7;
+            font-style: italic; margin: 24px 0;
+            color: rgba(240,230,227,0.85);
+        }
+        .philosophy .author { font-size: 14px; color: rgba(240,230,227,0.4); }
+
+        /* CTA */
+        .cta {
+            padding: 100px 40px; text-align: center;
+            background: linear-gradient(180deg, var(--cream) 0%, #f0ebe8 100%);
+        }
+        .cta h2 { font-size: 36px; font-weight: 700; margin-bottom: 16px; }
+        .cta p { font-size: 18px; color: var(--text-soft); max-width: 560px; margin: 0 auto 32px; }
+        .cta-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+        /* FOOTER */
+        footer {
+            padding: 48px 40px; background: var(--dark);
+            color: rgba(240,230,227,0.5); text-align: center;
+        }
+        footer .brand { font-size: 16px; font-weight: 600; color: var(--cream); margin-bottom: 8px; }
+        footer p { font-size: 13px; }
+        footer .links { display: flex; gap: 24px; justify-content: center; margin-top: 16px; }
+        footer .links a {
+            color: rgba(240,230,227,0.5); text-decoration: none;
+            font-size: 13px; transition: color 0.2s;
+        }
+        footer .links a:hover { color: var(--coral); }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 36px; }
+            .hero p { font-size: 16px; }
+            .features-grid, .engines-grid { grid-template-columns: 1fr; }
+            .stack-grid { grid-template-columns: repeat(2, 1fr); }
+            .models-grid, .usecases-grid { grid-template-columns: 1fr; }
+            nav { padding: 12px 20px; }
+            .nav-links a:not(.nav-cta) { display: none; }
+            .hero, .features, .stack, .cta, .engines, .comparison { padding-left: 20px; padding-right: 20px; }
+            .comparison-table { font-size: 12px; }
+            .comparison-table th, .comparison-table td { padding: 10px 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav id="nav">
+    <a href="#" class="nav-brand"><span>🦞</span><strong>Lobster Code</strong></a>
+    <div class="nav-links">
+        <a href="#engines">Motori</a>
+        <a href="#features">Funzionalit&agrave;</a>
+        <a href="#models">Modelli</a>
+        <a href="#comparison">Confronto</a>
+        <a href="https://github.com/SuperSapiensAi/LobsterCode" target="_blank" class="nav-cta">&#11015; Scarica</a>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-content">
+        <span class="hero-emoji">🦞</span>
+        <h1>Come Cursor e Claude Code<br><span class="highlight">ma locale e gratuito</span></h1>
+        <p>Un agente AI che scrive codice, gestisce file, usa git e automatizza il lavoro. Tre motori, zero cloud, zero costi. Il tuo codice resta sul tuo computer.</p>
+        <div class="hero-badges">
+            <div class="hero-badge open">&#10022; Open Source &mdash; MIT License</div>
+            <div class="hero-badge engine-list">&#9889; 3 Motori: Ollama &middot; Ollama Pro &middot; Claw Rust &mdash; tutti locali</div>
+        </div>
+        <div class="hero-actions">
+            <a href="https://github.com/SuperSapiensAi/LobsterCode" target="_blank" class="btn btn-github">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                Scarica da GitHub
+            </a>
+            <a href="#install" class="btn btn-primary">Installazione rapida &rarr;</a>
+            <a href="#engines" class="btn btn-secondary">Scopri i motori</a>
+        </div>
+    </div>
+</section>
+
+<!-- INSTALL -->
+<section class="install" id="install">
+    <div class="install-box">
+        <button class="install-copy" onclick="copyInstall()">Copia</button>
+        <div><span class="comment"># Clona il repository</span></div>
+        <div><span class="cmd">git clone</span> https://github.com/SuperSapiensAi/LobsterCode.git</div>
+        <div><span class="cmd">cd</span> LobsterCode/ui</div>
+        <br>
+        <div><span class="comment"># Installa Ollama (ollama.ai) e scarica un modello</span></div>
+        <div><span class="cmd">ollama pull</span> <span class="flag">qwen2.5-coder:14b</span></div>
+        <br>
+        <div><span class="comment"># Avvia Lobster Code (auto-detect del miglior motore)</span></div>
+        <div><span class="cmd">bash</span> start-agent.command</div>
+        <br>
+        <div><span class="comment"># [Opzionale] Compila il motore Claw per performance massime</span></div>
+        <div><span class="cmd">cd</span> ../rust &amp;&amp; <span class="cmd">cargo build</span> <span class="flag">--workspace</span></div>
+    </div>
+</section>
+
+<!-- ENGINES -->
+<section class="engines" id="engines">
+    <div class="engines-inner">
+        <div class="section-label">Architettura</div>
+        <h2 class="section-title">Tre motori, un'interfaccia</h2>
+        <p class="section-desc">Lobster Code auto-rileva il miglior motore disponibile. Puoi cambiarlo in qualsiasi momento dalla UI.</p>
+        <div class="engines-grid">
+            <div class="engine-card recommended">
+                <span class="engine-emoji">&#9889;</span>
+                <h3>Ollama Pro</h3>
+                <div class="engine-sub">100% locale &middot; Ollama v0.14+ &middot; protocollo avanzato</div>
+                <ul>
+                    <li>Tool calling nativo senza fallback</li>
+                    <li>Streaming SSE ad alta precisione</li>
+                    <li>Formato tool_use strutturato</li>
+                    <li>Zero parsing euristico</li>
+                    <li>Compatibile con tutti i modelli Ollama</li>
+                </ul>
+            </div>
+            <div class="engine-card">
+                <span class="engine-emoji">🦞</span>
+                <h3>Claw Engine</h3>
+                <div class="engine-sub">Binario Rust &middot; 48K+ LOC</div>
+                <ul>
+                    <li>Runtime nativo ad alte prestazioni</li>
+                    <li>Permission system a 3 livelli</li>
+                    <li>MCP Tool Bridge</li>
+                    <li>LSP Client integrato</li>
+                    <li>Plugin system ed estensioni</li>
+                </ul>
+            </div>
+            <div class="engine-card">
+                <span class="engine-emoji">🦙</span>
+                <h3>Ollama Nativo</h3>
+                <div class="engine-sub">Qualsiasi versione &middot; /api/chat</div>
+                <ul>
+                    <li>Compatibilit&agrave; universale</li>
+                    <li>Fallback intelligente per text tool calls</li>
+                    <li>Funziona con Ollama 0.1+</li>
+                    <li>Streaming NDJSON</li>
+                    <li>Setup zero configurazione</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+    <div class="section-label">Funzionalit&agrave;</div>
+    <h2 class="section-title">Non un chatbot. Un agente che lavora davvero.</h2>
+    <p class="section-desc">Scrive codice, esegue comandi, versiona, protegge i tuoi file e impara il tuo progetto.</p>
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon red">&#129516;</div>
+            <h3>Project DNA</h3>
+            <p>Scansiona il tuo progetto e ne costruisce un profilo persistente: stack, convenzioni, linter, test framework, struttura. L'agente scrive codice che rispetta il tuo stile.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon ocean">&#9889;</div>
+            <h3>Smart Routing</h3>
+            <p>Instrada automaticamente i task semplici su un modello veloce e quelli complessi su uno potente. Risparmi GPU e tempo senza perdere qualit&agrave;.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon coral">&#127859;</div>
+            <h3>Workflow Recipes</h3>
+            <p>Ricette pronte all'uso: Setup Next.js, FastAPI, Docker, migrazione JS&rarr;TS, test automatici. Un click per eseguire. Crea le tue ricette custom.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon green">&#128028;</div>
+            <h3>Git integrato</h3>
+            <p>Status, diff, commit e log direttamente dalla sidebar. Niente terminale, niente context switch.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon sand">&#9199;</div>
+            <h3>Snapshot &amp; Rollback</h3>
+            <p>Ogni azione crea uno snapshot automatico. Se qualcosa va storto, torni indietro con un click. Zero rischio.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon emerald">&#128274;</div>
+            <h3>Workspace Isolation</h3>
+            <p>L'agente accede solo alle cartelle che gli concedi tu. Tre livelli di permesso: read-only, workspace-write, full-access.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon dark">&#128736;</div>
+            <h3>7 Tool nativi</h3>
+            <p>bash, read_file, write_file, edit_file, list_directory, search_files, glob_search. Tutto il necessario per lavorare sul codice.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon purple">&#129504;</div>
+            <h3>Memoria persistente</h3>
+            <p>Il contesto delle conversazioni sopravvive alle sessioni. L'agente ricorda decisioni, scelte architetturali e preferenze.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon amber">&#128203;</div>
+            <h3>Diff Preview</h3>
+            <p>Ogni modifica mostra un diff riga per riga. Sai sempre cosa cambia, prima e dopo.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon red">&#128737;</div>
+            <h3>Sicurezza nativa</h3>
+            <p>Path di sistema protetti, comandi distruttivi bloccati, scritture atomiche. Non pu&ograve; rompere il tuo OS.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon ocean">&#128065;</div>
+            <h3>File Explorer</h3>
+            <p>Naviga i file del progetto dalla sidebar. Preview con syntax highlighting. Tutto senza uscire dalla UI.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon coral">&#128640;</div>
+            <h3>Zero dipendenze</h3>
+            <p>Un file Python, un file HTML. Niente npm, niente pip, niente Docker. python3 agent_server.py e sei operativo.</p>
+        </div>
+    </div>
+</section>
+
+<!-- DEMO -->
+<section class="demo" id="demo">
+    <div class="demo-inner">
+        <div class="section-label">In azione</div>
+        <h2 class="section-title">Guarda come lavora</h2>
+        <p class="section-desc">Agent loop reale con tool calling, diff preview e snapshot automatico.</p>
+        <div class="demo-window">
+            <div class="demo-titlebar">
+                <div class="demo-dot r"></div>
+                <div class="demo-dot y"></div>
+                <div class="demo-dot g"></div>
+                <span>Lobster Code &mdash; &#9889; Ollama Pro &middot; qwen2.5-coder:14b</span>
+            </div>
+            <div class="demo-body">
+                <div class="demo-line demo-engine">&#128640; Motore: Ollama Pro (auto-detect) &middot; Permessi: workspace-write</div>
+                <div class="demo-line demo-user">&#128100;  Crea un componente React counter con TypeScript e test</div>
+                <div class="demo-line demo-comment">   # L'agente rileva: React + TypeScript + Jest</div>
+                <div class="demo-line demo-tool">&#128295;  bash &rarr; mkdir -p src/components</div>
+                <div class="demo-line demo-tool">&#128295;  write_file &rarr; src/components/Counter.tsx (38 righe)</div>
+                <div class="demo-line demo-diff-add">   + export const Counter: React.FC = () =&gt; { ... }</div>
+                <div class="demo-line demo-tool">&#128295;  write_file &rarr; src/components/Counter.test.tsx</div>
+                <div class="demo-line demo-result">&#9989;  Componente creato! Snapshot salvato (3 file) &middot; Rollback disponibile</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- STACK -->
+<section class="stack" id="stack">
+    <div class="section-label">Architettura</div>
+    <h2 class="section-title">Zero dipendenze, massima potenza</h2>
+    <p class="section-desc">Web UI in vanilla JS, backend Python stdlib, motore Rust opzionale.</p>
+    <div class="stack-grid">
+        <div class="stack-item">
+            <div class="icon">&#128013;</div>
+            <h4>Python</h4>
+            <p>Backend puro stdlib, zero pip install</p>
+        </div>
+        <div class="stack-item">
+            <div class="icon">&#129438;</div>
+            <h4>Ollama</h4>
+            <p>LLM locali con 2 protocolli nativi</p>
+        </div>
+        <div class="stack-item">
+            <div class="icon">&#127760;</div>
+            <h4>Vanilla JS</h4>
+            <p>Frontend senza framework, SSE nativo</p>
+        </div>
+        <div class="stack-item">
+            <div class="icon">&#129408;</div>
+            <h4>Claw (Rust)</h4>
+            <p>48K+ LOC, MCP, LSP, plugin system</p>
+        </div>
+    </div>
+</section>
+
+<!-- MODELS -->
+<section class="models" id="models">
+    <div class="models-inner">
+        <div class="section-label">Modelli supportati</div>
+        <h2 class="section-title">Scegli il cervello che preferisci</h2>
+        <p class="section-desc">Funziona con qualsiasi modello Ollama. Il wizard suggerisce il migliore per la tua RAM.</p>
+
+        <div class="models-grid">
+            <div class="model-card">
+                <div class="model-badge-icon" style="background:rgba(46,139,87,0.1);">&#127942;</div>
+                <div class="model-card-info">
+                    <h4>Qwen 2.5 Coder 14B</h4>
+                    <p>Il migliore per coding. Tool calling nativo, veloce e preciso.</p>
+                </div>
+                <div class="model-card-tags">
+                    <span class="model-tag coding">Coding</span>
+                    <span class="model-tag tools">Tools</span>
+                </div>
+            </div>
+            <div class="model-card">
+                <div class="model-badge-icon" style="background:rgba(139,92,246,0.1);">&#128142;</div>
+                <div class="model-card-info">
+                    <h4>Gemma 4 12B</h4>
+                    <p>Di Google. Multilingua eccellente, tool calling nativo, 128K contesto.</p>
+                </div>
+                <div class="model-card-tags">
+                    <span class="model-tag general">Generale</span>
+                    <span class="model-tag tools">Tools</span>
+                    <span class="model-tag context">128K</span>
+                </div>
+            </div>
+            <div class="model-card">
+                <div class="model-badge-icon" style="background:rgba(42,143,181,0.1);">&#129482;</div>
+                <div class="model-card-info">
+                    <h4>DeepSeek Coder V2</h4>
+                    <p>Eccellente per refactoring e debug. Ragionamento profondo.</p>
+                </div>
+                <div class="model-card-tags">
+                    <span class="model-tag coding">Coding</span>
+                    <span class="model-tag reasoning">Ragionamento</span>
+                </div>
+            </div>
+            <div class="model-card">
+                <div class="model-badge-icon" style="background:rgba(196,163,90,0.1);">&#127754;</div>
+                <div class="model-card-info">
+                    <h4>Mistral 7B</h4>
+                    <p>Versatile e veloce. Tool calling nativo, ottimo bilanciamento.</p>
+                </div>
+                <div class="model-card-tags">
+                    <span class="model-tag general">Generale</span>
+                    <span class="model-tag tools">Tools</span>
+                    <span class="model-tag fast">Veloce</span>
+                </div>
+            </div>
+            <div class="model-card">
+                <div class="model-badge-icon" style="background:rgba(232,117,84,0.1);">&#129433;</div>
+                <div class="model-card-info">
+                    <h4>Code Llama 13B</h4>
+                    <p>Di Meta, specializzato nel coding. Veloce e affidabile.</p>
+                </div>
+                <div class="model-card-tags">
+                    <span class="model-tag coding">Coding</span>
+                    <span class="model-tag fast">Veloce</span>
+                </div>
+            </div>
+            <div class="model-card">
+                <div class="model-badge-icon" style="background:rgba(46,139,87,0.1);">&#128302;</div>
+                <div class="model-card-info">
+                    <h4>Codestral 22B</h4>
+                    <p>Di Mistral AI, specializzato coding. 80+ linguaggi supportati.</p>
+                </div>
+                <div class="model-card-tags">
+                    <span class="model-tag coding">Coding</span>
+                    <span class="model-tag tools">Tools</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- COMPARISON -->
+<section class="comparison" id="comparison">
+    <div class="section-label">Confronto</div>
+    <h2 class="section-title">Lobster Code vs. altri tool</h2>
+    <p class="section-desc">Cosa ottieni scegliendo un agente locale, gratuito e open source.</p>
+    <table class="comparison-table">
+        <thead>
+            <tr>
+                <th></th>
+                <th class="highlight-col">&#129438; Lobster Code</th>
+                <th>Cursor</th>
+                <th>Claude Code</th>
+                <th>Ollama Chat</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Costo</td>
+                <td class="highlight-col"><span class="check">Gratis</span></td>
+                <td>$20/mese</td>
+                <td>Pay-per-use</td>
+                <td><span class="check">Gratis</span></td>
+            </tr>
+            <tr>
+                <td>Privacy (locale)</td>
+                <td class="highlight-col"><span class="check">&#10003;</span></td>
+                <td><span class="cross">&#10007;</span></td>
+                <td><span class="cross">&#10007;</span></td>
+                <td><span class="check">&#10003;</span></td>
+            </tr>
+            <tr>
+                <td>Agent loop con tool</td>
+                <td class="highlight-col"><span class="check">&#10003;</span></td>
+                <td><span class="check">&#10003;</span></td>
+                <td><span class="check">&#10003;</span></td>
+                <td><span class="cross">&#10007;</span></td>
+            </tr>
+            <tr>
+                <td>Web UI</td>
+                <td class="highlight-col"><span class="check">&#10003;</span></td>
+                <td>IDE</td>
+                <td>CLI</td>
+                <td><span class="check">&#10003;</span></td>
+            </tr>
+            <tr>
+                <td>Git integrato</td>
+                <td class="highlight-col"><span class="check">&#10003;</span></td>
+                <td><span class="check">&#10003;</span></td>
+                <td><span class="check">&#10003;</span></td>
+                <td><span class="cross">&#10007;</span></td>
+            </tr>
+            <tr>
+                <td>Snapshot &amp; Rollback</td>
+                <td class="highlight-col"><span class="check">&#10003;</span></td>
+                <td><span class="cross">&#10007;</span></td>
+                <td><span class="cross">&#10007;</span></td>
+                <td><span class="cross">&#10007;</span></td>
+            </tr>
+            <tr>
+                <td>Permission system</td>
+                <td class="highlight-col"><span class="check">&#10003;</span></td>
+                <td><span class="cross">&#10007;</span></td>
+                <td><span class="check">&#10003;</span></td>
+                <td><span class="cross">&#10007;</span></td>
+            </tr>
+            <tr>
+                <td>Open source</td>
+                <td class="highlight-col"><span class="check">MIT</span></td>
+                <td><span class="cross">&#10007;</span></td>
+                <td><span class="cross">&#10007;</span></td>
+                <td><span class="check">&#10003;</span></td>
+            </tr>
+            <tr>
+                <td>Multi-engine</td>
+                <td class="highlight-col"><span class="check">3 motori</span></td>
+                <td><span class="cross">&#10007;</span></td>
+                <td><span class="cross">&#10007;</span></td>
+                <td><span class="cross">&#10007;</span></td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+
+<!-- USE CASES -->
+<section class="usecases" id="usecases">
+    <div class="section-label">Come usarlo</div>
+    <h2 class="section-title">Dalla riga di comando al progetto completo</h2>
+    <p class="section-desc">Non &egrave; un chatbot. &Egrave; un collega che esegue, versiona e protegge il tuo lavoro.</p>
+
+    <div class="usecases-grid">
+        <div class="usecase">
+            <div class="usecase-head">
+                <span class="usecase-emoji">&#127959;</span>
+                <h3>Scaffolding progetti</h3>
+            </div>
+            <p>Crea strutture complete con context-awareness. L'agente rileva lo stack e adatta le sue azioni.</p>
+            <div class="usecase-example">
+                <span class="dim">&rarr;</span> "Crea un'API REST in FastAPI con auth JWT e test pytest"
+            </div>
+        </div>
+        <div class="usecase">
+            <div class="usecase-head">
+                <span class="usecase-emoji">&#128027;</span>
+                <h3>Debug e fix</h3>
+            </div>
+            <p>Legge il codice, trova il bug, lo corregge con diff preview e crea uno snapshot per rollback.</p>
+            <div class="usecase-example">
+                <span class="dim">&rarr;</span> "Il login non funziona, controlla auth.py e fixalo"
+            </div>
+        </div>
+        <div class="usecase">
+            <div class="usecase-head">
+                <span class="usecase-emoji">&#128194;</span>
+                <h3>Refactoring sicuro</h3>
+            </div>
+            <p>Snapshot automatico prima di ogni modifica. Se non ti piace il risultato, rollback con un click.</p>
+            <div class="usecase-example">
+                <span class="dim">&rarr;</span> "Refactora utils/ separando le funzioni per dominio"
+            </div>
+        </div>
+        <div class="usecase">
+            <div class="usecase-head">
+                <span class="usecase-emoji">&#128200;</span>
+                <h3>Analisi dati</h3>
+            </div>
+            <p>Elabora CSV, genera grafici, calcola statistiche. Tutto locale, i tuoi dati restano tuoi.</p>
+            <div class="usecase-example">
+                <span class="dim">&rarr;</span> "Analizza vendite.csv, mostra trend mensile e top 5 prodotti"
+            </div>
+        </div>
+        <div class="usecase">
+            <div class="usecase-head">
+                <span class="usecase-emoji">&#128028;</span>
+                <h3>Git workflow</h3>
+            </div>
+            <p>Commit, branch, log dalla UI. Genera changelog automatici analizzando i commit recenti.</p>
+            <div class="usecase-example">
+                <span class="dim">&rarr;</span> "Genera un changelog dal branch develop e committalo"
+            </div>
+        </div>
+        <div class="usecase">
+            <div class="usecase-head">
+                <span class="usecase-emoji">&#127912;</span>
+                <h3>Frontend da zero</h3>
+            </div>
+            <p>HTML, CSS, JS &mdash; componenti, animazioni, responsive. Vede il diff di ogni file che tocca.</p>
+            <div class="usecase-example">
+                <span class="dim">&rarr;</span> "Crea una landing page per il mio portfolio con dark mode"
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- PHILOSOPHY -->
+<section class="philosophy">
+    <div class="philosophy-inner">
+        <div class="section-label">La filosofia</div>
+        <blockquote>"Il miglior tool &egrave; quello che non ti chiede mai di uscire dal tuo flusso. Lobster Code vive dove lavori tu &mdash; nei tuoi file, con i tuoi dati, con tre motori sotto il cofano. Nessun cloud che ti spia, nessun abbonamento che ti frena."</blockquote>
+        <p class="author">&mdash; Il team di Lobster Code</p>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+    <h2>Pronto per iniziare?</h2>
+    <p>Lobster Code &egrave; gratuito, open source e pronto in 2 minuti. Tre motori, zero configurazione, nessun account richiesto.</p>
+    <div class="cta-actions">
+        <a href="https://github.com/SuperSapiensAi/LobsterCode" target="_blank" class="btn btn-github">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            Scarica da GitHub
+        </a>
+        <a href="#install" class="btn btn-primary">Guida installazione &rarr;</a>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <div class="brand">&#129438; Lobster Code</div>
+    <p>Agente di sviluppo AI &mdash; locale, privato, open source.</p>
+    <div class="links">
+        <a href="#features">Funzionalit&agrave;</a>
+        <a href="#engines">Motori</a>
+        <a href="#comparison">Confronto</a>
+        <a href="https://github.com/SuperSapiensAi/LobsterCode" target="_blank">GitHub</a>
+        <a href="https://github.com/SuperSapiensAi/LobsterCode/issues" target="_blank">Segnala bug</a>
+    </div>
+</footer>
+
+<script>
+    window.addEventListener('scroll', () => {
+        document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 20);
+    });
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+        a.addEventListener('click', e => {
+            e.preventDefault();
+            const t = document.querySelector(a.getAttribute('href'));
+            if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    });
+    function copyInstall() {
+        const text = 'git clone https://github.com/SuperSapiensAi/LobsterCode.git\ncd LobsterCode/ui\nollama pull qwen2.5-coder:14b\nbash start-agent.command';
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.querySelector('.install-copy');
+            btn.textContent = 'Copiato!';
+            setTimeout(() => btn.textContent = 'Copia', 2000);
+        });
+    }
+</script>
+</body>
+</html>
