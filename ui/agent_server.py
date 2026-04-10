@@ -390,11 +390,15 @@ def _compute_project_fingerprint(workspace: str) -> str:
                 sig_parts.append(f"{kf}:{p.stat().st_mtime}")
             except Exception:
                 pass
-    # Conta file per estensione (struttura)
+    # Conta file per estensione (struttura) — max 2000 file per sicurezza
     ext_counts = {}
     try:
+        count = 0
         for item in ws.rglob("*"):
-            if item.is_file() and not any(part.startswith(".") for part in item.parts):
+            count += 1
+            if count > 2000:
+                break  # Safety: non scansionare troppi file
+            if item.is_file() and not any(part.startswith(".") or part in ("node_modules", "__pycache__", "target", "dist", "build", ".next", "venv") for part in item.parts):
                 ext = item.suffix.lower()
                 if ext:
                     ext_counts[ext] = ext_counts.get(ext, 0) + 1
@@ -598,7 +602,11 @@ def _scan_project_structure(workspace: str) -> dict:
     ]
 
     try:
+        scan_count = 0
         for item in ws.rglob("*"):
+            scan_count += 1
+            if scan_count > 5000:
+                break  # Safety: non scansionare troppi file
             # Skip hidden dirs e node_modules
             parts = item.relative_to(ws).parts
             if any(p.startswith(".") or p in ("node_modules", "__pycache__", "target", "dist", "build", ".next", "venv") for p in parts):
@@ -680,6 +688,12 @@ def get_project_dna(workspace: str = None) -> dict:
     Altrimenti rigenera e salva.
     """
     ws = workspace or WORKSPACE_ROOT
+
+    # Safety: NON scansionare la home directory o root — troppo grande
+    home = os.path.expanduser("~")
+    if ws in (home, "/", home + "/"):
+        return {}  # Nessun DNA per workspace troppo grandi
+
     dna_path = _get_dna_path(ws)
     current_fingerprint = _compute_project_fingerprint(ws)
 
@@ -1924,76 +1938,61 @@ def call_ollama_streaming(model: str, messages: list, use_tools: bool = True):
 
 def call_ollama_pro_streaming(model: str, messages: list, use_tools: bool = True):
     """
-    Chiama Ollama via Messages API (/v1/messages) in streaming SSE.
-    Disponibile da Ollama v0.14+. Fornisce tool calling nativo senza fallback.
+    Chiama Ollama via OpenAI-compatible API (/v1/chat/completions) in streaming.
+    Fornisce tool calling nativo tramite l'API OpenAI-compatible di Ollama.
     Yield tuples: ("text", str) | ("tool_call", dict) | ("done", dict)
     """
-    # Convert messages to /v1/messages format
-    pro_messages = []
-    system_content = ""
+    # Converti messaggi nel formato OpenAI
+    oai_messages = []
     for msg in messages:
         role = msg.get("role", "")
         if role == "system":
-            system_content = msg.get("content", "")
-            continue
+            oai_messages.append({"role": "system", "content": msg.get("content", "")})
         elif role == "user":
-            pro_messages.append({"role": "user", "content": msg.get("content", "")})
+            oai_messages.append({"role": "user", "content": msg.get("content", "")})
         elif role == "assistant":
-            content_blocks = []
-            text = msg.get("content", "")
-            if text:
-                content_blocks.append({"type": "text", "text": text})
-            # Add tool_use blocks if present
-            for tc in msg.get("tool_calls", []):
-                fn = tc.get("function", {})
-                content_blocks.append({
-                    "type": "tool_use",
-                    "id": f"toolu_{int(time.time()*1000)}_{fn.get('name','')}",
-                    "name": fn.get("name", ""),
-                    "input": fn.get("arguments", {})
-                })
-            if content_blocks:
-                pro_messages.append({"role": "assistant", "content": content_blocks})
+            oai_msg = {"role": "assistant", "content": msg.get("content", "") or ""}
+            # Converti tool_calls se presenti
+            if msg.get("tool_calls"):
+                oai_msg["tool_calls"] = []
+                for i, tc in enumerate(msg["tool_calls"]):
+                    fn = tc.get("function", {})
+                    oai_msg["tool_calls"].append({
+                        "id": f"call_{i}_{int(time.time()*1000)}",
+                        "type": "function",
+                        "function": {
+                            "name": fn.get("name", ""),
+                            "arguments": json.dumps(fn.get("arguments", {}))
+                        }
+                    })
+            oai_messages.append(oai_msg)
         elif role == "tool":
-            # Convert tool result to /v1/messages format
-            pro_messages.append({
-                "role": "user",
-                "content": [{
-                    "type": "tool_result",
-                    "tool_use_id": f"toolu_result_{int(time.time()*1000)}",
-                    "content": msg.get("content", "")
-                }]
+            oai_messages.append({
+                "role": "tool",
+                "content": msg.get("content", ""),
+                "tool_call_id": f"call_{int(time.time()*1000)}"
             })
 
-    # Build /v1/messages-format tools
-    pro_tools = []
+    # Build OpenAI-format tools
+    oai_tools = []
     if use_tools:
-        for t in TOOLS:
-            fn = t.get("function", {})
-            pro_tools.append({
-                "name": fn.get("name", ""),
-                "description": fn.get("description", ""),
-                "input_schema": fn.get("parameters", {})
-            })
+        oai_tools = TOOLS  # Già in formato OpenAI
 
     payload = {
         "model": model,
-        "max_tokens": 4096,
-        "messages": pro_messages,
+        "messages": oai_messages,
         "stream": True,
     }
-    if system_content:
-        payload["system"] = system_content
-    if pro_tools:
-        payload["tools"] = pro_tools
+    if oai_tools:
+        payload["tools"] = oai_tools
 
     data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(
-        f"{OLLAMA_BASE}/v1/messages",
+        f"{OLLAMA_BASE}/v1/chat/completions",
         data=data,
         headers={
             "Content-Type": "application/json",
-            "anthropic-version": "2023-06-01",
+            "Authorization": "Bearer ollama",  # Ollama accetta qualsiasi key
         },
         method="POST"
     )
@@ -2001,9 +2000,8 @@ def call_ollama_pro_streaming(model: str, messages: list, use_tools: bool = True
     try:
         with urllib.request.urlopen(req, timeout=300) as resp:
             buffer = ""
-            current_tool_name = ""
-            current_tool_id = ""
-            current_tool_json = ""
+            # Accumula tool call in corso (OpenAI streaming li manda a pezzi)
+            active_tool_calls = {}  # index -> {"name": str, "arguments_json": str}
 
             for raw_chunk in iter(lambda: resp.read(4096), b""):
                 buffer += raw_chunk.decode("utf-8", errors="replace")
@@ -2015,12 +2013,20 @@ def call_ollama_pro_streaming(model: str, messages: list, use_tools: bool = True
                     if not line or line.startswith(":"):
                         continue
 
-                    if line.startswith("event:"):
-                        continue
-
                     if line.startswith("data: "):
                         json_str = line[6:]
                         if json_str.strip() == "[DONE]":
+                            # Emetti tutti i tool call accumulati
+                            for idx in sorted(active_tool_calls.keys()):
+                                tc = active_tool_calls[idx]
+                                try:
+                                    args = json.loads(tc["arguments_json"]) if tc["arguments_json"] else {}
+                                except json.JSONDecodeError:
+                                    args = {}
+                                yield ("tool_call", {
+                                    "name": tc["name"],
+                                    "arguments": args
+                                })
                             yield ("done", {})
                             return
 
@@ -2029,91 +2035,64 @@ def call_ollama_pro_streaming(model: str, messages: list, use_tools: bool = True
                         except json.JSONDecodeError:
                             continue
 
-                        event_type = event.get("type", "")
+                        choices = event.get("choices", [])
+                        if not choices:
+                            continue
+                        delta = choices[0].get("delta", {})
+                        finish = choices[0].get("finish_reason")
 
-                        if event_type == "content_block_start":
-                            block = event.get("content_block", {})
-                            if block.get("type") == "tool_use":
-                                current_tool_name = block.get("name", "")
-                                current_tool_id = block.get("id", "")
-                                current_tool_json = ""
+                        # Testo
+                        content = delta.get("content")
+                        if content:
+                            yield ("text", content)
 
-                        elif event_type == "content_block_delta":
-                            delta = event.get("delta", {})
-                            delta_type = delta.get("type", "")
+                        # Tool calls (streaming: arrivano a pezzi)
+                        for tc_delta in delta.get("tool_calls", []):
+                            idx = tc_delta.get("index", 0)
+                            if idx not in active_tool_calls:
+                                active_tool_calls[idx] = {"name": "", "arguments_json": ""}
+                            fn = tc_delta.get("function", {})
+                            if fn.get("name"):
+                                active_tool_calls[idx]["name"] = fn["name"]
+                            if fn.get("arguments"):
+                                active_tool_calls[idx]["arguments_json"] += fn["arguments"]
 
-                            if delta_type == "text_delta":
-                                text = delta.get("text", "")
-                                if text:
-                                    yield ("text", text)
-
-                            elif delta_type == "input_json_delta":
-                                current_tool_json += delta.get("partial_json", "")
-
-                        elif event_type == "content_block_stop":
-                            if current_tool_name:
+                        # Fine (stop o tool_calls)
+                        if finish in ("stop", "tool_calls"):
+                            for idx in sorted(active_tool_calls.keys()):
+                                tc = active_tool_calls[idx]
                                 try:
-                                    args = json.loads(current_tool_json) if current_tool_json else {}
+                                    args = json.loads(tc["arguments_json"]) if tc["arguments_json"] else {}
                                 except json.JSONDecodeError:
                                     args = {}
                                 yield ("tool_call", {
-                                    "name": current_tool_name,
-                                    "arguments": args,
-                                    "id": current_tool_id
+                                    "name": tc["name"],
+                                    "arguments": args
                                 })
-                                current_tool_name = ""
-                                current_tool_id = ""
-                                current_tool_json = ""
-
-                        elif event_type == "message_stop":
-                            yield ("done", {})
-                            return
-
-                    # Also handle NDJSON format (Ollama might use this instead of SSE)
-                    elif line.startswith("{"):
-                        try:
-                            event = json.loads(line)
-                            event_type = event.get("type", "")
-
-                            # Same handling as above for NDJSON
-                            if event_type == "content_block_start":
-                                block = event.get("content_block", {})
-                                if block.get("type") == "tool_use":
-                                    current_tool_name = block.get("name", "")
-                                    current_tool_id = block.get("id", "")
-                                    current_tool_json = ""
-                            elif event_type == "content_block_delta":
-                                delta = event.get("delta", {})
-                                if delta.get("type") == "text_delta":
-                                    text = delta.get("text", "")
-                                    if text:
-                                        yield ("text", text)
-                                elif delta.get("type") == "input_json_delta":
-                                    current_tool_json += delta.get("partial_json", "")
-                            elif event_type == "content_block_stop":
-                                if current_tool_name:
-                                    try:
-                                        args = json.loads(current_tool_json) if current_tool_json else {}
-                                    except json.JSONDecodeError:
-                                        args = {}
-                                    yield ("tool_call", {
-                                        "name": current_tool_name,
-                                        "arguments": args,
-                                        "id": current_tool_id
-                                    })
-                                    current_tool_name = ""
-                                    current_tool_id = ""
-                                    current_tool_json = ""
-                            elif event_type == "message_stop":
+                            if finish == "stop" and not active_tool_calls:
                                 yield ("done", {})
                                 return
-                        except json.JSONDecodeError:
-                            continue
+                            elif finish == "tool_calls":
+                                # Non emettere done — il loop agente continuerà
+                                return
+                            active_tool_calls = {}
+
+            # Fine stream senza [DONE] esplicito
+            for idx in sorted(active_tool_calls.keys()):
+                tc = active_tool_calls[idx]
+                try:
+                    args = json.loads(tc["arguments_json"]) if tc["arguments_json"] else {}
+                except json.JSONDecodeError:
+                    args = {}
+                yield ("tool_call", {
+                    "name": tc["name"],
+                    "arguments": args
+                })
+            yield ("done", {})
 
     except urllib.error.HTTPError as e:
         if e.code == 404:
-            # Ollama Pro API not available on this Ollama version
-            yield ("text", "\n\n⚠️ Ollama Pro non disponibile. Aggiorna Ollama a v0.14+ o usa il motore nativo.")
+            yield ("text", "\n\n⚠️ Ollama Pro API non disponibile. Aggiorna Ollama o usa il motore 'ollama' nativo.")
         else:
             yield ("text", f"\n\n❌ Errore Ollama Pro: {e.code} {e.reason}")
         yield ("done", {})
@@ -2147,7 +2126,9 @@ def call_claw_subprocess(model: str, messages: list, use_tools: bool = True):
     try:
         env = os.environ.copy()
         env["OPENAI_BASE_URL"] = f"{OLLAMA_BASE}/v1"
-        env.pop("OPENAI_API_KEY", None)  # Ollama non richiede API key
+        env["OPENAI_API_KEY"] = "ollama"  # Key fittizia — Ollama accetta qualsiasi valore
+        # Rimuovi chiavi Anthropic per forzare il path OpenAI-compat
+        env.pop("ANTHROPIC_API_KEY", None)
 
         proc = subprocess.Popen(
             [CLAW_BINARY, "--model", model, "--output-format", "json",
@@ -2205,31 +2186,45 @@ def _detect_best_engine():
     if ENGINE_MODE != "auto":
         return ENGINE_MODE
 
-    # 1. Try Ollama Pro /v1/messages (best: native tool calling)
+    # 1. Try Ollama Pro via OpenAI-compatible /v1/chat/completions (tool calling nativo)
     try:
         test_req = urllib.request.Request(
-            f"{OLLAMA_BASE}/v1/messages",
+            f"{OLLAMA_BASE}/v1/chat/completions",
             data=json.dumps({
                 "model": DEFAULT_MODEL,
-                "max_tokens": 10,
                 "messages": [{"role": "user", "content": "test"}],
+                "max_tokens": 5,
+                "stream": False,
             }).encode(),
-            headers={"Content-Type": "application/json", "anthropic-version": "2023-06-01"},
+            headers={"Content-Type": "application/json", "Authorization": "Bearer ollama"},
             method="POST"
         )
-        with urllib.request.urlopen(test_req, timeout=5) as resp:
+        with urllib.request.urlopen(test_req, timeout=10) as resp:
             if resp.status == 200:
                 ENGINE_MODE = "ollama-pro"
                 return "ollama-pro"
     except Exception:
         pass
 
-    # 2. Check claw binary
+    # 2. Fallback: native Ollama /api/chat (funziona sempre con tool calling)
+    try:
+        test_req2 = urllib.request.Request(
+            f"{OLLAMA_BASE}/api/tags",
+            method="GET"
+        )
+        with urllib.request.urlopen(test_req2, timeout=3) as resp:
+            if resp.status == 200:
+                ENGINE_MODE = "ollama"
+                return "ollama"
+    except Exception:
+        pass
+
+    # 3. Check claw binary (ultimo resort)
     if os.path.isfile(CLAW_BINARY) and os.access(CLAW_BINARY, os.X_OK):
         ENGINE_MODE = "claw"
         return "claw"
 
-    # 3. Fallback: native Ollama API
+    # 4. Default: ollama anche senza verifica
     ENGINE_MODE = "ollama"
     return "ollama"
 
@@ -2288,18 +2283,20 @@ def _looks_like_final_response(text: str) -> bool:
     Euristica: se il testo sembra una risposta finale rivolta all'utente
     (non un tentativo di usare tool), ritorna True per evitare che il
     fallback text-tool-call lo catturi e il loop continui all'infinito.
+    NOTA: se ci sono tool call validi nel testo, non è mai una risposta finale.
     """
     t = text.lower().strip()
-    # Se il testo è molto lungo (>300 chars) con pochi JSON, è probabilmente
-    # una risposta finale che contiene esempi di codice
-    json_ratio = text.count('"name"') / max(len(t), 1)
-    if len(t) > 300 and json_ratio < 0.01:
-        return True
 
-    # Se c'è molto testo discorsivo rispetto ai blocchi JSON
-    # (il modello sta spiegando, non invocando tool)
-    non_json_text = _re.sub(r'\{[^}]*\}', '', t)
-    if len(non_json_text) > 200:
+    # Se il testo contiene effettivamente tool call JSON validi, NON è finale
+    # (il modello sta cercando di usare tool anche se scrive testo intorno)
+    if '"name"' in t and '"arguments"' in t:
+        for tool_name in TOOL_NAMES:
+            if f'"name": "{tool_name}"' in t or f'"name":"{tool_name}"' in t:
+                return False  # Ha un tool call valido → non è finale
+
+    # Se il testo è molto lungo (>500 chars) con zero JSON tool-like, è finale
+    json_ratio = text.count('"name"') / max(len(t), 1)
+    if len(t) > 500 and json_ratio < 0.005:
         return True
 
     # Pattern di chiusura comuni (l'agente sta parlando all'utente)
