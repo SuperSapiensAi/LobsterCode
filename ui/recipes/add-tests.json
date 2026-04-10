@@ -1,0 +1,16 @@
+{
+  "id": "add-tests",
+  "name": "Aggiungi test al progetto",
+  "description": "Analizza il progetto e genera test per i file principali",
+  "tags": [
+    "testing",
+    "quality"
+  ],
+  "variables": [],
+  "steps": [
+    {
+      "type": "prompt",
+      "action": "Analizza il progetto corrente. Identifica i 3-5 file più importanti che non hanno test. Per ognuno, scrivi test completi usando il framework di test già presente nel progetto (o il più appropriato per lo stack). Metti i test nella directory test/tests convenzionale del progetto. Poi esegui i test e correggi eventuali errori. Fermati quando tutti i test passano."
+    }
+  ]
+}

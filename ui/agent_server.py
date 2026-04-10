@@ -11,9 +11,11 @@ Zero dipendenze esterne - usa solo la standard library di Python.
 
 import difflib
 import glob as _glob
+import hashlib
 import http.server
 import json
 import os
+import re as _re
 import shlex
 import subprocess
 import sys
@@ -2239,9 +2241,6 @@ def get_active_engine():
         _active_engine = _detect_best_engine()
     return _active_engine
 
-
-import re as _re
-import hashlib
 
 
 TOOL_NAMES = {t["function"]["name"] for t in TOOLS}

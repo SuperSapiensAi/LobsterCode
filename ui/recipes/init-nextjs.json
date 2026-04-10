@@ -1,0 +1,28 @@
+{
+  "id": "init-nextjs",
+  "name": "Setup Next.js + Tailwind",
+  "description": "Crea un progetto Next.js con Tailwind CSS, TypeScript strict e struttura best-practice",
+  "tags": [
+    "nextjs",
+    "react",
+    "tailwind",
+    "typescript"
+  ],
+  "variables": [
+    {
+      "name": "project_name",
+      "prompt": "Nome del progetto",
+      "default": "my-app"
+    }
+  ],
+  "steps": [
+    {
+      "type": "prompt",
+      "action": "Crea un nuovo progetto Next.js chiamato '{{project_name}}' con: npx create-next-app@latest {{project_name}} --typescript --tailwind --eslint --app --src-dir --import-alias '@/*'. Poi entra nella directory e verifica che funzioni con npm run dev (fermalo subito dopo)."
+    },
+    {
+      "type": "prompt",
+      "action": "Nel progetto {{project_name}}, configura TypeScript strict in tsconfig.json (strict: true, noUncheckedIndexedAccess: true). Aggiungi un .prettierrc con semi:false, singleQuote:true, tabWidth:2. Crea la struttura: src/components/, src/lib/, src/hooks/, src/types/. Poi fermati."
+    }
+  ]
+}

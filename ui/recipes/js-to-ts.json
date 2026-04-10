@@ -1,0 +1,17 @@
+{
+  "id": "js-to-ts",
+  "name": "Migra JavaScript → TypeScript",
+  "description": "Converti file .js/.jsx in .ts/.tsx con type safety",
+  "tags": [
+    "typescript",
+    "migration",
+    "refactoring"
+  ],
+  "variables": [],
+  "steps": [
+    {
+      "type": "prompt",
+      "action": "Analizza il progetto. Se non c'è tsconfig.json, creane uno con strict:true. Elenca tutti i file .js e .jsx nella directory src/. Per ciascuno, convertilo in .ts/.tsx aggiungendo tipi appropriati (no 'any' dove evitabile). Rinomina i file. Poi verifica che il progetto compili senza errori con tsc --noEmit. Correggi errori fino a quando non compila. Fermati."
+    }
+  ]
+}

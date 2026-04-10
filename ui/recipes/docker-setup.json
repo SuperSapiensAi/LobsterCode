@@ -1,0 +1,17 @@
+{
+  "id": "docker-setup",
+  "name": "Aggiungi Docker al progetto",
+  "description": "Genera Dockerfile e docker-compose.yml ottimizzati per lo stack rilevato",
+  "tags": [
+    "docker",
+    "devops",
+    "deploy"
+  ],
+  "variables": [],
+  "steps": [
+    {
+      "type": "prompt",
+      "action": "Analizza lo stack del progetto corrente. Crea un Dockerfile ottimizzato (multi-stage build, layer caching, .dockerignore) e un docker-compose.yml appropriato. Se il progetto usa un database, aggiungi il servizio DB nel compose. Testa che docker build funzioni. Fermati."
+    }
+  ]
+}

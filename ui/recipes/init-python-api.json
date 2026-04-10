@@ -1,0 +1,23 @@
+{
+  "id": "init-python-api",
+  "name": "Setup Python API (FastAPI)",
+  "description": "Crea un progetto FastAPI con struttura pulita, pytest e tipo hints",
+  "tags": [
+    "python",
+    "fastapi",
+    "api"
+  ],
+  "variables": [
+    {
+      "name": "project_name",
+      "prompt": "Nome del progetto",
+      "default": "my-api"
+    }
+  ],
+  "steps": [
+    {
+      "type": "prompt",
+      "action": "Crea un progetto Python API chiamato '{{project_name}}' con questa struttura:\n{{project_name}}/\n  app/\n    __init__.py\n    main.py (FastAPI app con health check endpoint)\n    routers/ (__init__.py)\n    models/ (__init__.py)\n    services/ (__init__.py)\n  tests/\n    __init__.py\n    test_main.py (test base)\n  requirements.txt (fastapi, uvicorn, pytest, httpx)\n  .gitignore\n  README.md\nPoi fermati."
+    }
+  ]
+}
