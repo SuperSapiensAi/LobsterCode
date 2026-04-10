@@ -93,14 +93,15 @@
 
         /* ============ TAB SYSTEM ============ */
         .sidebar-tabs {
-            display: flex;
-            gap: 2px;
-            padding: 10px 6px 0 6px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 4px;
+            padding: 8px 8px 0 8px;
             border-bottom: 1px solid var(--sidebar-border);
             margin-bottom: 8px;
         }
         .sidebar-tab {
-            padding: 5px 7px;
+            padding: 5px 4px;
             border-radius: 5px;
             border: 1px solid transparent;
             background: transparent;
@@ -110,9 +111,7 @@
             cursor: pointer;
             transition: all 0.2s;
             white-space: nowrap;
-            flex: 1 1 0;
             text-align: center;
-            min-width: 0;
         }
         .sidebar-tab:hover {
             background: var(--sidebar-hover);
@@ -1284,7 +1283,7 @@
                 <button onclick="regenerateDNA()" style="background:none;border:1px solid var(--sidebar-border);border-radius:6px;color:var(--accent-light);cursor:pointer;font-size:10px;padding:3px 8px;">Rigenera</button>
             </div>
             <div id="dnaContent" style="display:flex;flex-direction:column;gap:8px;">
-                <div style="color:var(--sidebar-text-dim);text-align:center;padding:20px;">Caricamento DNA...</div>
+                <div style="color:var(--sidebar-text-dim);text-align:center;padding:20px;font-size:11px;">Clicca per analizzare il progetto</div>
             </div>
             <!-- Multi-Model Toggle -->
             <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--sidebar-border);">
@@ -1308,7 +1307,7 @@
         <div style="padding:12px;">
             <div style="font-size:11px;font-weight:700;color:var(--sidebar-text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Workflow Recipes</div>
             <div id="recipesList" style="display:flex;flex-direction:column;gap:6px;">
-                <div style="color:var(--sidebar-text-dim);text-align:center;padding:20px;font-size:12px;">Caricamento ricette...</div>
+                <div style="color:var(--sidebar-text-dim);text-align:center;padding:20px;font-size:11px;">Caricamento...</div>
             </div>
         </div>
     </div>
@@ -2562,12 +2561,21 @@
     // ============ PROJECT DNA ============
 
     async function loadProjectDNA() {
+        const container = document.getElementById('dnaContent');
+        container.innerHTML = '<div style="color:var(--sidebar-text-dim);text-align:center;padding:20px;font-size:11px;">Analisi in corso...</div>';
         try {
-            const res = await safeFetch(`${API_BASE}/api/project-dna`);
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 10000);
+            const res = await safeFetch(`${API_BASE}/api/project-dna`, { signal: controller.signal });
+            clearTimeout(timeout);
             const dna = await res.json();
-            renderDNA(dna);
+            if (dna && (dna.languages || dna.stack)) {
+                renderDNA(dna);
+            } else {
+                container.innerHTML = '<div style="color:var(--sidebar-text-dim);text-align:center;padding:12px;font-size:11px;">Nessun workspace attivo. Seleziona una cartella nel tab Files.</div>';
+            }
         } catch (e) {
-            document.getElementById('dnaContent').innerHTML = '<div style="color:var(--sidebar-text-dim);text-align:center;padding:12px;">Errore nel caricamento</div>';
+            container.innerHTML = '<div style="color:var(--sidebar-text-dim);text-align:center;padding:12px;font-size:11px;">Impossibile caricare il DNA.<br><span style="font-size:10px;opacity:0.7;">Verifica che il server sia attivo e un workspace sia selezionato.</span></div>';
         }
     }
 
@@ -2704,12 +2712,17 @@
     // ============ WORKFLOW RECIPES ============
 
     async function loadRecipes() {
+        const container = document.getElementById('recipesList');
+        container.innerHTML = '<div style="color:var(--sidebar-text-dim);text-align:center;padding:20px;font-size:11px;">Caricamento...</div>';
         try {
-            const res = await safeFetch(`${API_BASE}/api/recipes`);
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 10000);
+            const res = await safeFetch(`${API_BASE}/api/recipes`, { signal: controller.signal });
+            clearTimeout(timeout);
             const data = await res.json();
             renderRecipes(data.recipes || []);
         } catch (e) {
-            document.getElementById('recipesList').innerHTML = '<div style="color:var(--sidebar-text-dim);text-align:center;padding:12px;font-size:12px;">Errore nel caricamento</div>';
+            container.innerHTML = '<div style="color:var(--sidebar-text-dim);text-align:center;padding:12px;font-size:11px;">Impossibile caricare le ricette.<br><span style="font-size:10px;opacity:0.7;">Verifica che il server sia attivo.</span></div>';
         }
     }
 
