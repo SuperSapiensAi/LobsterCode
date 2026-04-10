@@ -1678,7 +1678,20 @@ def _run_read_file(path: str) -> str:
 
 
 def _run_write_file(path: str, content: str) -> str:
+    # Gestisci path mancante/invalido
+    if not path or path.strip() in ("undefined", "null", "None", ".", ""):
+        return "Errore: devi specificare un path valido (es. 'index.html' o 'progetto/index.html')"
+
     resolved = resolve_path(path)
+
+    # Blocca scrittura se il path risolve alla home directory stessa
+    home = os.path.expanduser("~")
+    if resolved == home or resolved == home + "/":
+        return f"Errore: non puoi scrivere nella home directory. Specifica un nome file (es. 'progetto/index.html')"
+
+    # Blocca scrittura se il path è una directory esistente
+    if os.path.isdir(resolved):
+        return f"Errore: '{resolved}' è una directory. Specifica il percorso completo del file (es. '{path}/index.html')"
 
     # Sicurezza: blocca scrittura in directory di sistema
     if _is_path_protected_write(resolved):
@@ -2275,6 +2288,23 @@ def _extract_text_tool_calls(text: str) -> list:
         except json.JSONDecodeError:
             pass
 
+    # Pattern 3: il modello scrive un blocco di codice con filename
+    # es: "### File `index.html`\n```html\n<html>...</html>\n```"
+    # Lo convertiamo in un write_file tool call
+    if not found:
+        file_code_pattern = _re.findall(
+            r'(?:`([^`]+\.\w{1,5})`|(?:file|salva|crea|nome)[:\s]+([^\s`]+\.\w{1,5}))\s*(?:\n|.)*?```\w*\s*\n(.*?)```',
+            text, _re.DOTALL | _re.IGNORECASE
+        )
+        for match in file_code_pattern:
+            filename = match[0] or match[1]
+            content = match[2]
+            if filename and content and len(content.strip()) > 10:
+                found.append({
+                    "name": "write_file",
+                    "arguments": {"path": filename.strip(), "content": content}
+                })
+
     return found
 
 
@@ -2288,15 +2318,24 @@ def _looks_like_final_response(text: str) -> bool:
     t = text.lower().strip()
 
     # Se il testo contiene effettivamente tool call JSON validi, NON è finale
-    # (il modello sta cercando di usare tool anche se scrive testo intorno)
     if '"name"' in t and '"arguments"' in t:
         for tool_name in TOOL_NAMES:
             if f'"name": "{tool_name}"' in t or f'"name":"{tool_name}"' in t:
                 return False  # Ha un tool call valido → non è finale
 
-    # Se il testo è molto lungo (>500 chars) con zero JSON tool-like, è finale
+    # Se il testo contiene blocchi di codice con filename, NON è finale
+    # (il modello sta cercando di creare file anche se non usa tool nativi)
+    if '```' in text:
+        file_refs = _re.findall(r'`([^`]+\.\w{1,5})`', text)
+        code_blocks = _re.findall(r'```\w*\s*\n(.+?)```', text, _re.DOTALL)
+        if file_refs and code_blocks:
+            for block in code_blocks:
+                if len(block.strip()) > 20:
+                    return False  # Ha codice con filename → non è finale
+
+    # Se il testo è molto lungo (>800 chars) con zero JSON o codice, è finale
     json_ratio = text.count('"name"') / max(len(t), 1)
-    if len(t) > 500 and json_ratio < 0.005:
+    if len(t) > 800 and json_ratio < 0.005 and '```' not in text:
         return True
 
     # Pattern di chiusura comuni (l'agente sta parlando all'utente)
@@ -2379,7 +2418,12 @@ def run_agent_loop(model: str, messages: list, stream_callback):
         # parlando all'utente, non sta cercando di usare tool).
         if not got_tool_call and collected_text:
             text_tool_calls = _extract_text_tool_calls(collected_text)
-            if text_tool_calls and not _looks_like_final_response(collected_text):
+            is_final = _looks_like_final_response(collected_text) if text_tool_calls else True
+            if text_tool_calls:
+                sys.stderr.write(f"[agent] Fallback text extraction: {len(text_tool_calls)} tool call(s) trovati, is_final={is_final}\n")
+                for tc in text_tool_calls:
+                    sys.stderr.write(f"  → {tc['name']}({list(tc['arguments'].keys())})\n")
+            if text_tool_calls and not is_final:
                 got_tool_call = True
                 tool_calls = text_tool_calls
 
@@ -3366,43 +3410,28 @@ class AgentHandler(http.server.SimpleHTTPRequestHandler):
             dna = get_project_dna()
             project_info = "\n\n" + format_dna_for_prompt(dna) if dna.get("stack") else ""
 
+            # Determina la directory di lavoro per i progetti
+            projects_dir = os.path.join(WORKSPACE_ROOT, "Desktop", "lobster-projects")
+
             system_msg = {
                 "role": "system",
                 "content": (
-                    f"Sei Lobster Code, un agente di sviluppo AI locale.\n"
-                    f"Directory di lavoro: {WORKSPACE_ROOT}\n"
+                    f"Sei Lobster Code, un agente di sviluppo AI che ESEGUE direttamente le azioni.\n"
+                    f"Directory progetti: {projects_dir}\n"
                     f"{project_info}\n"
-                    f"HAI ACCESSO AI SEGUENTI TOOL — USALI SEMPRE:\n"
-                    f"- bash(command): esegui QUALSIASI comando nella shell (ls, cat, mkdir, npm, pip, git, ecc.)\n"
-                    f"- read_file(path): leggi il contenuto di qualsiasi file\n"
-                    f"- write_file(path, content): crea o sovrascrivi un file\n"
-                    f"- edit_file(path, old_text, new_text): modifica un file esistente\n"
-                    f"- list_directory(path): elenca file e cartelle in una directory\n"
-                    f"- search_files(pattern, path): cerca testo nei file\n"
-                    f"- glob_search(pattern, path): trova file per pattern glob (es. '**/*.py')\n\n"
-                    f"METODO DI LAVORO:\n"
-                    f"1. Per task complessi (creare un progetto, refactoring, ecc.), prima ELENCA brevemente gli step che farai (es. '1. Creo struttura cartelle 2. Scrivo componenti 3. Aggiungo stili'), poi esegui.\n"
-                    f"2. Per task semplici (leggere un file, eseguire un comando), esegui direttamente.\n"
-                    f"3. Quando hai FINITO, scrivi un riepilogo breve e FERMATI. Non aggiungere extra.\n\n"
-                    f"REGOLE FONDAMENTALI:\n"
-                    f"1. Tu SEI un agente con accesso ai workspace concessi dall'utente. NON dire MAI che non puoi accedere ai file.\n"
-                    f"2. Quando l'utente chiede di fare qualcosa, FALLO usando i tool. Non spiegare — ESEGUI.\n"
-                    f"3. Rispondi SEMPRE con azioni concrete, MAI con spiegazioni teoriche.\n"
-                    f"4. Se non sei sicuro di un percorso, usa list_directory per esplorare prima.\n"
-                    f"5. Quando hai finito, scrivi un breve riepilogo e FERMATI. Non aggiungere azioni extra.\n\n"
-                    f"LIMITI DI SICUREZZA (non aggirabili):\n"
-                    f"- Puoi accedere SOLO ai workspace che l'utente ha esplicitamente concesso\n"
-                    f"- Non puoi scrivere in /System, /Library, /usr, /bin, /sbin, /etc, /var, /Applications\n"
-                    f"- Non puoi eseguire comandi distruttivi (rm -rf /, sudo rm, mkfs, dd, shutdown, reboot)\n"
-                    f"- Non puoi leggere chiavi SSH, credenziali AWS, keychain\n\n"
-                    f"DIVIETI ASSOLUTI:\n"
-                    f"- NON usare 'open' per aprire file/URL nel browser.\n"
-                    f"- NON lanciare server HTTP.\n"
-                    f"- NON aprire applicazioni esterne.\n"
-                    f"- Fai SOLO quello che l'utente ha chiesto.\n\n"
-                    f"MOTORE: {get_active_engine()}\n"
-                    f"Questa sessione utilizza il motore {get_active_engine()} di Lobster Code, basato sull'architettura Claw Code.\n\n"
-                    f"Rispondi in italiano se l'utente scrive in italiano."
+                    f"Tu HAI accesso ai tool e DEVI usarli. Non dire MAI che non puoi creare file.\n\n"
+                    f"TOOL DISPONIBILI:\n"
+                    f"- write_file(path, content): crea file. Il PATH deve essere SEMPRE completo, es: '{projects_dir}/mio-sito/index.html'\n"
+                    f"- read_file(path): leggi file\n"
+                    f"- edit_file(path, old_string, new_string): modifica file\n"
+                    f"- bash(command): esegui comandi shell\n"
+                    f"- list_directory(path): elenca directory\n\n"
+                    f"REGOLE OBBLIGATORIE:\n"
+                    f"1. Quando l'utente chiede di creare qualcosa, USA write_file subito. NON mostrare codice, NON dare istruzioni manuali.\n"
+                    f"2. Usa SEMPRE path completi sotto {projects_dir}/. Mai path vuoti, mai 'undefined'.\n"
+                    f"3. Prima di creare file, crea la directory con bash: mkdir -p {projects_dir}/nome-progetto\n"
+                    f"4. Rispondi in italiano se l'utente scrive in italiano.\n\n"
+                    f"LIMITI: Non scrivere in /System, /Library, /usr. Non eseguire rm -rf, sudo rm. Non aprire browser."
                 )
             }
 
@@ -3422,6 +3451,25 @@ class AgentHandler(http.server.SimpleHTTPRequestHandler):
                     pass
 
             messages.insert(0, system_msg)
+
+            # Inietta few-shot examples per insegnare al modello il formato tool call
+            # Questo è CRITICO per modelli locali che altrimenti ignorano i tool
+            if len(messages) <= 2:  # Solo alla prima richiesta (system + user)
+                fewshot = [
+                    {"role": "user", "content": "crea un file hello.txt con scritto ciao"},
+                    {"role": "assistant", "content": "", "tool_calls": [
+                        {"function": {"name": "bash", "arguments": {"command": f"mkdir -p {projects_dir}/progetto"}}}
+                    ]},
+                    {"role": "tool", "content": ""},
+                    {"role": "assistant", "content": "", "tool_calls": [
+                        {"function": {"name": "write_file", "arguments": {"path": f"{projects_dir}/progetto/hello.txt", "content": "ciao"}}}
+                    ]},
+                    {"role": "tool", "content": f"Creato: {projects_dir}/progetto/hello.txt (4 caratteri)"},
+                    {"role": "assistant", "content": "Fatto! Ho creato il file `hello.txt`."},
+                ]
+                # Inserisci dopo system, prima del messaggio utente reale
+                for i, fm in enumerate(fewshot):
+                    messages.insert(1 + i, fm)
 
         # Setup streaming response
         self.send_response(200)
