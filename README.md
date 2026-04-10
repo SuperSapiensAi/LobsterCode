@@ -17,32 +17,33 @@ It gives you the same agentic coding experience as Cursor or Claude Code: the AI
 ## Features
 
 ### Core Agent
-- **Three execution engines** — Ollama Native, Ollama Pro (OpenAI-compatible), and Claw (Rust binary)
+- **Multi-turn agent loop** — executes up to 10 consecutive tool-calling turns to complete complex tasks autonomously
 - **7 native tools** — `bash`, `read_file`, `write_file`, `edit_file`, `list_directory`, `search_files`, `glob_search`
+- **Streaming responses** — real-time output via Server-Sent Events with typewriter animation
 - **Zero external dependencies** — Python stdlib only (no pip install required)
 
 ### Project DNA
-Lobster Code automatically scans your project and builds a persistent DNA profile: stack, languages, frameworks, coding conventions (indentation, naming style, linter, formatter, TypeScript strict mode), test framework, CSS approach, API style, project structure, and entry points. This context is injected into every conversation so the agent always writes code that matches your project's style. The DNA is saved to `.lobster/project-dna.json` and auto-updates when your project changes.
+Lobster Code automatically scans your project and builds a context profile: stack, languages, frameworks, git status, and project structure. This context is injected into every conversation so the agent always writes code that matches your project. Detects Node.js, Python, Rust, Go, Docker, and frameworks like React, Vue, Next.js, Angular, Express, FastAPI, Django.
 
-### Smart Routing (Multi-Model Orchestration)
-Route simple tasks (file reads, git status, quick questions) to a small fast model, and complex tasks (refactoring, new features, debugging) to a large powerful model — automatically. Saves GPU resources and speeds up simple interactions by 3-5x. Configurable via environment variables or the DNA tab toggle.
-
-### Workflow Recipes
-Pre-built and custom workflow recipes you can run with one click. Ships with 5 built-in recipes: Setup Next.js + Tailwind, Setup Python API (FastAPI), Add Tests, Migrate JS → TypeScript, Add Docker. Create your own recipes as JSON files in `.lobster/recipes/`. Recipes support variables, multi-step execution, and community sharing.
+### Stack-Aware Prompt Templates
+14 pre-built prompt templates that adapt to your detected stack. Working on React? You get component scaffolding suggestions. Python project? Virtual env setup and test commands are ready. Zero configuration needed.
 
 ### Security & Isolation
 - **Workspace grant system** — the agent can only access folders you explicitly allow
-- **Permission levels** — read-only, workspace-write, or full-access modes
+- **3 permission levels** — read-only, workspace-write, or full-access modes
 - **Protected paths** — `/System`, `/Library`, `/usr`, `/bin`, `/etc`, `/var` are always blocked
 - **Command filtering** — destructive commands (`rm -rf /`, `sudo rm`, `mkfs`, etc.) are blocked
 - **Atomic file writes** — changes use temp files + atomic rename to prevent corruption
 - **Snapshot & rollback** — every file change is tracked; undo any modification instantly
 
 ### Developer Experience
-- **Git integration** — status, diff, commit directly from the sidebar
-- **Session memory** — persistent context across conversations via `.lobster/context.md`
-- **File explorer** — browse, preview, and navigate project files in the sidebar
-- **Keyboard shortcuts** — Ctrl/Cmd+Enter to send, Escape to close modals
+- **Git integration** — status, log, diff, commit directly from the sidebar
+- **Session memory** — persistent context across sessions via `.lobster/context.md`
+- **File explorer** — browse, preview with syntax highlighting (30+ languages) in the sidebar
+- **Diff preview** — every file modification shows a unified diff before and after
+- **Setup wizard** — checks Ollama, verifies RAM, recommends and downloads the best model
+- **Chat history** — persistent sessions with auto-generated titles
+- **4 sidebar tabs** — Chat, Files, Git, Modified files
 
 ## Quick Start
 
@@ -50,8 +51,8 @@ Pre-built and custom workflow recipes you can run with one click. Ships with 5 b
 # 1. Make sure Ollama is running
 ollama serve
 
-# 2. Pull a coding model (see recommended models below)
-ollama pull devstral
+# 2. Pull a coding model
+ollama pull gemma4:latest
 
 # 3. Clone and start
 git clone https://github.com/SuperSapiensAi/LobsterCode.git
@@ -65,29 +66,20 @@ Open [http://localhost:8899](http://localhost:8899) in your browser. That's it.
 
 | Model | Size | Best For | VRAM Needed | Command |
 |-------|------|----------|-------------|---------|
-| **Devstral** | 24B | Agentic coding, SWE-bench champion | 16GB+ | `ollama pull devstral` |
-| **Qwen3-Coder** | 30B | Top coding agent performance | 20GB+ | `ollama pull qwen3-coder` |
-| **Gemma 4** | 27B | All-round reasoning + coding | 18GB+ | `ollama pull gemma4` |
-| **Qwen 2.5-Coder** | 32B | HumanEval 92.7%, great for code gen | 24GB+ | `ollama pull qwen2.5-coder:32b` |
-| **Qwen 2.5-Coder** | 14B | Good balance of speed and quality | 10GB+ | `ollama pull qwen2.5-coder:14b` |
-| **Gemma 4** | 12B | Fast, good for Smart Routing (small) | 8GB+ | `ollama pull gemma4:12b` |
-| **Qwen 2.5-Coder** | 3B | Ultra-fast for simple tasks | 4GB+ | `ollama pull qwen2.5-coder:3b` |
+| **Gemma 4** | 12B | Default, excellent all-round + tool calling | 8GB+ | `ollama pull gemma4:latest` |
+| **Qwen 2.5-Coder** | 14B | Best pure coding performance | 10GB+ | `ollama pull qwen2.5-coder:14b` |
+| **Qwen 2.5-Coder** | 7B | Lightweight, fast coding | 5GB+ | `ollama pull qwen2.5-coder:7b` |
+| **DeepSeek Coder V2** | 16B | Refactoring and deep reasoning | 10GB+ | `ollama pull deepseek-coder-v2` |
+| **Mistral** | 7B | Versatile, fast, native tool calling | 5GB+ | `ollama pull mistral` |
+| **Code Llama** | 13B | Meta's coding specialist | 8GB+ | `ollama pull codellama:13b` |
 
-**Smart Routing tip:** Set a small model (3B-12B) for simple tasks and a large model (24B-32B) for complex tasks. Enable Smart Routing in the DNA tab to auto-switch between them.
-
-```bash
-# Example: Smart Routing with Devstral + Gemma 4 12B
-LOBSTER_MULTI_MODEL=true \
-LOBSTER_LARGE_MODEL=devstral \
-LOBSTER_SMALL_MODEL=gemma4:12b \
-python3 agent_server.py
-```
+The setup wizard recommends the best model based on your available RAM.
 
 ## Requirements
 
 - **Python 3.8+** (no external packages needed)
-- **Ollama** running locally on port 11434
-- A coding model pulled in Ollama
+- **Ollama 0.20+** running locally on port 11434
+- A model with tool calling support pulled in Ollama
 
 ## Architecture
 
@@ -100,13 +92,13 @@ python3 agent_server.py
               ┌────────────┼────────────┐
               │            │            │
         ┌─────┴─────┐ ┌───┴───┐ ┌──────┴──────┐
-        │  7 Tools   │ │  DNA  │ │  Recipes    │
-        │  Filesystem│ │ Scan  │ │  Engine     │
-        │  Bash Shell│ │ Cache │ │  5 built-in │
+        │  7 Tools   │ │  DNA  │ │  Security   │
+        │  Filesystem│ │ Scan  │ │  3 levels   │
+        │  Bash Shell│ │ Stack │ │  Snapshots  │
         └───────────┘ └───────┘ └─────────────┘
 ```
 
-The server is a single Python file with zero dependencies. The UI is a single HTML file. The agent loops between the LLM and tool execution until the task is complete. Project DNA provides persistent context. Smart Routing picks the right model. Recipes automate common workflows.
+The server is a single Python file with zero dependencies. The UI is a single HTML file. The agent loops between the LLM and tool execution (up to 10 turns) until the task is complete. Project DNA provides persistent context. Snapshots protect your files.
 
 ## How It Compares
 
@@ -118,10 +110,8 @@ The server is a single Python file with zero dependencies. The UI is a single HT
 | No API Key | ✅ | ❌ | ❌ |
 | Web UI | ✅ | ❌ | ❌ |
 | Project DNA (auto-context) | ✅ | ❌ | ❌ |
-| Smart Model Routing | ✅ | ❌ | ❌ |
-| Workflow Recipes | ✅ | ❌ | ❌ |
-| Workspace Isolation | ✅ | ❌ | ❌ |
 | Snapshot Rollback | ✅ | ❌ | ❌ |
+| Workspace Isolation | ✅ | ❌ | ❌ |
 | Agentic Tools | ✅ | ✅ | ✅ |
 | File Editing | ✅ | ✅ | ✅ |
 | Terminal Access | ✅ | ✅ | ✅ |
@@ -132,14 +122,10 @@ All configuration is via environment variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `CLAW_MODEL` | `qwen2.5-coder:14b` | Default model |
+| `CLAW_MODEL` | `gemma4:latest` | Default model |
 | `CLAW_WORKSPACE` | `~` | Default workspace path |
 | `CLAW_PORT` | `8899` | Server port |
 | `OLLAMA_BASE_URL` | `http://127.0.0.1:11434` | Ollama server URL |
-| `LOBSTER_ENGINE` | `auto` | Engine: `ollama`, `ollama-pro`, `claw`, `auto` |
-| `LOBSTER_MULTI_MODEL` | `false` | Enable Smart Routing |
-| `LOBSTER_SMALL_MODEL` | `qwen2.5-coder:3b` | Model for simple tasks |
-| `LOBSTER_LARGE_MODEL` | (same as CLAW_MODEL) | Model for complex tasks |
 
 ## Project Structure
 
@@ -149,15 +135,16 @@ LobsterCode/
 │   ├── agent_server.py    # Backend server (Python stdlib only)
 │   ├── agent.html         # Web UI (single file)
 │   ├── landing.html       # Landing page
-│   └── recipes/           # Built-in workflow recipes
-├── rust/                  # Claw engine (Rust binary, optional)
+│   └── start-agent.command # Quick launcher
+├── index.html             # GitHub Pages (lobstercode.net)
+├── CNAME                  # Custom domain config
 ├── LICENSE                # MIT
 └── README.md
 ```
 
 ## Contributing
 
-Contributions are welcome! This project is in active development. You can contribute recipes by adding JSON files to `ui/recipes/`.
+Contributions are welcome! This project is in active development.
 
 ## License
 
@@ -166,4 +153,3 @@ Contributions are welcome! This project is in active development. You can contri
 ---
 
 **Built by [SuperSapiens AI](https://github.com/SuperSapiensAi)**
-Based on [Claw Code](https://github.com/ultraworkers/claw-code) by UltraWorkers.
