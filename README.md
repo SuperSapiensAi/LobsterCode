@@ -1,102 +1,116 @@
-# Claw Code
+# 🦞 Lobster Code
+
+**The open-source AI coding agent that runs entirely on your machine.**
+
+Like Cursor and Claude Code — but free, local, and private. Powered by [Ollama](https://ollama.com).
 
 <p align="center">
-  <a href="https://github.com/ultraworkers/claw-code">ultraworkers/claw-code</a>
-  ·
-  <a href="./USAGE.md">Usage</a>
-  ·
-  <a href="./rust/README.md">Rust workspace</a>
-  ·
-  <a href="./PARITY.md">Parity</a>
-  ·
-  <a href="./ROADMAP.md">Roadmap</a>
-  ·
-  <a href="https://discord.gg/5TUQKqFWd">UltraWorkers Discord</a>
+  <img src="assets/claw-hero.jpeg" alt="Lobster Code" width="300" />
 </p>
 
-<p align="center">
-  <a href="https://star-history.com/#ultraworkers/claw-code&Date">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=ultraworkers/claw-code&type=Date&theme=dark" />
-      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=ultraworkers/claw-code&type=Date" />
-      <img alt="Star history for ultraworkers/claw-code" src="https://api.star-history.com/svg?repos=ultraworkers/claw-code&type=Date" width="600" />
-    </picture>
-  </a>
-</p>
+## What is Lobster Code?
 
-<p align="center">
-  <img src="assets/claw-hero.jpeg" alt="Claw Code" width="300" />
-</p>
+Lobster Code is a local AI coding agent with a web UI. It connects to Ollama running on your machine — no API keys, no cloud, no subscriptions. Your code never leaves your computer.
 
-Claw Code is the public Rust implementation of the `claw` CLI agent harness.
-The canonical implementation lives in [`rust/`](./rust), and the current source of truth for this repository is **ultraworkers/claw-code**.
+It gives you the same agentic coding experience as Cursor or Claude Code: the AI reads your files, writes code, runs commands, and iterates — all through a clean browser interface.
 
-> [!IMPORTANT]
-> Start with [`USAGE.md`](./USAGE.md) for build, auth, CLI, session, and parity-harness workflows. Make `claw doctor` your first health check after building, use [`rust/README.md`](./rust/README.md) for crate-level details, read [`PARITY.md`](./PARITY.md) for the current Rust-port checkpoint, and see [`docs/container.md`](./docs/container.md) for the container-first workflow.
+## Features
 
-## Current repository shape
+- **Three execution engines** — Ollama Native, Ollama Pro (OpenAI-compatible), and Claw (Rust binary)
+- **7 native tools** — `bash`, `read_file`, `write_file`, `edit_file`, `list_directory`, `search_files`, `glob_search`
+- **Workspace grant system** — the agent can only access folders you explicitly allow
+- **Permission levels** — read-only, workspace-write, or full-access modes
+- **Snapshot & rollback** — every file change is tracked; undo any modification instantly
+- **Git integration** — status, diff, commit directly from the sidebar
+- **Session memory** — persistent context across conversations via `.lobster/context.md`
+- **Zero external dependencies** — Python stdlib only (no pip install required)
+- **Built-in security** — protected system paths, dangerous command blocking, sanitized error output
 
-- **`rust/`** — canonical Rust workspace and the `claw` CLI binary
-- **`USAGE.md`** — task-oriented usage guide for the current product surface
-- **`PARITY.md`** — Rust-port parity status and migration notes
-- **`ROADMAP.md`** — active roadmap and cleanup backlog
-- **`PHILOSOPHY.md`** — project intent and system-design framing
-- **`src/` + `tests/`** — companion Python/reference workspace and audit helpers; not the primary runtime surface
-
-## Quick start
-
-> [!NOTE]
-> **`cargo install clawcode` will not work** — this package is not published on crates.io. Build from source as shown below.
+## Quick Start
 
 ```bash
-# 1. Clone and build
-git clone https://github.com/ultraworkers/claw-code
-cd claw-code/rust
-cargo build --workspace
+# 1. Make sure Ollama is running
+ollama serve
 
-# 2. Set your API key (Anthropic API key — not a Claude subscription)
-export ANTHROPIC_API_KEY="sk-ant-..."
+# 2. Pull a coding model
+ollama pull qwen2.5-coder:14b
 
-# 3. Verify everything is wired correctly
-./target/debug/claw doctor
-
-# 4. Run a prompt
-./target/debug/claw prompt "say hello"
+# 3. Clone and start
+git clone https://github.com/SuperSapiensAi/LobsterCode.git
+cd LobsterCode/ui
+python3 agent_server.py
 ```
 
-> [!NOTE]
-> **Windows (PowerShell):** the binary is `claw.exe`, not `claw`. Use `.\target\debug\claw.exe` or run `cargo run -- prompt "say hello"` to skip the path lookup.
+Open [http://localhost:3456](http://localhost:3456) in your browser. That's it.
 
-> [!NOTE]
-> **Auth:** claw requires an **API key** (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, etc.) — Claude subscription login is not a supported auth path.
+## Requirements
 
-Run the workspace test suite:
+- **Python 3.8+** (no external packages needed)
+- **Ollama** running locally on port 11434
+- A coding model pulled in Ollama (recommended: `qwen2.5-coder:14b`)
 
-```bash
-cd rust
-cargo test --workspace
+## Architecture
+
+```
+┌─────────────┐     ┌──────────────────┐     ┌─────────┐
+│  Browser UI  │────▶│  Python Server   │────▶│  Ollama │
+│  (agent.html)│◀────│  (agent_server)  │◀────│  (local)│
+└─────────────┘     └──────────────────┘     └─────────┘
+                           │
+                    ┌──────┴──────┐
+                    │  7 Tools    │
+                    │  Filesystem │
+                    │  Bash Shell │
+                    └─────────────┘
 ```
 
-## Documentation map
+The server is a single Python file with zero dependencies. The UI is a single HTML file. The agent loops between the LLM and tool execution until the task is complete.
 
-- [`USAGE.md`](./USAGE.md) — quick commands, auth, sessions, config, parity harness
-- [`rust/README.md`](./rust/README.md) — crate map, CLI surface, features, workspace layout
-- [`PARITY.md`](./PARITY.md) — parity status for the Rust port
-- [`rust/MOCK_PARITY_HARNESS.md`](./rust/MOCK_PARITY_HARNESS.md) — deterministic mock-service harness details
-- [`ROADMAP.md`](./ROADMAP.md) — active roadmap and open cleanup work
-- [`PHILOSOPHY.md`](./PHILOSOPHY.md) — why the project exists and how it is operated
+## How It Compares
 
-## Ecosystem
+| Feature | Lobster Code | Cursor | Claude Code |
+|---------|:---:|:---:|:---:|
+| Free | ✅ | ❌ | ❌ |
+| Local/Private | ✅ | ❌ | ❌ |
+| Open Source | ✅ | ❌ | ❌ |
+| No API Key | ✅ | ❌ | ❌ |
+| Web UI | ✅ | ❌ | ❌ |
+| Agentic Tools | ✅ | ✅ | ✅ |
+| File Editing | ✅ | ✅ | ✅ |
+| Terminal Access | ✅ | ✅ | ✅ |
 
-Claw Code is built in the open alongside the broader UltraWorkers toolchain:
+## Project Structure
 
-- [clawhip](https://github.com/Yeachan-Heo/clawhip)
-- [oh-my-openagent](https://github.com/code-yeongyu/oh-my-openagent)
-- [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode)
-- [oh-my-codex](https://github.com/Yeachan-Heo/oh-my-codex)
-- [UltraWorkers Discord](https://discord.gg/5TUQKqFWd)
+```
+LobsterCode/
+├── ui/
+│   ├── agent_server.py    # Backend server (Python stdlib only)
+│   ├── agent.html         # Web UI (single file)
+│   └── landing.html       # Landing page
+├── rust/                  # Claw engine (Rust binary, optional)
+├── LICENSE                # MIT
+└── README.md
+```
 
-## Ownership / affiliation disclaimer
+## Security
 
-- This repository does **not** claim ownership of the original Claude Code source material.
-- This repository is **not affiliated with, endorsed by, or maintained by Anthropic**.
+Lobster Code takes security seriously:
+
+- **Workspace isolation** — the agent can only access folders you explicitly grant
+- **Protected paths** — `/System`, `/Library`, `/usr`, `/bin`, `/etc`, `/var` are always blocked
+- **Command filtering** — destructive commands (`rm -rf /`, `sudo rm`, `mkfs`, etc.) are blocked
+- **Atomic file writes** — changes use temp files + atomic rename to prevent corruption
+- **Snapshot system** — every modification is tracked for instant rollback
+
+## Contributing
+
+Contributions are welcome! This project is in active development.
+
+## License
+
+[MIT](./LICENSE) — use it however you want.
+
+---
+
+**Built by [SuperSapiens AI](https://github.com/SuperSapiensAi)**
+Based on [Claw Code](https://github.com/ultraworkers/claw-code) by UltraWorkers.

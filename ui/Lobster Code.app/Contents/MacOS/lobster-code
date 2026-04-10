@@ -1,0 +1,14 @@
+#\!/bin/bash
+# Lobster Code Agent Launcher
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+
+# Find the real script directory (in the claw-code/ui folder)
+SCRIPT_DIR="$(cd "$(dirname "$0")/../../../" && pwd)"
+
+# Run in Terminal
+osascript -e "
+tell application \"Terminal\"
+    activate
+    do script \"cd '$SCRIPT_DIR' && bash start-agent.command\"
+end tell
+"

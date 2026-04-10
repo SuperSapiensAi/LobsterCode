@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lobster Code — AI Agent Open Source</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦞</text></svg>">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --red: #d63a28;
+            --red-light: #e95a45;
+            --red-dark: #b52d1e;
+            --cream: #faf7f5;
+            --white: #ffffff;
+            --dark: #1c1214;
+            --text: #2a1a17;
+            --text-soft: #7a6560;
+            --text-dim: #b0a09a;
+            --border: #e8e0dc;
+            --ocean: #2a8fb5;
+            --coral: #e87554;
+            --sand: #c4a35a;
+            --green: #2e8b57;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--cream);
+            color: var(--text);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* NAV */
+        nav {
+            position: fixed; top: 0; width: 100%; z-index: 100;
+            padding: 16px 40px;
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(250, 247, 245, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            transition: box-shadow 0.3s;
+        }
+        nav.scrolled { box-shadow: 0 2px 20px rgba(0,0,0,0.06); }
+        .nav-brand {
+            display: flex; align-items: center; gap: 10px;
+            text-decoration: none; color: var(--text);
+        }
+        .nav-brand span { font-size: 28px; }
+        .nav-brand strong {
+            font-size: 18px; font-weight: 700;
+            background: linear-gradient(135deg, var(--red), var(--red-light));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .nav-links { display: flex; align-items: center; gap: 32px; }
+        .nav-links a {
+            text-decoration: none; color: var(--text-soft);
+            font-size: 14px; font-weight: 500; transition: color 0.2s;
+        }
+        .nav-links a:hover { color: var(--red); }
+        .nav-cta {
+            background: var(--red) !important; color: var(--white) !important;
+            padding: 8px 20px; border-radius: 8px; font-weight: 600 !important;
+            box-shadow: 0 2px 8px rgba(214,58,40,0.2); transition: all 0.2s !important;
+        }
+        .nav-cta:hover {
+            background: var(--red-dark) !important;
+            box-shadow: 0 4px 16px rgba(214,58,40,0.3) !important;
+            transform: translateY(-1px);
+        }
+
+        /* HERO */
+        .hero {
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            padding: 120px 40px 80px; position: relative; overflow: hidden;
+        }
+        .hero::before {
+            content: ''; position: absolute; top: -200px; right: -200px;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(214,58,40,0.06) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .hero::after {
+            content: ''; position: absolute; bottom: -150px; left: -150px;
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(42,143,181,0.05) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .hero-content { max-width: 800px; text-align: center; position: relative; z-index: 1; }
+        .hero-emoji {
+            font-size: 80px; display: block; margin-bottom: 24px;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 8px 32px rgba(214,58,40,0.15));
+        }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+        .hero h1 { font-size: 56px; font-weight: 800; line-height: 1.1; margin-bottom: 20px; letter-spacing: -1px; }
+        .hero h1 .highlight {
+            background: linear-gradient(135deg, var(--red), var(--coral));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .hero p { font-size: 20px; color: var(--text-soft); max-width: 600px; margin: 0 auto 16px; line-height: 1.7; }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(46,139,87,0.08); border: 1px solid rgba(46,139,87,0.2);
+            border-radius: 20px; padding: 6px 16px; font-size: 13px; font-weight: 500;
+            color: var(--green); margin-bottom: 32px;
+        }
+        .hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+        .btn {
+            padding: 14px 32px; border-radius: 12px; font-size: 16px; font-weight: 600;
+            text-decoration: none; transition: all 0.3s; cursor: pointer; border: none;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--red), var(--red-light)); color: var(--white);
+            box-shadow: 0 4px 20px rgba(214,58,40,0.3);
+        }
+        .btn-primary:hover { box-shadow: 0 8px 32px rgba(214,58,40,0.4); transform: translateY(-2px); }
+        .btn-secondary {
+            background: var(--white); color: var(--text);
+            border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .btn-secondary:hover { border-color: var(--red); color: var(--red); transform: translateY(-2px); }
+        .btn-github {
+            background: var(--dark); color: var(--white);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+        .btn-github:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.2); transform: translateY(-2px); }
+
+        /* INSTALL */
+        .install {
+            padding: 60px 40px;
+            max-width: 700px; margin: 0 auto;
+        }
+        .install-box {
+            background: var(--dark); border-radius: 14px; padding: 24px 28px;
+            font-family: 'SF Mono', 'Fira Code', monospace; font-size: 14px;
+            color: #e0d5d0; position: relative; overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+        }
+        .install-box .comment { color: #5a4a44; }
+        .install-box .cmd { color: var(--coral); }
+        .install-box .flag { color: var(--ocean); }
+        .install-copy {
+            position: absolute; top: 16px; right: 16px;
+            background: rgba(255,255,255,0.1); border: none;
+            border-radius: 6px; padding: 6px 12px; color: #e0d5d0;
+            font-size: 12px; cursor: pointer; font-family: inherit;
+            transition: background 0.2s;
+        }
+        .install-copy:hover { background: rgba(255,255,255,0.2); }
+
+        /* FEATURES */
+        .features { padding: 100px 40px; max-width: 1200px; margin: 0 auto; }
+        .section-label {
+            text-align: center; font-size: 13px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 2px;
+            color: var(--red); margin-bottom: 12px;
+        }
+        .section-title {
+            text-align: center; font-size: 40px; font-weight: 700;
+            margin-bottom: 16px; letter-spacing: -0.5px;
+        }
+        .section-desc {
+            text-align: center; font-size: 18px; color: var(--text-soft);
+            max-width: 600px; margin: 0 auto 60px;
+        }
+        .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .feature-card {
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: 16px; padding: 32px; transition: all 0.3s;
+        }
+        .feature-card:hover {
+            border-color: transparent;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+            transform: translateY(-4px);
+        }
+        .feature-icon {
+            width: 48px; height: 48px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; margin-bottom: 20px;
+        }
+        .feature-icon.red { background: rgba(214,58,40,0.1); }
+        .feature-icon.ocean { background: rgba(42,143,181,0.1); }
+        .feature-icon.coral { background: rgba(232,117,84,0.1); }
+        .feature-icon.sand { background: rgba(196,163,90,0.1); }
+        .feature-icon.green { background: rgba(46,139,87,0.1); }
+        .feature-icon.dark { background: rgba(42,26,23,0.08); }
+        .feature-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+        .feature-card p { font-size: 14px; color: var(--text-soft); line-height: 1.6; }
+
+        /* DEMO */
+        .demo { padding: 80px 40px; background: var(--dark); color: var(--cream); }
+        .demo-inner { max-width: 1000px; margin: 0 auto; }
+        .demo .section-label { color: var(--coral); }
+        .demo .section-title { color: var(--cream); }
+        .demo .section-desc { color: rgba(240,230,227,0.6); }
+        .demo-window {
+            background: #0f0a0a; border: 1px solid #3a2822;
+            border-radius: 12px; overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+        .demo-titlebar {
+            display: flex; align-items: center; gap: 8px;
+            padding: 12px 16px; background: #1a1210; border-bottom: 1px solid #3a2822;
+        }
+        .demo-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .demo-dot.r { background: #ff5f57; }
+        .demo-dot.y { background: #febc2e; }
+        .demo-dot.g { background: #28c840; }
+        .demo-titlebar span { flex: 1; text-align: center; font-size: 12px; color: #7a6560; font-weight: 500; }
+        .demo-body {
+            padding: 24px; font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 14px; line-height: 1.8; min-height: 200px;
+        }
+        .demo-line { margin-bottom: 4px; opacity: 0; animation: typeLine 0.3s forwards; }
+        .demo-line:nth-child(1) { animation-delay: 0.3s; }
+        .demo-line:nth-child(2) { animation-delay: 0.8s; }
+        .demo-line:nth-child(3) { animation-delay: 1.3s; }
+        .demo-line:nth-child(4) { animation-delay: 1.8s; }
+        .demo-line:nth-child(5) { animation-delay: 2.5s; }
+        .demo-line:nth-child(6) { animation-delay: 3.0s; }
+        @keyframes typeLine { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        .demo-user { color: var(--coral); }
+        .demo-tool { color: var(--sand); }
+        .demo-result { color: #28c840; }
+        .demo-comment { color: #5a4a44; }
+
+        /* STACK */
+        .stack { padding: 100px 40px; max-width: 1000px; margin: 0 auto; }
+        .stack-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 48px; }
+        .stack-item {
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: 12px; padding: 24px; text-align: center; transition: all 0.2s;
+        }
+        .stack-item:hover { border-color: var(--red); box-shadow: 0 4px 16px rgba(214,58,40,0.08); }
+        .stack-item .icon { font-size: 32px; margin-bottom: 12px; }
+        .stack-item h4 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+        .stack-item p { font-size: 12px; color: var(--text-soft); }
+
+        /* MODELS */
+        .models { padding: 100px 40px; background: var(--white); }
+        .models-inner { max-width: 1100px; margin: 0 auto; }
+        .models-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 48px; }
+        .model-card {
+            display: flex; align-items: center; gap: 16px;
+            padding: 20px 24px; border-radius: 12px;
+            border: 1px solid var(--border); transition: all 0.2s;
+            background: var(--cream);
+        }
+        .model-card:hover { border-color: var(--red); transform: translateX(4px); }
+        .model-badge-icon {
+            width: 44px; height: 44px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; flex-shrink: 0;
+        }
+        .model-card-info { flex: 1; min-width: 0; }
+        .model-card-info h4 { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+        .model-card-info p { font-size: 12px; color: var(--text-soft); }
+        .model-card-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+        .model-tag {
+            font-size: 10px; font-weight: 600; padding: 2px 8px;
+            border-radius: 10px; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .model-tag.coding { background: rgba(46,139,87,0.1); color: var(--green); }
+        .model-tag.general { background: rgba(42,143,181,0.1); color: var(--ocean); }
+        .model-tag.fast { background: rgba(232,117,84,0.1); color: var(--coral); }
+        .model-tag.reasoning { background: rgba(196,163,90,0.1); color: var(--sand); }
+        .model-tag.tools { background: rgba(214,58,40,0.1); color: var(--red); }
+
+        /* USE CASES */
+        .usecases { padding: 100px 40px; max-width: 1100px; margin: 0 auto; }
+        .usecases-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-top: 48px; }
+        .usecase {
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: 16px; padding: 28px; transition: all 0.3s;
+            position: relative; overflow: hidden;
+        }
+        .usecase:hover { box-shadow: 0 12px 40px rgba(0,0,0,0.06); transform: translateY(-2px); }
+        .usecase-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .usecase-emoji { font-size: 28px; }
+        .usecase h3 { font-size: 17px; font-weight: 600; }
+        .usecase p { font-size: 14px; color: var(--text-soft); line-height: 1.6; margin-bottom: 12px; }
+        .usecase-example {
+            background: var(--dark); border-radius: 8px; padding: 12px 16px;
+            font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px;
+            color: var(--coral); line-height: 1.6;
+        }
+        .usecase-example .dim { color: #5a4a44; }
+
+        /* PHILOSOPHY */
+        .philosophy {
+            padding: 80px 40px; background: linear-gradient(135deg, var(--dark) 0%, #2a1a17 100%);
+            color: var(--cream); text-align: center;
+        }
+        .philosophy-inner { max-width: 700px; margin: 0 auto; }
+        .philosophy .section-label { color: var(--coral); }
+        .philosophy blockquote {
+            font-size: 24px; font-weight: 300; line-height: 1.7;
+            font-style: italic; margin: 24px 0;
+            color: rgba(240,230,227,0.85);
+        }
+        .philosophy .author { font-size: 14px; color: rgba(240,230,227,0.4); }
+
+        /* CTA */
+        .cta {
+            padding: 100px 40px; text-align: center;
+            background: linear-gradient(180deg, var(--cream) 0%, #f0ebe8 100%);
+        }
+        .cta h2 { font-size: 36px; font-weight: 700; margin-bottom: 16px; }
+        .cta p { font-size: 18px; color: var(--text-soft); max-width: 500px; margin: 0 auto 32px; }
+        .cta-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+        /* FOOTER */
+        footer {
+            padding: 48px 40px; background: var(--dark);
+            color: rgba(240,230,227,0.5); text-align: center;
+        }
+        footer .brand { font-size: 16px; font-weight: 600; color: var(--cream); margin-bottom: 8px; }
+        footer p { font-size: 13px; }
+        footer .links { display: flex; gap: 24px; justify-content: center; margin-top: 16px; }
+        footer .links a {
+            color: rgba(240,230,227,0.5); text-decoration: none;
+            font-size: 13px; transition: color 0.2s;
+        }
+        footer .links a:hover { color: var(--coral); }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 36px; }
+            .hero p { font-size: 16px; }
+            .features-grid { grid-template-columns: 1fr; }
+            .stack-grid { grid-template-columns: repeat(2, 1fr); }
+            nav { padding: 12px 20px; }
+            .nav-links a:not(.nav-cta) { display: none; }
+            .hero, .features, .stack, .cta { padding-left: 20px; padding-right: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav id="nav">
+    <a href="#" class="nav-brand"><span>🦞</span><strong>Lobster Code</strong></a>
+    <div class="nav-links">
+        <a href="#features">Funzionalità</a>
+        <a href="#models">Modelli</a>
+        <a href="#usecases">Casi d'uso</a>
+        <a href="https://github.com/ultraworkers/claw-code" target="_blank" class="nav-cta">⬇ Download</a>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-content">
+        <span class="hero-emoji">🦞</span>
+        <h1>Il tuo agente di sviluppo<br><span class="highlight">locale e privato</span></h1>
+        <p>Lobster Code è un agente AI open source che esegue codice, gestisce file e automatizza task direttamente sul tuo computer. Nessun cloud, nessun limite, nessun costo.</p>
+        <div class="hero-badge">✦ Open Source — MIT License</div>
+        <div class="hero-actions">
+            <a href="https://github.com/ultraworkers/claw-code" target="_blank" class="btn btn-github">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                Scarica da GitHub
+            </a>
+            <a href="#install" class="btn btn-primary">Installazione rapida →</a>
+            <a href="#features" class="btn btn-secondary">Scopri di più</a>
+        </div>
+    </div>
+</section>
+
+<!-- INSTALL -->
+<section class="install" id="install">
+    <div class="install-box">
+        <button class="install-copy" onclick="copyInstall()">Copia</button>
+        <div><span class="comment"># Clona il repository</span></div>
+        <div><span class="cmd">git clone</span> https://github.com/ultraworkers/claw-code.git</div>
+        <div><span class="cmd">cd</span> claw-code/ui</div>
+        <br>
+        <div><span class="comment"># Assicurati di avere Ollama installato (ollama.ai)</span></div>
+        <div><span class="cmd">ollama pull</span> <span class="flag">qwen2.5-coder:14b</span></div>
+        <br>
+        <div><span class="comment"># Avvia Lobster Code</span></div>
+        <div><span class="cmd">bash</span> start-agent.command</div>
+    </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+    <div class="section-label">Funzionalità</div>
+    <h2 class="section-title">Tutto ciò di cui hai bisogno</h2>
+    <p class="section-desc">Un agente completo che non si limita a spiegare — esegue direttamente sul tuo sistema.</p>
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon red">⚡</div>
+            <h3>Esecuzione diretta</h3>
+            <p>Esegue comandi bash, crea file, modifica codice. Non spiega come fare — lo fa per te.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon ocean">🔒</div>
+            <h3>Privacy totale</h3>
+            <p>Gira in locale con Ollama. Nessun dato esce dal tuo computer, nessuna API esterna necessaria.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon coral">🧠</div>
+            <h3>Multi-modello</h3>
+            <p>Supporta qualsiasi modello Ollama: Qwen, CodeLlama, Mistral, DeepSeek e altri. Scegli tu.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon sand">📁</div>
+            <h3>File Explorer</h3>
+            <p>Naviga, visualizza e gestisci i tuoi file direttamente dall'interfaccia web integrata.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon green">🛡️</div>
+            <h3>Sicurezza integrata</h3>
+            <p>Protezione automatica dei file di sistema. Comandi distruttivi bloccati a livello di codice.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon dark">🔄</div>
+            <h3>Agent Loop</h3>
+            <p>Loop agente completo: ragiona, usa tool, analizza risultati, itera fino alla soluzione.</p>
+        </div>
+    </div>
+</section>
+
+<!-- DEMO -->
+<section class="demo" id="demo">
+    <div class="demo-inner">
+        <div class="section-label">In azione</div>
+        <h2 class="section-title">Guarda come lavora</h2>
+        <p class="section-desc">Lobster Code non ti dice cosa fare — lo fa direttamente.</p>
+        <div class="demo-window">
+            <div class="demo-titlebar">
+                <div class="demo-dot r"></div>
+                <div class="demo-dot y"></div>
+                <div class="demo-dot g"></div>
+                <span>Lobster Code — localhost:8899</span>
+            </div>
+            <div class="demo-body">
+                <div class="demo-line demo-user">👤  Crea un progetto React con un componente counter</div>
+                <div class="demo-line demo-comment">   # Lobster Code ragiona e usa i tool...</div>
+                <div class="demo-line demo-tool">🔧  bash → npx create-react-app my-counter</div>
+                <div class="demo-line demo-tool">🔧  write_file → src/Counter.jsx (42 righe)</div>
+                <div class="demo-line demo-tool">🔧  edit_file → src/App.jsx (import Counter)</div>
+                <div class="demo-line demo-result">✅  Progetto creato! Esegui `cd my-counter && npm start`</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- STACK -->
+<section class="stack" id="stack">
+    <div class="section-label">Tecnologia</div>
+    <h2 class="section-title">Zero dipendenze, massima potenza</h2>
+    <p class="section-desc">Costruito con semplicità radicale. Solo Python stdlib e Ollama.</p>
+    <div class="stack-grid">
+        <div class="stack-item">
+            <div class="icon">🐍</div>
+            <h4>Python</h4>
+            <p>Backend puro stdlib, zero pip install</p>
+        </div>
+        <div class="stack-item">
+            <div class="icon">🦙</div>
+            <h4>Ollama</h4>
+            <p>LLM locali con tool calling</p>
+        </div>
+        <div class="stack-item">
+            <div class="icon">🌐</div>
+            <h4>Vanilla JS</h4>
+            <p>Frontend senza framework</p>
+        </div>
+        <div class="stack-item">
+            <div class="icon">🦀</div>
+            <h4>Rust CLI</h4>
+            <p>Runtime nativo ad alte prestazioni</p>
+        </div>
+    </div>
+</section>
+
+<!-- MODELS -->
+<section class="models" id="models">
+    <div class="models-inner">
+        <div class="section-label">Modelli supportati</div>
+        <h2 class="section-title">Scegli il cervello che preferisci</h2>
+        <p class="section-desc">Lobster Code funziona con qualsiasi modello Ollama. Ecco i più performanti, testati e consigliati.</p>
+
+        <div class="models-grid">
+            <div class="model-card">
+                <div class="model-badge-icon" style="background:rgba(46,139,87,0.1);">🏆</div>
+                <div class="model-card-info">
+                    <h4>Qwen 2.5 Coder 14B</h4>
+                    <p>Il migliore per coding. Tool calling nativo, veloce e preciso.</p>
+                </div>
+                <div class="model-card-tags">
+                    <span class="model-tag coding">Coding</span>
+                    <span class="model-tag tools">Tools</span>
+                </div>
+            </div>
+            <div class="model-card">
+                <div class="model-badge-icon" style="background:rgba(42,143,181,0.1);">🧊</div>
+                <div class="model-card-info">
+                    <h4>DeepSeek Coder V2</h4>
+                    <p>Eccellente per refactoring e debug. Ragionamento profondo.</p>
+                </div>
+                <div class="model-card-tags">
+                    <span class="model-tag coding">Coding</span>
+                    <span class="model-tag reasoning">Ragionamento</span>
+                </div>
+            </div>
+            <div class="model-card">
+                <div class="model-badge-icon" style="background:rgba(232,117,84,0.1);">⚡</div>
+                <div class="model-card-info">
+                    <h4>CodeLlama 13B</h4>
+                    <p>Veloce e leggero. Ideale per generazione rapida di codice.</p>
+                </div>
+                <div class="model-card-tags">
+                    <span class="model-tag coding">Coding</span>
+                    <span class="model-tag fast">Veloce</span>
+                </div>
+            </div>
+            <div class="model-card">
+                <div class="model-badge-icon" style="background:rgba(196,163,90,0.1);">🌊</div>
+                <div class="model-card-info">
+                    <h4>Mistral 7B / Mixtral</h4>
+                    <p>Ottimo bilanciamento. Tool calling nativo, multi-lingua.</p>
+                </div>
+                <div class="model-card-tags">
+                    <span class="model-tag general">Generale</span>
+                    <span class="model-tag tools">Tools</span>
+                </div>
+            </div>
+            <div class="model-card">
+                <div class="model-badge-icon" style="background:rgba(214,58,40,0.1);">🦙</div>
+                <div class="model-card-info">
+                    <h4>Llama 3.3 70B</h4>
+                    <p>Il più potente. Serve hardware robusto, ma i risultati sono impressionanti.</p>
+                </div>
+                <div class="model-card-tags">
+                    <span class="model-tag general">Generale</span>
+                    <span class="model-tag reasoning">Ragionamento</span>
+                </div>
+            </div>
+            <div class="model-card">
+                <div class="model-badge-icon" style="background:rgba(46,139,87,0.1);">🔮</div>
+                <div class="model-card-info">
+                    <h4>Codestral 22B</h4>
+                    <p>Di Mistral AI, specializzato coding. 80+ linguaggi supportati.</p>
+                </div>
+                <div class="model-card-tags">
+                    <span class="model-tag coding">Coding</span>
+                    <span class="model-tag tools">Tools</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- USE CASES -->
+<section class="usecases" id="usecases">
+    <div class="section-label">Come usarlo</div>
+    <h2 class="section-title">Dalla riga di comando al progetto completo</h2>
+    <p class="section-desc">Non è solo un chatbot. È un collega silenzioso che esegue, non chiacchiera.</p>
+
+    <div class="usecases-grid">
+        <div class="usecase">
+            <div class="usecase-head">
+                <span class="usecase-emoji">🏗️</span>
+                <h3>Scaffolding progetti</h3>
+            </div>
+            <p>Crea strutture complete: React, Flask, FastAPI, static site. Configura linting, testing, CI/CD in un comando.</p>
+            <div class="usecase-example">
+                <span class="dim">→</span> "Crea un'API REST in FastAPI con autenticazione JWT e database SQLite"
+            </div>
+        </div>
+        <div class="usecase">
+            <div class="usecase-head">
+                <span class="usecase-emoji">🐛</span>
+                <h3>Debug e fix</h3>
+            </div>
+            <p>Legge il codice, trova il bug, lo corregge e verifica che funzioni. Senza che tu debba alzare un dito.</p>
+            <div class="usecase-example">
+                <span class="dim">→</span> "Il login non funziona, controlla auth.py e fixalo"
+            </div>
+        </div>
+        <div class="usecase">
+            <div class="usecase-head">
+                <span class="usecase-emoji">📊</span>
+                <h3>Analisi dati</h3>
+            </div>
+            <p>Elabora CSV, genera grafici con matplotlib, calcola statistiche. Tutto in locale, i tuoi dati restano tuoi.</p>
+            <div class="usecase-example">
+                <span class="dim">→</span> "Analizza vendite.csv, mostra trend mensile e top 5 prodotti"
+            </div>
+        </div>
+        <div class="usecase">
+            <div class="usecase-head">
+                <span class="usecase-emoji">🔧</span>
+                <h3>DevOps locale</h3>
+            </div>
+            <p>Gestisci Docker, configura nginx, scrivi Dockerfile. Automatizza task ripetitivi con script bash.</p>
+            <div class="usecase-example">
+                <span class="dim">→</span> "Scrivi un Dockerfile multi-stage per la mia app Node.js"
+            </div>
+        </div>
+        <div class="usecase">
+            <div class="usecase-head">
+                <span class="usecase-emoji">📝</span>
+                <h3>Documentazione</h3>
+            </div>
+            <p>Genera README, docstring, JSDoc, commenti. Legge il codice e produce documentazione coerente.</p>
+            <div class="usecase-example">
+                <span class="dim">→</span> "Aggiungi docstring a tutte le funzioni in utils/"
+            </div>
+        </div>
+        <div class="usecase">
+            <div class="usecase-head">
+                <span class="usecase-emoji">🎨</span>
+                <h3>Frontend da zero</h3>
+            </div>
+            <p>HTML, CSS, JavaScript — componenti, animazioni, layout responsive. Crea e ti mostra il risultato live.</p>
+            <div class="usecase-example">
+                <span class="dim">→</span> "Crea una landing page per il mio portfolio con dark mode"
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- PHILOSOPHY -->
+<section class="philosophy">
+    <div class="philosophy-inner">
+        <div class="section-label">La nostra filosofia</div>
+        <blockquote>"Il miglior tool è quello che non ti chiede mai di uscire dal tuo flusso di lavoro. Lobster Code vive dove lavori tu — nel tuo terminale, sui tuoi file, con i tuoi dati. Nessun cloud che ti spia, nessun abbonamento che ti frena."</blockquote>
+        <p class="author">— Il team di Lobster Code</p>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+    <h2>Pronto per iniziare?</h2>
+    <p>Lobster Code è gratuito, open source e pronto in 2 minuti. Nessun account richiesto.</p>
+    <div class="cta-actions">
+        <a href="https://github.com/ultraworkers/claw-code" target="_blank" class="btn btn-github">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            Scarica da GitHub
+        </a>
+        <a href="#install" class="btn btn-primary">Guida installazione →</a>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <div class="brand">🦞 Lobster Code</div>
+    <p>Agente di sviluppo AI — locale, privato, open source.</p>
+    <div class="links">
+        <a href="#features">Funzionalità</a>
+        <a href="#demo">Demo</a>
+        <a href="https://github.com/ultraworkers/claw-code" target="_blank">GitHub</a>
+        <a href="https://github.com/ultraworkers/claw-code/issues" target="_blank">Segnala bug</a>
+    </div>
+</footer>
+
+<script>
+    window.addEventListener('scroll', () => {
+        document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 20);
+    });
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+        a.addEventListener('click', e => {
+            e.preventDefault();
+            const t = document.querySelector(a.getAttribute('href'));
+            if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    });
+    function copyInstall() {
+        const text = 'git clone https://github.com/ultraworkers/claw-code.git\ncd claw-code/ui\nollama pull qwen2.5-coder:14b\nbash start-agent.command';
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.querySelector('.install-copy');
+            btn.textContent = 'Copiato!';
+            setTimeout(() => btn.textContent = 'Copia', 2000);
+        });
+    }
+</script>
+</body>
+</html>

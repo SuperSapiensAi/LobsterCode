@@ -1,7 +1,40 @@
+# Python
 __pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Environment
+.env
+.env.local
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Lobster Code
+.lobster/
+*.log
+
+# Rust build
+target/
+
+# Node (if applicable)
+node_modules/
+
+# Legacy / internal
 archive/
 .omx/
 .clawd-agents/
-# Claude Code local artifacts
 .claude/settings.local.json
 .claude/sessions/
