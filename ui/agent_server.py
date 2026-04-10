@@ -2486,6 +2486,8 @@ class AgentHandler(http.server.SimpleHTTPRequestHandler):
             self._handle_toggle_multi_model()
         elif self.path == "/api/regenerate-dna":
             self._handle_regenerate_dna()
+        elif self.path == "/api/save-recipe":
+            self._handle_save_recipe()
         else:
             self.send_error(404, "Endpoint non trovato")
 
@@ -3264,6 +3266,50 @@ class AgentHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
         self.wfile.write(response.encode())
+
+    def _handle_save_recipe(self):
+        """Salva una ricetta custom dell'utente."""
+        request = self._read_json_body()
+        if request is None:
+            return
+        name = request.get("name", "").strip()
+        if not name:
+            self.send_response(400)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(json.dumps({"success": False, "error": "Nome obbligatorio"}).encode())
+            return
+        # Genera ID dal nome
+        recipe_id = _re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-')
+        if not recipe_id:
+            recipe_id = f"custom-{int(time.time())}"
+        recipe = {
+            "id": recipe_id,
+            "name": name,
+            "description": request.get("description", name),
+            "tags": request.get("tags", []),
+            "variables": request.get("variables", []),
+            "steps": request.get("steps", []),
+        }
+        # Salva nella directory utente
+        os.makedirs(_USER_RECIPES_DIR, exist_ok=True)
+        rpath = os.path.join(_USER_RECIPES_DIR, f"{recipe_id}.json")
+        try:
+            with open(rpath, "w", encoding="utf-8") as f:
+                json.dump(recipe, f, indent=2, ensure_ascii=False)
+            response = json.dumps({"success": True, "id": recipe_id, "path": rpath}, ensure_ascii=False)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(response.encode())
+        except Exception as e:
+            self.send_response(500)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode())
 
     # --- Multi-Model endpoints ---
 

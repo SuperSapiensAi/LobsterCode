@@ -1305,9 +1305,12 @@
     <!-- Recipes Tab -->
     <div class="sidebar-content" id="tab-recipes">
         <div style="padding:12px;">
-            <div style="font-size:11px;font-weight:700;color:var(--sidebar-text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Workflow Recipes</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                <span style="font-size:11px;font-weight:700;color:var(--sidebar-text-dim);text-transform:uppercase;letter-spacing:0.5px;">Workflow Recipes</span>
+                <button onclick="createCustomRecipe()" style="background:none;border:1px solid var(--sidebar-border);border-radius:6px;color:var(--accent-light);cursor:pointer;font-size:10px;padding:3px 8px;" title="Crea ricetta custom">+ Nuova</button>
+            </div>
             <div id="recipesList" style="display:flex;flex-direction:column;gap:6px;">
-                <div style="color:var(--sidebar-text-dim);text-align:center;padding:20px;font-size:11px;">Caricamento...</div>
+                <div style="color:var(--sidebar-text-dim);text-align:center;padding:20px;font-size:11px;">Seleziona il tab per caricare</div>
             </div>
         </div>
     </div>
@@ -2789,6 +2792,44 @@
             }
         } catch (e) {
             alert('Errore nell\'esecuzione della ricetta: ' + e.message);
+        }
+    }
+
+    async function createCustomRecipe() {
+        const name = prompt('Nome della ricetta:', '');
+        if (!name) return;
+        const description = prompt('Descrizione breve:', '');
+        if (description === null) return;
+        const stepsText = prompt('Step (prompt che l\'agente eseguirà).\nPuoi separare più step con "---":', '');
+        if (!stepsText) return;
+        const tags = prompt('Tag separati da virgola (es: python, testing):', '');
+
+        const steps = stepsText.split('---').map(s => s.trim()).filter(Boolean).map(s => ({
+            type: 'prompt',
+            action: s
+        }));
+
+        const recipe = {
+            name: name,
+            description: description || name,
+            tags: tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+            steps: steps
+        };
+
+        try {
+            const res = await safeFetch(`${API_BASE}/api/save-recipe`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(recipe)
+            });
+            const data = await res.json();
+            if (data.success) {
+                loadRecipes();
+            } else {
+                alert('Errore: ' + (data.error || 'salvataggio fallito'));
+            }
+        } catch (e) {
+            alert('Errore nel salvataggio: ' + e.message);
         }
     }
 
