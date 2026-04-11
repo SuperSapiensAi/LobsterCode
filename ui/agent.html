@@ -2353,10 +2353,13 @@
         }
 
         if (tabName === 'modifiche') {
+            _modTabSeen = true;
             loadModifiedFiles();
             const modBadge = document.getElementById('modBadge');
             modBadge.style.display = 'none';
             modBadge.textContent = '0';
+        } else {
+            _modTabSeen = false;
         }
         if (tabName === 'git') loadGitStatus();
         if (tabName === 'memory') loadSessionMemory();
@@ -2436,11 +2439,15 @@
         }
     }
 
+    let _modTabSeen = false;  // true quando l'utente ha visto il tab Mod
+
     function renderModifiedFiles() {
         const list = modifiedFilesData || [];
         const modBadge = document.getElementById('modBadge');
-        
-        if (list.length > 0) {
+
+        // Mostra badge solo se ci sono file E l'utente non sta guardando il tab
+        const modTabActive = document.getElementById('tab-modifiche') && document.getElementById('tab-modifiche').classList.contains('active');
+        if (list.length > 0 && !modTabActive && !_modTabSeen) {
             modBadge.textContent = list.length;
             modBadge.style.display = 'inline-block';
         } else {
