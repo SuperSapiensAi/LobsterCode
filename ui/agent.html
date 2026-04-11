@@ -2082,38 +2082,43 @@
 
     // ============ MODEL SELECTOR ============
     function getModelCategory(name) {
+        // Categorizza solo modelli con tool calling nativo (filtrati da getModelToolSupport)
         const n = name.toLowerCase();
         // Coding models
-        if (n.includes('coder') || n.includes('codellama') || n.includes('starcoder') ||
-            n.includes('deepseek-coder') || n.includes('codestral'))
+        if (n.includes('coder') || n.includes('codestral'))
             return { label: 'Coding', color: '#3fb950', icon: '&#128187;' };
         // Reasoning models
-        if (n.includes('phi') || n.includes('qwq') || n.includes('thinking') ||
-            n.includes('o1') || n.includes('o3') || n.includes('deepseek-r'))
+        if (n.includes('phi4') || n.includes('phi3.5') || n.includes('qwq') || n.includes('thinking'))
             return { label: 'Ragionamento', color: '#d29922', icon: '&#129504;' };
-        // Vision models
-        if (n.includes('llava') || n.includes('vision') || n.includes('bakllava'))
-            return { label: 'Visione', color: '#a371f7', icon: '&#128065;' };
-        // Small/fast models
+        // Google AI
         if (n.includes('gemma4') || n.includes('gemma3'))
             return { label: 'Google AI', color: '#4285f4', icon: '&#128142;' };
-        if (n.includes('gemma') || n.includes('tinyllama') || n.includes('phi3:mini'))
-            return { label: 'Veloce', color: '#00c8ff', icon: '&#9889;' };
         // General purpose
         if (n.includes('llama') || n.includes('mistral') || n.includes('mixtral') ||
-            n.includes('qwen3') || n.includes('command'))
+            n.includes('qwen') || n.includes('command') || n.includes('granite') ||
+            n.includes('nemotron') || n.includes('hermes'))
             return { label: 'Generale', color: '#8b949e', icon: '&#127793;' };
-        // Deep seek general
-        if (n.includes('deepseek'))
-            return { label: 'Coding', color: '#3fb950', icon: '&#128187;' };
 
         return { label: 'Generale', color: '#8b949e', icon: '&#127793;' };
     }
 
     function getModelToolSupport(name) {
-        // Ollama 0.20+ supporta tool calling per la maggior parte dei modelli.
-        // Mostra tutti i modelli installati — l'utente sceglie.
-        return true;
+        // Whitelist modelli con tool calling nativo verificato su Ollama 0.20+.
+        // Solo questi invocano tool_calls nel JSON — gli altri li ignorano o li scrivono come testo.
+        const n = name.toLowerCase();
+        const toolCapable = [
+            'gemma4', 'gemma3',
+            'qwen3', 'qwen2.5', 'qwen2',
+            'mistral', 'mixtral', 'codestral',
+            'llama3.1', 'llama3.2', 'llama3.3', 'llama4',
+            'command-r', 'command-r-plus',
+            'phi4', 'phi3.5',
+            'granite',
+            'nemotron',
+            'firefunction',
+            'hermes3',
+        ];
+        return toolCapable.some(prefix => n.includes(prefix));
     }
 
     async function loadModels() {
@@ -2131,8 +2136,16 @@
                 return;
             }
 
-            // Mostra tutti i modelli installati
-            const toolModels = models;
+            // Mostra SOLO modelli con tool calling nativo verificato
+            const toolModels = models.filter(m => getModelToolSupport(m.name));
+
+            if (toolModels.length === 0) {
+                list.innerHTML = `
+                    <p style="color:var(--text-dim);font-size:13px;margin-bottom:12px;">Nessun modello con tool calling installato.<br>Installa uno tra: <strong>gemma4</strong>, <strong>qwen3</strong>, <strong>mistral</strong>, <strong>llama3.1+</strong></p>
+                    <button class="model-card-btn download" style="width:100%;" onclick="document.getElementById('modelModal').classList.remove('active'); openSetupWizard();">Apri Setup Wizard</button>
+                `;
+                return;
+            }
 
             list.innerHTML = toolModels.map(m => {
                 const sizeGB = (m.size / 1e9).toFixed(1) + ' GB';

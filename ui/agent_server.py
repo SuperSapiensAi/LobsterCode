@@ -1903,31 +1903,63 @@ def _extract_text_tool_calls(text: str) -> list:
     Formati supportati:
       {"name": "bash", "arguments": {"command": "ls"}}
       ```json\n{"name": "bash", ...}\n```
+    Usa un parser a conteggio parentesi per gestire JSON annidato.
     """
     found = []
-    # Cerca blocchi JSON che sembrano tool calls
-    # Pattern 1: { "name": "<tool>", "arguments": { ... } }
-    pattern = r'\{\s*"name"\s*:\s*"(\w+)"\s*,\s*"arguments"\s*:\s*(\{[^}]*(?:\{[^}]*\}[^}]*)?\})\s*\}'
-    for match in _re.finditer(pattern, text, _re.DOTALL):
-        name = match.group(1)
-        if name in TOOL_NAMES:
-            try:
-                args = json.loads(match.group(2))
-                found.append({"name": name, "arguments": args})
-            except json.JSONDecodeError:
-                pass
 
-    # Pattern 2: blocco ```json ... ``` o ``` ... ```
-    code_blocks = _re.findall(r'```(?:json)?\s*(\{.*?\})\s*```', text, _re.DOTALL)
-    for block in code_blocks:
+    def _find_json_objects(s: str) -> list:
+        """Trova tutti i blocchi JSON top-level bilanciati nel testo."""
+        objects = []
+        i = 0
+        while i < len(s):
+            if s[i] == '{':
+                depth = 0
+                start = i
+                in_string = False
+                escape_next = False
+                while i < len(s):
+                    c = s[i]
+                    if escape_next:
+                        escape_next = False
+                    elif c == '\\' and in_string:
+                        escape_next = True
+                    elif c == '"' and not escape_next:
+                        in_string = not in_string
+                    elif not in_string:
+                        if c == '{':
+                            depth += 1
+                        elif c == '}':
+                            depth -= 1
+                            if depth == 0:
+                                objects.append(s[start:i+1])
+                                break
+                    i += 1
+            i += 1
+        return objects
+
+    def _try_parse_tool_call(raw: str) -> dict:
+        """Prova a parsare un blocco JSON come tool call."""
         try:
-            obj = json.loads(block)
+            obj = json.loads(raw)
             if isinstance(obj, dict) and obj.get("name") in TOOL_NAMES and "arguments" in obj:
-                # Evita duplicati
-                if not any(f["name"] == obj["name"] and f["arguments"] == obj["arguments"] for f in found):
-                    found.append({"name": obj["name"], "arguments": obj["arguments"]})
-        except json.JSONDecodeError:
+                return {"name": obj["name"], "arguments": obj["arguments"]}
+        except (json.JSONDecodeError, ValueError):
             pass
+        return None
+
+    # Pattern 1: blocchi ```json ... ``` o ``` ... ``` (priorità alta, meno ambiguo)
+    code_blocks = _re.findall(r'```(?:json)?\s*(.*?)\s*```', text, _re.DOTALL)
+    for block in code_blocks:
+        for raw in _find_json_objects(block):
+            tc = _try_parse_tool_call(raw)
+            if tc and not any(f["name"] == tc["name"] and f["arguments"] == tc["arguments"] for f in found):
+                found.append(tc)
+
+    # Pattern 2: JSON inline nel testo (cerca tutti i { ... } bilanciati)
+    for raw in _find_json_objects(text):
+        tc = _try_parse_tool_call(raw)
+        if tc and not any(f["name"] == tc["name"] and f["arguments"] == tc["arguments"] for f in found):
+            found.append(tc)
 
     return found
 
@@ -1937,42 +1969,65 @@ def _looks_like_final_response(text: str) -> bool:
     Euristica: se il testo sembra una risposta finale rivolta all'utente
     (non un tentativo di usare tool), ritorna True per evitare che il
     fallback text-tool-call lo catturi e il loop continui all'infinito.
+
+    Strategia: contiamo i "segnali tool" vs i "segnali finale" e decidiamo
+    in base al rapporto, non in base a singoli match fragili.
     """
     t = text.lower().strip()
-    # Se il testo è molto lungo (>300 chars) con pochi JSON, è probabilmente
-    # una risposta finale che contiene esempi di codice
-    json_ratio = text.count('"name"') / max(len(t), 1)
-    if len(t) > 300 and json_ratio < 0.01:
+    if not t:
         return True
 
-    # Se c'è molto testo discorsivo rispetto ai blocchi JSON
-    # (il modello sta spiegando, non invocando tool)
+    # ---- Segnali che indicano tool call intenzionale ----
+    # Se il testo è SOLO un blocco JSON (magari con ```), è quasi certamente un tool call
+    stripped = _re.sub(r'```(?:json)?\s*', '', t).strip().rstrip('`').strip()
+    if stripped.startswith('{') and stripped.endswith('}') and len(stripped) < 2000:
+        return False
+
+    # Conta quanti tool call validi sono stati trovati
+    tool_name_matches = sum(1 for name in TOOL_NAMES if f'"name": "{name}"' in t or f'"name":"{name}"' in t)
+
+    # ---- Segnali che indicano risposta finale ----
+    final_score = 0
+
+    # Testo molto lungo con poco JSON → probabilmente spiega
     non_json_text = _re.sub(r'\{[^}]*\}', '', t)
-    if len(non_json_text) > 200:
-        return True
+    if len(non_json_text) > 300:
+        final_score += 2
 
-    # Pattern di chiusura comuni (l'agente sta parlando all'utente)
-    final_phrases = [
-        "ho completato", "ho finito", "ecco il risultato", "il file è stato",
-        "il sito è pronto", "è stato creato", "ho creato", "ecco cosa ho fatto",
-        "ho scritto", "puoi trovare", "il progetto è pronto", "tutto fatto",
-        "missione compiuta", "operazione completata", "ho terminato",
-        "here is", "here's", "i've created", "i have created", "done",
-        "the file has been", "the site is ready", "i've finished",
-        "completa con successo", "completato con successo",
-        "fammi sapere", "let me know", "dimmi se", "se hai bisogno",
-        "se vuoi che", "posso aiutarti", "qualcos'altro",
-        "anything else", "is there anything",
-        "repository inizializzato", "repo inizializzat", "git init",
-        "ora puoi", "adesso puoi", "è pronto", "sono pronto",
-        "in sintesi", "in summary", "riepilog", "riassumendo",
-        "buon lavoro", "good luck", "happy coding",
+    # Frasi di chiusura (raggruppate per forza del segnale)
+    strong_final = [
+        "ho completato", "ho finito", "tutto fatto", "missione compiuta",
+        "operazione completata", "ho terminato", "i've finished", "i've created",
+        "completato con successo", "completa con successo",
     ]
-    for phrase in final_phrases:
-        if phrase in t:
-            return True
+    medium_final = [
+        "ecco il risultato", "ecco cosa ho fatto", "fammi sapere", "let me know",
+        "dimmi se", "se hai bisogno", "anything else", "is there anything",
+        "posso aiutarti", "qualcos'altro", "buon lavoro", "happy coding",
+        "in sintesi", "in summary", "riepilog", "riassumendo",
+    ]
+    weak_final = [
+        "ho creato", "ho scritto", "è pronto", "sono pronto",
+        "il file è stato", "è stato creato", "here is", "here's",
+        "puoi trovare", "ora puoi", "adesso puoi",
+    ]
 
-    return False
+    for phrase in strong_final:
+        if phrase in t:
+            final_score += 3
+    for phrase in medium_final:
+        if phrase in t:
+            final_score += 2
+    for phrase in weak_final:
+        if phrase in t:
+            final_score += 1
+
+    # ---- Decisione ----
+    # Se ci sono tool call espliciti, servono segnali finali molto forti
+    if tool_name_matches > 0:
+        return final_score >= 5  # servono almeno 2 segnali forti
+    # Se non ci sono tool call nel testo, qualsiasi segnale basta
+    return final_score >= 1
 
 
 def run_agent_loop(model: str, messages: list, stream_callback):
@@ -2037,18 +2092,21 @@ def run_agent_loop(model: str, messages: list, stream_callback):
 
         # Aggiungi il messaggio assistant con i tool calls
         assistant_msg = {"role": "assistant", "content": collected_text or ""}
-        # Nota: Ollama gestisce tool_calls nel messaggio
-        # Dobbiamo ricostruire il formato corretto
+        # Ricostruisci il formato corretto con tool_call_id per correlazione
         assistant_msg["tool_calls"] = [
-            {"function": {"name": tc["name"], "arguments": tc["arguments"]}}
-            for tc in tool_calls
+            {
+                "id": f"call_{turns}_{i}",
+                "function": {"name": tc["name"], "arguments": tc["arguments"]}
+            }
+            for i, tc in enumerate(tool_calls)
         ]
         messages.append(assistant_msg)
 
-        # Esegui ogni tool call
-        for tc in tool_calls:
+        # Esegui ogni tool call con error handling individuale
+        for i, tc in enumerate(tool_calls):
             tool_name = tc["name"]
             tool_args = tc["arguments"]
+            call_id = f"call_{turns}_{i}"
 
             # Notifica UI che stiamo eseguendo un tool
             stream_callback("tool_start", {
@@ -2056,8 +2114,11 @@ def run_agent_loop(model: str, messages: list, stream_callback):
                 "arguments": tool_args
             })
 
-            # Esegui il tool
-            result = execute_tool(tool_name, tool_args)
+            # Esegui il tool con protezione errori
+            try:
+                result = execute_tool(tool_name, tool_args)
+            except Exception as e:
+                result = f"ERRORE nell'esecuzione di {tool_name}: {e}"
 
             # Notifica UI del risultato
             stream_callback("tool_result", {
@@ -2065,9 +2126,10 @@ def run_agent_loop(model: str, messages: list, stream_callback):
                 "result": result[:5000]  # limita per la UI
             })
 
-            # Aggiungi il risultato ai messaggi
+            # Aggiungi il risultato ai messaggi con tool_call_id
             messages.append({
                 "role": "tool",
+                "tool_call_id": call_id,
                 "content": result
             })
 
