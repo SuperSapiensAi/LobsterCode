@@ -40,7 +40,6 @@ SERVER_PORT = int(os.environ.get("LOBSTER_PORT", os.environ.get("CLAW_PORT", "88
 
 # Engine: solo Ollama nativo (V1)
 ENGINE_MODE = "ollama"
-CLAW_BINARY = ""  # Non usato in V1, mantenuto per compatibilità dead code
 
 # Sicurezza: limite dimensione request body (10 MB)
 MAX_REQUEST_SIZE = 10 * 1024 * 1024
@@ -1635,296 +1634,9 @@ def call_ollama_streaming(model: str, messages: list, use_tools: bool = True):
         yield ("done", {})
 
 
-def call_ollama_pro_streaming(model: str, messages: list, use_tools: bool = True):
-    """
-    Chiama Ollama via Messages API (/v1/messages) in streaming SSE.
-    Disponibile da Ollama v0.14+. Fornisce tool calling nativo senza fallback.
-    Yield tuples: ("text", str) | ("tool_call", dict) | ("done", dict)
-    """
-    # Convert messages to /v1/messages format
-    pro_messages = []
-    system_content = ""
-    for msg in messages:
-        role = msg.get("role", "")
-        if role == "system":
-            system_content = msg.get("content", "")
-            continue
-        elif role == "user":
-            pro_messages.append({"role": "user", "content": msg.get("content", "")})
-        elif role == "assistant":
-            content_blocks = []
-            text = msg.get("content", "")
-            if text:
-                content_blocks.append({"type": "text", "text": text})
-            # Add tool_use blocks if present
-            for tc in msg.get("tool_calls", []):
-                fn = tc.get("function", {})
-                content_blocks.append({
-                    "type": "tool_use",
-                    "id": f"toolu_{int(time.time()*1000)}_{fn.get('name','')}",
-                    "name": fn.get("name", ""),
-                    "input": fn.get("arguments", {})
-                })
-            if content_blocks:
-                pro_messages.append({"role": "assistant", "content": content_blocks})
-        elif role == "tool":
-            # Convert tool result to /v1/messages format
-            pro_messages.append({
-                "role": "user",
-                "content": [{
-                    "type": "tool_result",
-                    "tool_use_id": f"toolu_result_{int(time.time()*1000)}",
-                    "content": msg.get("content", "")
-                }]
-            })
-
-    # Build /v1/messages-format tools
-    pro_tools = []
-    if use_tools:
-        for t in TOOLS:
-            fn = t.get("function", {})
-            pro_tools.append({
-                "name": fn.get("name", ""),
-                "description": fn.get("description", ""),
-                "input_schema": fn.get("parameters", {})
-            })
-
-    payload = {
-        "model": model,
-        "max_tokens": 4096,
-        "messages": pro_messages,
-        "stream": True,
-    }
-    if system_content:
-        payload["system"] = system_content
-    if pro_tools:
-        payload["tools"] = pro_tools
-
-    data = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(
-        f"{OLLAMA_BASE}/v1/messages",
-        data=data,
-        headers={
-            "Content-Type": "application/json",
-            "anthropic-version": "2023-06-01",
-        },
-        method="POST"
-    )
-
-    try:
-        with urllib.request.urlopen(req, timeout=300) as resp:
-            buffer = ""
-            current_tool_name = ""
-            current_tool_id = ""
-            current_tool_json = ""
-
-            for raw_chunk in iter(lambda: resp.read(4096), b""):
-                buffer += raw_chunk.decode("utf-8", errors="replace")
-
-                while "\n" in buffer:
-                    line, buffer = buffer.split("\n", 1)
-                    line = line.strip()
-
-                    if not line or line.startswith(":"):
-                        continue
-
-                    if line.startswith("event:"):
-                        continue
-
-                    if line.startswith("data: "):
-                        json_str = line[6:]
-                        if json_str.strip() == "[DONE]":
-                            yield ("done", {})
-                            return
-
-                        try:
-                            event = json.loads(json_str)
-                        except json.JSONDecodeError:
-                            continue
-
-                        event_type = event.get("type", "")
-
-                        if event_type == "content_block_start":
-                            block = event.get("content_block", {})
-                            if block.get("type") == "tool_use":
-                                current_tool_name = block.get("name", "")
-                                current_tool_id = block.get("id", "")
-                                current_tool_json = ""
-
-                        elif event_type == "content_block_delta":
-                            delta = event.get("delta", {})
-                            delta_type = delta.get("type", "")
-
-                            if delta_type == "text_delta":
-                                text = delta.get("text", "")
-                                if text:
-                                    yield ("text", text)
-
-                            elif delta_type == "input_json_delta":
-                                current_tool_json += delta.get("partial_json", "")
-
-                        elif event_type == "content_block_stop":
-                            if current_tool_name:
-                                try:
-                                    args = json.loads(current_tool_json) if current_tool_json else {}
-                                except json.JSONDecodeError:
-                                    args = {}
-                                yield ("tool_call", {
-                                    "name": current_tool_name,
-                                    "arguments": args,
-                                    "id": current_tool_id
-                                })
-                                current_tool_name = ""
-                                current_tool_id = ""
-                                current_tool_json = ""
-
-                        elif event_type == "message_stop":
-                            yield ("done", {})
-                            return
-
-                    # Also handle NDJSON format (Ollama might use this instead of SSE)
-                    elif line.startswith("{"):
-                        try:
-                            event = json.loads(line)
-                            event_type = event.get("type", "")
-
-                            # Same handling as above for NDJSON
-                            if event_type == "content_block_start":
-                                block = event.get("content_block", {})
-                                if block.get("type") == "tool_use":
-                                    current_tool_name = block.get("name", "")
-                                    current_tool_id = block.get("id", "")
-                                    current_tool_json = ""
-                            elif event_type == "content_block_delta":
-                                delta = event.get("delta", {})
-                                if delta.get("type") == "text_delta":
-                                    text = delta.get("text", "")
-                                    if text:
-                                        yield ("text", text)
-                                elif delta.get("type") == "input_json_delta":
-                                    current_tool_json += delta.get("partial_json", "")
-                            elif event_type == "content_block_stop":
-                                if current_tool_name:
-                                    try:
-                                        args = json.loads(current_tool_json) if current_tool_json else {}
-                                    except json.JSONDecodeError:
-                                        args = {}
-                                    yield ("tool_call", {
-                                        "name": current_tool_name,
-                                        "arguments": args,
-                                        "id": current_tool_id
-                                    })
-                                    current_tool_name = ""
-                                    current_tool_id = ""
-                                    current_tool_json = ""
-                            elif event_type == "message_stop":
-                                yield ("done", {})
-                                return
-                        except json.JSONDecodeError:
-                            continue
-
-    except urllib.error.HTTPError as e:
-        if e.code == 404:
-            # Ollama Pro API not available on this Ollama version
-            yield ("text", "\n\n⚠️ Ollama Pro non disponibile. Aggiorna Ollama a v0.14+ o usa il motore nativo.")
-        else:
-            yield ("text", f"\n\n❌ Errore Ollama Pro: {e.code} {e.reason}")
-        yield ("done", {})
-    except urllib.error.URLError as e:
-        yield ("text", f"\n\n❌ Errore connessione: {e}")
-        yield ("done", {})
-
-
-def call_claw_subprocess(model: str, messages: list, use_tools: bool = True):
-    """
-    Usa il binario Claw Code come motore. Offre permission system, MCP, LSP, plugin system.
-    Yield tuples: ("text", str) | ("tool_call", dict) | ("done", dict)
-    """
-    if not os.path.isfile(CLAW_BINARY):
-        yield ("text", f"⚠️ Binario claw non trovato: {CLAW_BINARY}\nCompila con: cd rust && cargo build --workspace")
-        yield ("done", {})
-        return
-
-    # Get the last user message
-    user_msg = ""
-    for m in reversed(messages):
-        if m.get("role") == "user":
-            user_msg = m.get("content", "")
-            break
-
-    if not user_msg:
-        yield ("text", "Nessun messaggio utente trovato.")
-        yield ("done", {})
-        return
-
-    try:
-        env = os.environ.copy()
-        env["OPENAI_BASE_URL"] = f"{OLLAMA_BASE}/v1"
-        env.pop("OPENAI_API_KEY", None)  # Ollama non richiede API key
-
-        proc = subprocess.Popen(
-            [CLAW_BINARY, "--model", model, "--output-format", "json",
-             "--permission-mode", "workspace-write",
-             "prompt", user_msg],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            cwd=WORKSPACE_ROOT,
-            env=env,
-        )
-
-        for line in proc.stdout:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                obj = json.loads(line)
-                msg_type = obj.get("type", "")
-                if msg_type == "assistant":
-                    text = obj.get("message", "")
-                    if text:
-                        yield ("text", text)
-                elif msg_type == "tool_use":
-                    yield ("tool_call", {
-                        "name": obj.get("name", ""),
-                        "arguments": obj.get("input", {})
-                    })
-                elif msg_type == "result":
-                    text = obj.get("result", "")
-                    if text:
-                        yield ("text", f"\n📎 {text}")
-            except json.JSONDecodeError:
-                # Raw text output
-                yield ("text", line)
-
-        proc.wait(timeout=300)
-        yield ("done", {})
-
-    except FileNotFoundError:
-        yield ("text", f"⚠️ Binario claw non trovato: {CLAW_BINARY}")
-        yield ("done", {})
-    except subprocess.TimeoutExpired:
-        proc.kill()
-        yield ("text", "\n❌ Timeout: il processo claw ha impiegato troppo tempo.")
-        yield ("done", {})
-    except Exception as e:
-        yield ("text", f"\n❌ Errore claw: {str(e)}")
-        yield ("done", {})
-
-
-def _detect_best_engine():
-    """Motore fisso: solo Ollama nativo (unico affidabile con tool calling)."""
-    global ENGINE_MODE
-    ENGINE_MODE = "ollama"
-    return "ollama"
-
-_active_engine = None  # Cache
-
 def get_active_engine():
-    global _active_engine
-    if _active_engine is None:
-        _active_engine = _detect_best_engine()
-    return _active_engine
+    """V1: sempre Ollama nativo."""
+    return "ollama"
 
 
 import re as _re
@@ -2090,18 +1802,7 @@ def run_agent_loop(model: str, messages: list, stream_callback):
         tool_calls = []
         got_tool_call = False
 
-        engine = get_active_engine()
-        if engine == "claw":
-            # Claw handles its own agent loop
-            for event_type, data in call_claw_subprocess(model, messages):
-                stream_callback(event_type, data)
-            return messages
-        elif engine == "ollama-pro":
-            stream_fn = call_ollama_pro_streaming
-        else:
-            stream_fn = call_ollama_streaming
-
-        for event_type, data in stream_fn(model, messages):
+        for event_type, data in call_ollama_streaming(model, messages):
             if event_type == "text":
                 collected_text += data
                 stream_callback("text", data)
@@ -2226,8 +1927,6 @@ class AgentHandler(http.server.SimpleHTTPRequestHandler):
             self._handle_session_memory_write()
         elif self.path == "/api/rollback":
             self._handle_rollback()
-        elif self.path == "/api/set-engine":
-            self._handle_set_engine()
         elif self.path == "/api/set-permission":
             self._handle_set_permission()
         elif self.path == "/api/grant-workspace":
@@ -2293,49 +1992,14 @@ class AgentHandler(http.server.SimpleHTTPRequestHandler):
             "path": WORKSPACE_ROOT,
             "model": DEFAULT_MODEL,
             "ollama_base": OLLAMA_BASE,
-            "engine": get_active_engine(),
-            "permission_mode": PERMISSION_MODE,
-            "claw_available": os.path.isfile(CLAW_BINARY),
-            "engines_available": {
-                "ollama": True,
-                "ollama-pro": get_active_engine() == "ollama-pro" or ENGINE_MODE == "ollama-pro",
-                "claw": os.path.isfile(CLAW_BINARY)
-            }
+            "engine": "ollama",
+            "permission_mode": PERMISSION_MODE
         })
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
         self.wfile.write(info.encode())
-
-    def _handle_set_engine(self):
-        """Cambia il motore di esecuzione."""
-        request = self._read_json_body()
-        if request is None:
-            return
-
-        global _active_engine, ENGINE_MODE
-        new_engine = request.get("engine", "")
-        if new_engine not in ("ollama", "ollama-pro", "claw", "auto"):
-            self.send_error(400, "Engine non valido. Usa: ollama, ollama-pro, claw, auto")
-            return
-
-        with _state_lock:
-            if new_engine == "auto":
-                _active_engine = None
-                ENGINE_MODE = "auto"
-                engine = get_active_engine()
-            else:
-                _active_engine = new_engine
-                ENGINE_MODE = new_engine
-                engine = new_engine
-
-        response = json.dumps({"engine": engine, "success": True})
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.end_headers()
-        self.wfile.write(response.encode())
 
     def _handle_set_permission(self):
         """Cambia la modalità di permesso."""
@@ -3149,7 +2813,14 @@ class AgentHandler(http.server.SimpleHTTPRequestHandler):
                     f"- NON aprire applicazioni esterne.\n"
                     f"- Fai SOLO quello che l'utente ha chiesto.\n\n"
                     f"MOTORE: Ollama (locale)\n"
-                    f"Rispondi in italiano se l'utente scrive in italiano."
+                    f"Rispondi in italiano se l'utente scrive in italiano.\n\n"
+                    f"ESEMPI DI COMPORTAMENTO CORRETTO:\n"
+                    f"Utente: 'controlla se ci sono errori nel mio codice'\n"
+                    f"Tu: usi list_directory per vedere i file, poi read_file per leggere il codice, poi rispondi con i problemi trovati.\n\n"
+                    f"Utente: 'fai un check di sicurezza'\n"
+                    f"Tu: chiedi 'Cosa vuoi che controlli? Posso verificare: permessi file, porte aperte, dipendenze vulnerabili, processi attivi. Su cosa mi concentro?'\n\n"
+                    f"Utente: 'crea un componente React'\n"
+                    f"Tu: usi write_file per creare il file, poi rispondi con un breve riepilogo."
                 )
             }
 
