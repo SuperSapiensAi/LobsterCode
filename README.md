@@ -28,6 +28,21 @@ Lobster Code automatically scans your project and builds a context profile: stac
 ### Stack-Aware Prompt Templates
 14 pre-built prompt templates that adapt to your detected stack. Working on React? You get component scaffolding suggestions. Python project? Virtual env setup and test commands are ready. Zero configuration needed.
 
+### MCP (Model Context Protocol)
+Connect external tools via MCP — databases, GitHub, Slack, browsers, and more. Configure servers in `.lobster/mcp.json`:
+```json
+{
+  "mcp_servers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {"GITHUB_TOKEN": "..."}
+    }
+  }
+}
+```
+MCP tools appear alongside native tools — Ollama uses them like any other tool. Zero code changes needed.
+
 ### Security & Isolation
 - **Workspace grant system** — the agent can only access folders you explicitly allow
 - **3 permission levels** — read-only, workspace-write, or full-access modes
@@ -92,9 +107,9 @@ The setup wizard recommends the best model based on your available RAM.
               ┌────────────┼────────────┐
               │            │            │
         ┌─────┴─────┐ ┌───┴───┐ ┌──────┴──────┐
-        │  7 Tools   │ │  DNA  │ │  Security   │
-        │  Filesystem│ │ Scan  │ │  3 levels   │
-        │  Bash Shell│ │ Stack │ │  Snapshots  │
+        │  7 Tools   │ │  DNA  │ │  MCP / Ext  │
+        │  Filesystem│ │ Scan  │ │  Tools      │
+        │  Bash Shell│ │ Stack │ │  Security   │
         └───────────┘ └───────┘ └─────────────┘
 ```
 
@@ -112,6 +127,7 @@ The server is a single Python file with zero dependencies. The UI is a single HT
 | Project DNA (auto-context) | ✅ | ❌ | ❌ |
 | Snapshot Rollback | ✅ | ❌ | ❌ |
 | Workspace Isolation | ✅ | ❌ | ❌ |
+| MCP / Extensibility | ✅ | ❌ | ✅ |
 | Agentic Tools | ✅ | ✅ | ✅ |
 | File Editing | ✅ | ✅ | ✅ |
 | Terminal Access | ✅ | ✅ | ✅ |
@@ -126,6 +142,8 @@ All configuration is via environment variables:
 | `CLAW_WORKSPACE` | `~` | Default workspace path |
 | `CLAW_PORT` | `8899` | Server port |
 | `OLLAMA_BASE_URL` | `http://127.0.0.1:11434` | Ollama server URL |
+
+MCP servers are configured in `.lobster/mcp.json` in your workspace — same format as Claude's MCP config.
 
 ## Project Structure
 

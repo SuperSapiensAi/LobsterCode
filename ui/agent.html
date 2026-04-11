@@ -1317,6 +1317,9 @@
             <span id="modelName">gemma4:latest</span>
         </div>
         <div class="agent-badge">AGENT</div>
+        <div class="mcp-badge" id="mcpBadge" style="display:none;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.3);border-radius:12px;padding:3px 10px;font-size:11px;color:#8b5cf6;cursor:pointer;" onclick="showMcpStatus()" title="Server MCP connessi">
+            🔌 <span id="mcpCount">0</span> MCP
+        </div>
         <div id="projectBadges" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
         <div class="topbar-spacer"></div>
         <span class="workspace-label" id="workspaceLabel"></span>
@@ -3250,6 +3253,62 @@
             sendMessage();
         }
     });
+
+    // ============ MCP STATUS ============
+    async function loadMcpStatus() {
+        try {
+            const res = await safeFetch(`${API_BASE}/api/mcp-status`);
+            const data = await res.json();
+            const badge = document.getElementById('mcpBadge');
+            const count = document.getElementById('mcpCount');
+            const connectedServers = Object.values(data.servers || {}).filter(s => s.connected);
+            if (connectedServers.length > 0) {
+                badge.style.display = '';
+                count.textContent = data.total_tools || 0;
+                badge.title = `MCP: ${connectedServers.length} server, ${data.total_tools} tool`;
+            } else {
+                badge.style.display = 'none';
+            }
+        } catch(e) { /* MCP non configurato — nascosto */ }
+    }
+
+    function showMcpStatus() {
+        safeFetch(`${API_BASE}/api/mcp-status`)
+            .then(r => r.json())
+            .then(data => {
+                const servers = data.servers || {};
+                let html = '<h3 style="margin-bottom:12px;">🔌 Server MCP</h3>';
+                const entries = Object.entries(servers);
+                if (entries.length === 0) {
+                    html += '<p style="color:var(--text-dim);font-size:13px;">Nessun server MCP configurato.<br>Crea <code>.lobster/mcp.json</code> per aggiungerne.</p>';
+                } else {
+                    entries.forEach(([name, s]) => {
+                        const status = s.connected ? '🟢' : '🔴';
+                        html += `<div style="padding:8px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;">
+                            <div style="font-weight:600;">${status} ${name} — ${s.tools} tool</div>
+                            <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">${s.tool_names.join(', ')}</div>
+                        </div>`;
+                    });
+                }
+                // Riusa il permission modal per mostrare
+                const modal = document.getElementById('permissionModal');
+                const container = document.getElementById('permissionOptions');
+                modal.querySelector('h3').textContent = '🔌 Server MCP';
+                modal.querySelector('p').textContent = `${data.total_tools} tool disponibili da ${entries.length} server`;
+                container.innerHTML = entries.map(([name, s]) => {
+                    const status = s.connected ? '🟢' : '🔴';
+                    return `<div style="padding:10px;border:1px solid var(--border);border-radius:8px;background:#fff;">
+                        <div style="font-weight:600;font-size:13px;">${status} ${name}</div>
+                        <div style="font-size:11px;color:var(--text-dim);margin-top:4px;">${s.tools} tool: ${s.tool_names.join(', ') || 'nessuno'}</div>
+                    </div>`;
+                }).join('');
+                modal.classList.add('active');
+            })
+            .catch(() => {});
+    }
+
+    // Carica status MCP al boot
+    loadMcpStatus();
 
     // ============ CLEANUP ON PAGE UNLOAD ============
     window.addEventListener('beforeunload', function() {

@@ -365,6 +365,310 @@ def get_project_context():
 
 
 # ---------------------------------------------------------------------------
+# MCP Client — Model Context Protocol (stdlib only)
+# ---------------------------------------------------------------------------
+
+import re as _re
+import struct as _struct
+
+class McpStdioTransport:
+    """Trasporto JSON-RPC su stdio con Content-Length framing."""
+
+    def __init__(self, command: list, env: dict = None):
+        self.command = command
+        self.env = {**os.environ, **(env or {})}
+        self.process = None
+        self._req_id = 0
+        self._lock = threading.Lock()
+
+    def start(self):
+        try:
+            self.process = subprocess.Popen(
+                self.command,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                env=self.env
+            )
+        except FileNotFoundError:
+            raise RuntimeError(f"MCP server command not found: {self.command[0]}")
+
+    def stop(self):
+        if self.process and self.process.poll() is None:
+            self.process.terminate()
+            try:
+                self.process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self.process.kill()
+        self.process = None
+
+    def _write_frame(self, data: dict):
+        body = json.dumps(data).encode("utf-8")
+        header = f"Content-Length: {len(body)}\r\n\r\n".encode("utf-8")
+        self.process.stdin.write(header + body)
+        self.process.stdin.flush()
+
+    def _read_frame(self, timeout: float = 60.0) -> dict:
+        """Legge un frame JSON-RPC con Content-Length header."""
+        import select
+        stdout = self.process.stdout
+
+        # Leggi headers fino a \r\n\r\n
+        header_buf = b""
+        deadline = time.time() + timeout
+        while b"\r\n\r\n" not in header_buf:
+            if time.time() > deadline:
+                raise TimeoutError("MCP: timeout reading response header")
+            chunk = stdout.read(1)
+            if not chunk:
+                stderr_out = ""
+                try:
+                    stderr_out = self.process.stderr.read(2048).decode(errors="replace")
+                except:
+                    pass
+                raise ConnectionError(f"MCP: server closed connection. stderr: {stderr_out}")
+            header_buf += chunk
+
+        # Parse Content-Length
+        header_text = header_buf.decode("utf-8")
+        match = _re.search(r"Content-Length:\s*(\d+)", header_text, _re.IGNORECASE)
+        if not match:
+            raise ValueError(f"MCP: missing Content-Length in header: {header_text!r}")
+        content_length = int(match.group(1))
+
+        # Leggi body
+        body = b""
+        while len(body) < content_length:
+            remaining = content_length - len(body)
+            chunk = stdout.read(remaining)
+            if not chunk:
+                raise ConnectionError("MCP: connection lost while reading body")
+            body += chunk
+
+        return json.loads(body.decode("utf-8"))
+
+    def send_request(self, method: str, params: dict = None) -> dict:
+        with self._lock:
+            self._req_id += 1
+            req = {
+                "jsonrpc": "2.0",
+                "id": self._req_id,
+                "method": method,
+            }
+            if params is not None:
+                req["params"] = params
+
+            self._write_frame(req)
+
+            # Leggi risposte, ignora notifiche (id=None)
+            while True:
+                resp = self._read_frame()
+                if "id" in resp and resp["id"] == self._req_id:
+                    if "error" in resp:
+                        err = resp["error"]
+                        raise RuntimeError(f"MCP error ({err.get('code', '?')}): {err.get('message', 'unknown')}")
+                    return resp.get("result", {})
+                # Se è una notifica (no id), ignora e continua
+
+
+class McpClient:
+    """Client MCP per un singolo server."""
+
+    def __init__(self, name: str, command: list, args: list = None, env: dict = None, timeout: float = 60.0):
+        self.name = name
+        self.timeout = timeout
+        full_command = [command] + (args or []) if isinstance(command, str) else command + (args or [])
+        self.transport = McpStdioTransport(full_command, env)
+        self.tools = []  # lista di tool scoperti
+        self.connected = False
+
+    def connect(self):
+        """Avvia il server e fai handshake."""
+        try:
+            self.transport.start()
+            self.transport.send_request("initialize", {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {},
+                "clientInfo": {"name": "lobster-code", "version": "1.1.0"}
+            })
+            # Notifica initialized
+            self.transport._write_frame({"jsonrpc": "2.0", "method": "notifications/initialized"})
+            self.connected = True
+            sys.stderr.write(f"[mcp] Connected to server: {self.name}\n")
+        except Exception as e:
+            sys.stderr.write(f"[mcp] Failed to connect to {self.name}: {e}\n")
+            self.connected = False
+            self.transport.stop()
+
+    def discover_tools(self) -> list:
+        """Scopri i tool disponibili sul server (con paginazione)."""
+        if not self.connected:
+            return []
+        all_tools = []
+        cursor = None
+        try:
+            while True:
+                params = {}
+                if cursor:
+                    params["cursor"] = cursor
+                result = self.transport.send_request("tools/list", params)
+                tools = result.get("tools", [])
+                all_tools.extend(tools)
+                cursor = result.get("nextCursor")
+                if not cursor:
+                    break
+            self.tools = all_tools
+            sys.stderr.write(f"[mcp] Discovered {len(all_tools)} tools from {self.name}\n")
+        except Exception as e:
+            sys.stderr.write(f"[mcp] Tool discovery failed for {self.name}: {e}\n")
+        return self.tools
+
+    def call_tool(self, tool_name: str, arguments: dict = None) -> str:
+        """Chiama un tool sul server MCP."""
+        if not self.connected:
+            return f"Errore: server MCP '{self.name}' non connesso"
+        try:
+            result = self.transport.send_request("tools/call", {
+                "name": tool_name,
+                "arguments": arguments or {}
+            })
+            # Il risultato può essere content[] con text/image
+            content = result.get("content", [])
+            texts = []
+            for item in content:
+                if item.get("type") == "text":
+                    texts.append(item.get("text", ""))
+                elif item.get("type") == "image":
+                    texts.append(f"[immagine: {item.get('mimeType', 'unknown')}]")
+                else:
+                    texts.append(str(item))
+            return "\n".join(texts) if texts else "(nessun output)"
+        except TimeoutError:
+            return f"Errore: timeout chiamando {tool_name} su {self.name}"
+        except Exception as e:
+            return f"Errore MCP ({self.name}/{tool_name}): {str(e)}"
+
+    def shutdown(self):
+        self.connected = False
+        self.transport.stop()
+
+
+def _normalize_mcp_name(s: str) -> str:
+    """Normalizza un nome per uso come tool name Ollama."""
+    return _re.sub(r"[^a-zA-Z0-9_-]", "_", s).strip("_")
+
+
+class McpRegistry:
+    """Registry globale per tutti i server MCP e i loro tool."""
+
+    def __init__(self):
+        self.clients: dict[str, McpClient] = {}
+        self._tool_map: dict[str, tuple] = {}  # qualified_name -> (server_name, raw_tool_name)
+
+    def load_config(self):
+        """Carica la configurazione MCP da file."""
+        config_paths = [
+            os.path.join(WORKSPACE_ROOT, ".lobster", "mcp.json"),
+            os.path.join(WORKSPACE_ROOT, ".lobster.json"),
+            os.path.expanduser("~/.lobster/mcp.json"),
+        ]
+        for path in config_paths:
+            if os.path.isfile(path):
+                try:
+                    with open(path, "r") as f:
+                        config = json.load(f)
+                    servers = config.get("mcp_servers", config.get("mcpServers", {}))
+                    for name, srv_config in servers.items():
+                        cmd = srv_config.get("command", "")
+                        args = srv_config.get("args", [])
+                        env = srv_config.get("env", {})
+                        timeout = srv_config.get("timeout", 60)
+                        self.clients[name] = McpClient(name, cmd, args, env, timeout)
+                    sys.stderr.write(f"[mcp] Loaded config from {path}: {len(servers)} server(s)\n")
+                    return
+                except Exception as e:
+                    sys.stderr.write(f"[mcp] Error loading config from {path}: {e}\n")
+        sys.stderr.write("[mcp] No MCP config found (optional: create .lobster/mcp.json)\n")
+
+    def connect_all(self):
+        """Connetti a tutti i server configurati."""
+        for name, client in self.clients.items():
+            client.connect()
+            if client.connected:
+                client.discover_tools()
+                # Registra tool con nomi qualificati
+                for tool in client.tools:
+                    raw_name = tool.get("name", "")
+                    qualified = f"mcp__{_normalize_mcp_name(name)}__{_normalize_mcp_name(raw_name)}"
+                    self._tool_map[qualified] = (name, raw_name)
+
+    def get_ollama_tools(self) -> list:
+        """Restituisci i tool MCP in formato Ollama."""
+        ollama_tools = []
+        for qualified_name, (server_name, raw_name) in self._tool_map.items():
+            client = self.clients.get(server_name)
+            if not client or not client.connected:
+                continue
+            # Trova la definizione originale del tool
+            tool_def = None
+            for t in client.tools:
+                if t.get("name") == raw_name:
+                    tool_def = t
+                    break
+            if not tool_def:
+                continue
+
+            ollama_tools.append({
+                "type": "function",
+                "function": {
+                    "name": qualified_name,
+                    "description": f"[MCP:{server_name}] {tool_def.get('description', raw_name)}",
+                    "parameters": tool_def.get("inputSchema", {"type": "object", "properties": {}})
+                }
+            })
+        return ollama_tools
+
+    def is_mcp_tool(self, name: str) -> bool:
+        return name in self._tool_map
+
+    def execute_mcp_tool(self, qualified_name: str, arguments: dict) -> str:
+        """Esegui un tool MCP dato il nome qualificato."""
+        if qualified_name not in self._tool_map:
+            return f"Errore: tool MCP '{qualified_name}' non trovato"
+        server_name, raw_name = self._tool_map[qualified_name]
+        client = self.clients.get(server_name)
+        if not client:
+            return f"Errore: server MCP '{server_name}' non trovato"
+        return client.call_tool(raw_name, arguments)
+
+    def get_status(self) -> dict:
+        """Stato di tutti i server per la UI."""
+        status = {}
+        for name, client in self.clients.items():
+            status[name] = {
+                "connected": client.connected,
+                "tools": len(client.tools),
+                "tool_names": [t.get("name", "") for t in client.tools]
+            }
+        return status
+
+    def shutdown_all(self):
+        for client in self.clients.values():
+            client.shutdown()
+
+
+# Inizializza il registry MCP globale
+_mcp_registry = McpRegistry()
+
+
+def _init_mcp():
+    """Inizializza MCP servers (chiamata al boot del server)."""
+    _mcp_registry.load_config()
+    if _mcp_registry.clients:
+        _mcp_registry.connect_all()
+
+
+# ---------------------------------------------------------------------------
 # Definizioni Tool per Ollama
 # ---------------------------------------------------------------------------
 
@@ -939,6 +1243,8 @@ def execute_tool(name: str, arguments: dict) -> str:
                 arguments.get("pattern", ""),
                 arguments.get("path", ".")
             )
+        elif _mcp_registry.is_mcp_tool(name):
+            return _mcp_registry.execute_mcp_tool(name, arguments)
         else:
             return f"Errore: tool sconosciuto '{name}'"
     except Exception as e:
@@ -1238,7 +1544,9 @@ def call_ollama_streaming(model: str, messages: list, use_tools: bool = True):
         "stream": True,
     }
     if use_tools:
-        payload["tools"] = TOOLS
+        # Combina tool nativi + tool MCP
+        all_tools = TOOLS + _mcp_registry.get_ollama_tools()
+        payload["tools"] = all_tools
 
     data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(
@@ -1847,6 +2155,8 @@ class AgentHandler(http.server.SimpleHTTPRequestHandler):
             self._handle_download_status(query_params)
         elif path_component == "/api/project-context":
             self._handle_project_context()
+        elif path_component == "/api/mcp-status":
+            self._handle_mcp_status()
         elif path_component == "/api/git-status":
             self._handle_git_status()
         elif path_component == "/api/git-log":
@@ -2207,6 +2517,16 @@ class AgentHandler(http.server.SimpleHTTPRequestHandler):
                 response = json.dumps(dl)
             else:
                 response = json.dumps(_download_status)
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+        self.wfile.write(response.encode())
+
+    def _handle_mcp_status(self):
+        """Ritorna stato dei server MCP."""
+        status = _mcp_registry.get_status()
+        response = json.dumps({"servers": status, "total_tools": sum(s["tools"] for s in status.values())})
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.send_header("Access-Control-Allow-Origin", "*")
@@ -2669,23 +2989,30 @@ class AgentHandler(http.server.SimpleHTTPRequestHandler):
 def main():
     ui_dir = os.path.dirname(os.path.abspath(__file__))
 
+    # Inizializza MCP servers (se configurati)
+    _init_mcp()
+    mcp_status = _mcp_registry.get_status()
+    mcp_tool_count = sum(s["tools"] for s in mcp_status.values())
+
     handler = partial(AgentHandler, directory=ui_dir)
 
     server = http.server.HTTPServer(("0.0.0.0", SERVER_PORT), handler)
+    mcp_line = ""
+    if mcp_status:
+        mcp_names = [f"{n} ({s['tools']} tools)" for n, s in mcp_status.items() if s["connected"]]
+        mcp_line = f"\n  MCP:        {', '.join(mcp_names)}" if mcp_names else "\n  MCP:        nessun server connesso"
     print(f"""
-🦞 Lobster Code Agent Server — Powered by Claw Code
+🦞 Lobster Code Agent Server v1.1
 ══════════════════════════════════════
   Server:     http://localhost:{SERVER_PORT}
   Ollama:     {OLLAMA_BASE}
   Modello:    {DEFAULT_MODEL}
   Workspace:  {WORKSPACE_ROOT}
-  Motore:     {get_active_engine()} (auto-detect)
   Permessi:   {PERMISSION_MODE}
-  Claw bin:   {"✓ " + CLAW_BINARY if os.path.isfile(CLAW_BINARY) else "✗ non trovato"}
 ══════════════════════════════════════
-  Tool: bash, read_file, write_file, edit_file,
-        list_directory, search_files, glob_search
-  Motori: ollama (native), ollama-pro (v0.14+), claw (Rust)
+  Tool nativi: bash, read_file, write_file, edit_file,
+               list_directory, search_files, glob_search{mcp_line}
+  Tool totali: {7 + mcp_tool_count}
 ══════════════════════════════════════
   Premi Ctrl+C per chiudere
 """)
@@ -2693,6 +3020,7 @@ def main():
     try:
         server.serve_forever()
     except KeyboardInterrupt:
+        _mcp_registry.shutdown_all()
         print("\n👋 Server arrestato")
         server.server_close()
 
