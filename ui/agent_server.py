@@ -2148,6 +2148,15 @@ class AgentHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, directory=None, **kwargs):
         super().__init__(*args, directory=directory, **kwargs)
 
+    def end_headers(self):
+        """Disabilita cache per file HTML/JS/CSS per evitare versioni stale."""
+        path = self.path or ""
+        if path.endswith(('.html', '.js', '.css')) or path == "/" or path.startswith("/api/"):
+            self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+            self.send_header("Pragma", "no-cache")
+            self.send_header("Expires", "0")
+        super().end_headers()
+
     def _read_json_body(self, max_size=MAX_REQUEST_SIZE):
         """Leggi e parsa il body JSON con limite di dimensione. Ritorna (dict, None) o (None, error_sent)."""
         content_length = int(self.headers.get("Content-Length", 0))
