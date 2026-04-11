@@ -1123,7 +1123,7 @@ CAUTIOUS_BASH_PATTERNS = [
 PERMISSION_MODE = os.environ.get("LOBSTER_PERMISSION_MODE", "workspace-write")  # read-only | workspace-write | full-access
 
 TOOL_PERMISSIONS = {
-    "bash": "full-access",
+    "bash": "workspace-write",
     "read_file": "read-only",
     "write_file": "workspace-write",
     "edit_file": "workspace-write",
@@ -3133,6 +3133,11 @@ class AgentHandler(http.server.SimpleHTTPRequestHandler):
                     f"5. Quando hai finito, scrivi un breve riepilogo e FERMATI. Non aggiungere azioni extra.\n"
                     f"6. Se la richiesta è vaga o ambigua, FAI DOMANDE per chiarirla. Non rifiutare mai una richiesta senza prima aver chiesto cosa intende l'utente.\n"
                     f"7. NON rifiutare MAI dicendo 'non posso' o 'non ho accesso'. Se qualcosa è fuori dal tuo scope, proponi un'alternativa concreta usando i tool che hai.\n\n"
+                    f"PERMESSI ATTIVI: {PERMISSION_MODE}\n"
+                    f"- read-only: solo lettura file, list_directory, search, glob\n"
+                    f"- workspace-write (default): tutto sopra + write_file, edit_file, bash — dentro i workspace concessi\n"
+                    f"- full-access: tutto, inclusi tool MCP esterni\n"
+                    f"Con '{PERMISSION_MODE}' hai accesso a bash e tutti i tool di scrittura dentro il workspace.\n\n"
                     f"LIMITI DI SICUREZZA (non aggirabili):\n"
                     f"- Puoi accedere SOLO ai workspace che l'utente ha esplicitamente concesso\n"
                     f"- Non puoi scrivere in /System, /Library, /usr, /bin, /sbin, /etc, /var, /Applications\n"
