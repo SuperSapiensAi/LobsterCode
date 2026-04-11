@@ -137,9 +137,9 @@ All configuration is via environment variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `CLAW_MODEL` | `gemma4:latest` | Default model |
-| `CLAW_WORKSPACE` | `~` | Default workspace path |
-| `CLAW_PORT` | `8899` | Server port |
+| `LOBSTER_MODEL` | `gemma4:latest` | Default model |
+| `LOBSTER_WORKSPACE` | `~` | Default workspace path |
+| `LOBSTER_PORT` | `8899` | Server port |
 | `OLLAMA_BASE_URL` | `http://127.0.0.1:11434` | Ollama server URL |
 
 MCP servers are configured in `.lobster/mcp.json` in your workspace — same format as Claude's MCP config.

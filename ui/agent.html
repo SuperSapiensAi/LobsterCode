@@ -1453,7 +1453,7 @@
             document.getElementById('workspacePath').textContent = info.workspace;
             document.getElementById('workspaceLabel').textContent = info.workspace.replace(/^\/Users\/[^/]+/, '~');
             // Usa il modello del server solo se non ne abbiamo già uno selezionato
-            if (info.model && currentModel === 'gemma4:latest' && !localStorage.getItem('claw-agent-selected-model')) {
+            if (info.model && currentModel === 'gemma4:latest' && !localStorage.getItem('lobster-selected-model')) {
                 currentModel = info.model;
                 document.getElementById('modelName').textContent = currentModel;
             }
@@ -1473,12 +1473,12 @@
     function generateId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 
     function saveChats() {
-        try { localStorage.setItem('claw-agent-chats', JSON.stringify(allChats)); } catch(e) {}
+        try { localStorage.setItem('lobster-chats', JSON.stringify(allChats)); } catch(e) {}
     }
 
     function loadChats() {
         try {
-            const saved = localStorage.getItem('claw-agent-chats');
+            const saved = localStorage.getItem('lobster-chats');
             if (saved) {
                 try { allChats = JSON.parse(saved); } catch(e) { console.warn('Chat data corrotti, reset'); allChats = []; }
             }
@@ -1487,14 +1487,14 @@
             saveChats();
 
             // Ripristina modello scelto dall'utente (ha priorità su tutto)
-            const savedModel = localStorage.getItem('claw-agent-selected-model');
+            const savedModel = localStorage.getItem('lobster-selected-model');
             if (savedModel) {
                 currentModel = savedModel;
                 document.getElementById('modelName').textContent = currentModel;
             }
 
             // Ripristina l'ultima chat attiva
-            const lastId = localStorage.getItem('claw-agent-current');
+            const lastId = localStorage.getItem('lobster-current-chat');
             if (lastId && allChats.find(c => c.id === lastId)) {
                 const chat = allChats.find(c => c.id === lastId);
                 currentChatId = lastId;
@@ -1526,7 +1526,7 @@
         messages = [];
         allChats.unshift({ id: currentChatId, title: 'Nuova chat', messages: [], model: currentModel });
         saveChats();
-        localStorage.setItem('claw-agent-current', currentChatId);
+        localStorage.setItem('lobster-current-chat', currentChatId);
         renderChatList();
         renderMessages();
     }
@@ -1560,7 +1560,7 @@
         messages = [...chat.messages];
         currentModel = chat.model || currentModel;
         document.getElementById('modelName').textContent = currentModel;
-        localStorage.setItem('claw-agent-current', currentChatId);
+        localStorage.setItem('lobster-current-chat', currentChatId);
         renderMessages();
         renderChatList();
     }
@@ -1575,13 +1575,13 @@
                 currentChatId = allChats[0].id;
                 messages = [...allChats[0].messages];
                 currentModel = allChats[0].model || currentModel;
-                localStorage.setItem('claw-agent-current', currentChatId);
+                localStorage.setItem('lobster-current-chat', currentChatId);
             } else {
                 currentChatId = generateId();
                 messages = [];
                 allChats.unshift({ id: currentChatId, title: 'Nuova chat', messages: [], model: currentModel });
                 saveChats();
-                localStorage.setItem('claw-agent-current', currentChatId);
+                localStorage.setItem('lobster-current-chat', currentChatId);
             }
             renderMessages();
         }
@@ -2180,7 +2180,7 @@
         badge.textContent = name;
         document.getElementById('modelModal').classList.remove('active');
         // Persisti la scelta dell'utente
-        try { localStorage.setItem('claw-agent-selected-model', name); } catch(e) {}
+        try { localStorage.setItem('lobster-selected-model', name); } catch(e) {}
         // Aggiorna anche la chat corrente
         _saveCurrentChatQuiet();
         // Flash visivo sulla badge del modello
@@ -2220,9 +2220,7 @@
 
     // ============ ENGINE (V1: Ollama fisso) ============
     let currentEngine = 'ollama';
-    function openEngineSelector() {} // no-op — V1 usa solo Ollama
-    function selectEngine() {} // no-op
-    function updateEngineDisplay() {} // no-op
+    // Engine selector rimosso — V1 usa solo Ollama
     try { localStorage.removeItem('lobster-engine'); } catch(e) {}
 
     // ============ PERMISSION SELECTOR ============
@@ -2330,14 +2328,6 @@
         document.getElementById(`tab-${tabName}`).classList.add('active');
         event.target.classList.add('active');
         
-        // Load files if switching to files tab
-        if (tabName === 'files') {
-            if (!window.filesLoaded) {
-                loadFileExplorer();
-            } else {
-                loadGrantedWorkspaces();
-            }
-        }
         if (tabName === 'modifiche') {
             loadModifiedFiles();
             // Reset badge quando l'utente vede le modifiche
@@ -2347,217 +2337,9 @@
         }
     }
 
-    // ============ WORKSPACE GRANT SYSTEM ============
+    // ============ WORKSPACE (minimal — file explorer removed in V1) ============
     let _grantedWorkspaces = [];
     let _activeWorkspacePath = '';
-
-    async function loadGrantedWorkspaces() {
-        try {
-            const res = await safeFetch(`${API_BASE}/api/granted-workspaces`);
-            const data = await res.json();
-            _grantedWorkspaces = data.workspaces || [];
-            renderWorkspaceList();
-            // Se non c'è workspace attivo, seleziona il primo
-            if (!_activeWorkspacePath && _grantedWorkspaces.length > 0) {
-                _activeWorkspacePath = _grantedWorkspaces[0].path;
-            }
-        } catch (e) {
-            console.error('Failed to load granted workspaces:', e);
-        }
-    }
-
-    function renderWorkspaceList() {
-        const container = document.getElementById('workspaceList');
-        if (!_grantedWorkspaces.length) {
-            container.innerHTML = '<div style="font-size:11px;color:var(--sidebar-text-dim);padding:4px 0;">Nessun workspace. Aggiungi una cartella.</div>';
-            return;
-        }
-        let html = '';
-        for (const ws of _grantedWorkspaces) {
-            const isActive = ws.path === _activeWorkspacePath;
-            const activeBg = isActive ? 'background:var(--sidebar-active);' : '';
-            const activeBorder = isActive ? 'border-left:2px solid var(--accent);' : 'border-left:2px solid transparent;';
-            const isOnly = _grantedWorkspaces.length <= 1;
-            html += `<div style="display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:4px;cursor:pointer;font-size:11px;${activeBg}${activeBorder}" onclick="selectWorkspace('${escapeHtml(ws.path)}')">
-                <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--sidebar-text);" title="${escapeHtml(ws.path)}">📁 ${escapeHtml(ws.name)}</span>
-                ${isOnly ? '' : `<button onclick="event.stopPropagation();revokeWorkspace('${escapeHtml(ws.path)}')" style="background:none;border:none;color:var(--sidebar-text-dim);cursor:pointer;font-size:12px;padding:0 2px;line-height:1;" title="Rimuovi workspace">✕</button>`}
-            </div>`;
-        }
-        container.innerHTML = html;
-    }
-
-    function selectWorkspace(path) {
-        _activeWorkspacePath = path;
-        currentFilePath = path;
-        renderWorkspaceList();
-        renderFileExplorer();
-    }
-
-    function showAddWorkspaceInput() {
-        document.getElementById('addWorkspaceForm').style.display = 'block';
-        document.getElementById('addWorkspacePath').focus();
-    }
-
-    function hideAddWorkspaceInput() {
-        document.getElementById('addWorkspaceForm').style.display = 'none';
-        document.getElementById('addWorkspacePath').value = '';
-    }
-
-    async function grantWorkspace() {
-        const input = document.getElementById('addWorkspacePath');
-        const path = input.value.trim();
-        if (!path) return;
-        try {
-            const res = await safeFetch(`${API_BASE}/api/grant-workspace`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({path})
-            });
-            const data = await res.json();
-            if (data.success) {
-                hideAddWorkspaceInput();
-                await loadGrantedWorkspaces();
-                // Seleziona il nuovo workspace
-                selectWorkspace(data.path);
-            } else {
-                alert(data.error || 'Errore nell\'aggiunta del workspace');
-            }
-        } catch (e) {
-            alert('Errore di rete: ' + e.message);
-        }
-    }
-
-    async function revokeWorkspace(path) {
-        if (!confirm(`Rimuovere il workspace?\n${path}`)) return;
-        try {
-            const res = await safeFetch(`${API_BASE}/api/revoke-workspace`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({path})
-            });
-            const data = await res.json();
-            if (data.success) {
-                // Se abbiamo revocato il workspace attivo, resetta
-                if (_activeWorkspacePath === path || _activeWorkspacePath === data.path) {
-                    _activeWorkspacePath = '';
-                }
-                await loadGrantedWorkspaces();
-                // Se c'è ancora un workspace, selezionalo e mostra i file
-                if (_grantedWorkspaces.length > 0 && !_activeWorkspacePath) {
-                    selectWorkspace(_grantedWorkspaces[0].path);
-                }
-            } else {
-                alert(data.error || 'Errore nella rimozione');
-            }
-        } catch (e) {
-            alert('Errore di rete: ' + e.message);
-        }
-    }
-
-    // ============ FILE EXPLORER ============
-    let currentFilePath = '';
-    window.filesLoaded = false;
-
-    async function loadFileExplorer() {
-        try {
-            // Carica prima i workspace concessi
-            await loadGrantedWorkspaces();
-            // Se abbiamo un workspace attivo, usalo come root
-            if (_activeWorkspacePath) {
-                currentFilePath = _activeWorkspacePath;
-            } else if (_grantedWorkspaces.length > 0) {
-                _activeWorkspacePath = _grantedWorkspaces[0].path;
-                currentFilePath = _activeWorkspacePath;
-            } else {
-                // Fallback: carica dal server
-                const res = await safeFetch(`${API_BASE}/api/workspace`);
-                const data = await res.json();
-                currentFilePath = data.path || data.workspace || '';
-            }
-            renderFileExplorer();
-            window.filesLoaded = true;
-        } catch (e) {
-            console.error('Failed to load workspace:', e);
-            document.getElementById('fileList').innerHTML = '<div style="padding:12px; color:var(--sidebar-text-dim);">Errore nel caricamento</div>';
-        }
-    }
-
-    function renderBreadcrumb() {
-        // Mostra path relativo al workspace attivo
-        let displayPath = currentFilePath;
-        let rootLabel = '~';
-        if (_activeWorkspacePath && currentFilePath.startsWith(_activeWorkspacePath)) {
-            displayPath = currentFilePath.slice(_activeWorkspacePath.length);
-            rootLabel = _activeWorkspacePath.split('/').filter(p=>p).pop() || '~';
-        }
-        const parts = displayPath ? displayPath.split('/').filter(p => p) : [];
-        let bc = `<span class="breadcrumb-seg" onclick="navigateToPath('${escapeHtml(_activeWorkspacePath || '')}')">${escapeHtml(rootLabel)}</span>`;
-        let accumulated = _activeWorkspacePath || '';
-        for (let part of parts) {
-            accumulated += '/' + part;
-            bc += ' / <span class="breadcrumb-seg" onclick="navigateToPath(\'' + escapeHtml(accumulated) + '\')">' + escapeHtml(part) + '</span>';
-        }
-        document.getElementById('fileBreadcrumb').innerHTML = bc;
-    }
-
-    async function renderFileExplorer() {
-        renderBreadcrumb();
-        try {
-            const res = await safeFetch(`${API_BASE}/api/files?path=${encodeURIComponent(currentFilePath)}`);
-            const data = await res.json();
-            const entries = data.entries || [];
-
-            let html = '';
-            // Mostra ".." solo se non siamo alla root del workspace attivo
-            if (currentFilePath && currentFilePath !== _activeWorkspacePath) {
-                html += '<div class="file-entry" onclick="navigateUp()" style="color:var(--sidebar-text-dim);"><span class="file-entry-icon">⬆️</span><span class="file-entry-name">..</span></div>';
-            }
-
-            for (let entry of entries) {
-                const isDir = entry.type === 'directory';
-                const icon = isDir ? '📁' : getFileIcon(entry.name);
-                const fullPath = currentFilePath + '/' + entry.name;
-                const clickHandler = isDir ? `navigateToPath('${escapeHtml(fullPath)}')` : `showFilePreview('${escapeHtml(fullPath)}')`;
-                html += `<div class="file-entry" onclick="${clickHandler}"><span class="file-entry-icon">${icon}</span><span class="file-entry-name">${escapeHtml(entry.name)}</span></div>`;
-            }
-            
-            document.getElementById('fileList').innerHTML = html || '<div style="padding:12px; color:var(--sidebar-text-dim);">Nessun file</div>';
-        } catch (e) {
-            console.error('Error loading files:', e);
-            document.getElementById('fileList').innerHTML = '<div style="padding:12px; color:var(--sidebar-text-dim);">Errore nel caricamento</div>';
-        }
-    }
-
-    function getFileIcon(name) {
-        if (name.endsWith('.py')) return '🐍';
-        if (name.endsWith('.js') || name.endsWith('.ts') || name.endsWith('.jsx') || name.endsWith('.tsx')) return '⚡';
-        if (name.endsWith('.rs')) return '🦀';
-        if (name.endsWith('.json')) return '{ }';
-        if (name.endsWith('.md')) return '📝';
-        if (name.endsWith('.html') || name.endsWith('.htm') || name.endsWith('.svg')) return '🌐';
-        if (name.endsWith('.css')) return '🎨';
-        return '📄';
-    }
-
-    function navigateToPath(path) {
-        currentFilePath = path;
-        renderFileExplorer();
-    }
-
-    function navigateUp() {
-        // Non navigare sopra il workspace attivo
-        if (_activeWorkspacePath && currentFilePath === _activeWorkspacePath) return;
-        const parts = currentFilePath.split('/').filter(p => p);
-        parts.pop();
-        let newPath = '/' + parts.join('/');
-        if (newPath === '/') newPath = '';
-        // Clamp: non andare sopra il workspace attivo
-        if (_activeWorkspacePath && !newPath.startsWith(_activeWorkspacePath)) {
-            newPath = _activeWorkspacePath;
-        }
-        currentFilePath = newPath;
-        renderFileExplorer();
-    }
 
     function _syntaxHighlight(code, ext) {
         // Lightweight syntax highlighting senza librerie esterne
@@ -3173,18 +2955,17 @@
         return el;
     };
 
-    // Update sidebar tab switching to load git
+    // Update sidebar tab switching to load git/memory
     const _origSwitchSidebarTab = switchSidebarTab;
     switchSidebarTab = function(tabName) {
-        // Hide all content
         document.querySelectorAll('.sidebar-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.sidebar-tab').forEach(el => el.classList.remove('active'));
-        // Show selected tab
         document.getElementById(`tab-${tabName}`).classList.add('active');
-        event.target.classList.add('active');
-        // Load data
-        if (tabName === 'files' && !window.filesLoaded) loadFileExplorer();
-        if (tabName === 'modifiche' && !window.modLoaded) loadModifiedFiles();
+        // Find and activate the clicked button
+        document.querySelectorAll('.sidebar-tab').forEach(el => {
+            if (el.textContent.trim().toLowerCase().startsWith(tabName.slice(0,3))) el.classList.add('active');
+        });
+        if (tabName === 'modifiche') loadModifiedFiles();
         if (tabName === 'git') loadGitStatus();
         if (tabName === 'memory') loadSessionMemory();
     };

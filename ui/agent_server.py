@@ -33,14 +33,13 @@ from urllib.parse import parse_qs, urlparse
 # ---------------------------------------------------------------------------
 
 OLLAMA_BASE = os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
-DEFAULT_MODEL = os.environ.get("CLAW_MODEL", "gemma4:latest")
-WORKSPACE_ROOT = os.environ.get("CLAW_WORKSPACE", os.path.expanduser("~"))
+DEFAULT_MODEL = os.environ.get("LOBSTER_MODEL", os.environ.get("CLAW_MODEL", "gemma4:latest"))
+WORKSPACE_ROOT = os.environ.get("LOBSTER_WORKSPACE", os.environ.get("CLAW_WORKSPACE", os.path.expanduser("~")))
 MAX_AGENT_TURNS = 10  # massimo numero di turni tool-call consecutivi
-SERVER_PORT = int(os.environ.get("CLAW_PORT", "8899"))
+SERVER_PORT = int(os.environ.get("LOBSTER_PORT", os.environ.get("CLAW_PORT", "8899")))
 
-# Engine: "ollama" (native /api/chat), "ollama-pro" (Ollama v0.14+ /v1/messages), "claw" (Rust binary)
-ENGINE_MODE = os.environ.get("LOBSTER_ENGINE", "auto")  # auto = try ollama-pro first, fallback to ollama
-CLAW_BINARY = os.environ.get("CLAW_BINARY", os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "rust", "target", "debug", "claw"))
+# Engine: solo Ollama nativo (V1)
+ENGINE_MODE = "ollama"
 
 # Sicurezza: limite dimensione request body (10 MB)
 MAX_REQUEST_SIZE = 10 * 1024 * 1024
@@ -3148,8 +3147,7 @@ class AgentHandler(http.server.SimpleHTTPRequestHandler):
                     f"- NON lanciare server HTTP.\n"
                     f"- NON aprire applicazioni esterne.\n"
                     f"- Fai SOLO quello che l'utente ha chiesto.\n\n"
-                    f"MOTORE: {get_active_engine()}\n"
-                    f"Questa sessione utilizza il motore {get_active_engine()} di Lobster Code, basato sull'architettura Claw Code.\n\n"
+                    f"MOTORE: Ollama (locale)\n"
                     f"Rispondi in italiano se l'utente scrive in italiano."
                 )
             }
