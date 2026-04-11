@@ -1082,6 +1082,18 @@ DANGEROUS_BASH_PATTERNS = [
     "halt",
     "init 0",
     "init 6",
+    # Anti-bypass: comandi alternativi di cancellazione massiva
+    "find / -delete",
+    "find / -exec rm",
+    "find ~ -delete",
+    "find ~ -exec rm",
+    "perl -e",           # blocca script inline perl distruttivi
+    "python -c \"import shutil; shutil.rmtree",
+    "python3 -c \"import shutil; shutil.rmtree",
+    # Anti-escalation: blocca tentativi di cambiare permessi via API locale
+    "set-permission",
+    "set_permission",
+    "full-access",
 ]
 
 # Comandi che aprono browser/app (bloccati: l'utente non li vuole)
@@ -1124,7 +1136,11 @@ PERMISSION_LEVELS = {"read-only": 0, "workspace-write": 1, "full-access": 2}
 
 def _check_permission(tool_name):
     """Check if current permission mode allows this tool. Returns None if OK, error string if blocked."""
-    required = TOOL_PERMISSIONS.get(tool_name, "workspace-write")
+    # Tool MCP esterni richiedono full-access (possono fare qualsiasi cosa)
+    if _mcp_registry.is_mcp_tool(tool_name):
+        required = "full-access"
+    else:
+        required = TOOL_PERMISSIONS.get(tool_name, "workspace-write")
     if PERMISSION_LEVELS.get(PERMISSION_MODE, 1) < PERMISSION_LEVELS.get(required, 1):
         return (
             f"🔒 PERMESSO NEGATO: il tool '{tool_name}' richiede modalità '{required}', "
@@ -1209,6 +1225,10 @@ def _bash_warning(command: str):
 
 def execute_tool(name: str, arguments: dict) -> str:
     """Esegui un tool e restituisci il risultato come stringa."""
+    # Anti-escalation: il modello NON può cambiare i propri permessi via tool call
+    if name in ("set_permission", "set-permission", "grant_workspace", "revoke_workspace"):
+        return "🛡️ BLOCCATO: il cambio permessi può essere fatto solo dall'utente tramite la UI."
+
     # Check permissions
     perm_error = _check_permission(name)
     if perm_error:
@@ -1343,6 +1363,15 @@ def _run_write_file(path: str, content: str) -> str:
     if _is_path_protected_write(resolved):
         return f"🛡️ BLOCCATO: non è permesso scrivere in directory di sistema ({resolved})"
 
+    # Sicurezza: in modalità workspace-write, la scrittura è consentita SOLO dentro workspace concessi
+    if PERMISSION_MODE == "workspace-write" and not _is_path_in_granted_workspace(resolved):
+        return (
+            f"🔒 BLOCCATO: in modalità 'workspace-write' puoi scrivere solo dentro i workspace concessi.\n"
+            f"Path richiesto: {resolved}\n"
+            f"Workspace concessi: {', '.join(_get_granted_workspaces())}\n"
+            f"👉 Concedi accesso alla cartella dalla sidebar Files, oppure passa a 'full-access'."
+        )
+
     # Snapshot: salva stato precedente prima di sovrascrivere
     _snapshot_save_file(resolved)
 
@@ -1406,6 +1435,15 @@ def _run_edit_file(path: str, old_string: str, new_string: str) -> str:
     # Sicurezza: blocca modifica file di sistema
     if _is_path_protected_write(resolved):
         return f"🛡️ BLOCCATO: non è permesso modificare file di sistema ({resolved})"
+
+    # Sicurezza: in modalità workspace-write, la modifica è consentita SOLO dentro workspace concessi
+    if PERMISSION_MODE == "workspace-write" and not _is_path_in_granted_workspace(resolved):
+        return (
+            f"🔒 BLOCCATO: in modalità 'workspace-write' puoi modificare solo file dentro i workspace concessi.\n"
+            f"Path richiesto: {resolved}\n"
+            f"Workspace concessi: {', '.join(_get_granted_workspaces())}\n"
+            f"👉 Concedi accesso alla cartella dalla sidebar Files, oppure passa a 'full-access'."
+        )
 
     # Snapshot: salva stato precedente prima di modificare
     _snapshot_save_file(resolved)

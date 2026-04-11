@@ -2258,6 +2258,17 @@
     }
 
     async function selectPermission(id) {
+        // Conferma esplicita per full-access (previene escalation accidentali)
+        if (id === 'full-access') {
+            const confirmed = confirm(
+                '⚠️ ATTENZIONE: "Accesso completo" dà all\'agente il controllo totale del sistema.\n\n' +
+                '• Può eseguire QUALSIASI comando bash\n' +
+                '• Può scrivere file OVUNQUE nel filesystem\n' +
+                '• Può usare tool MCP esterni\n\n' +
+                'Sei sicuro di voler attivare questa modalità?'
+            );
+            if (!confirmed) return;
+        }
         currentPermission = id;
         updatePermissionDisplay(id);
         document.getElementById('permissionModal').classList.remove('active');
