@@ -40,6 +40,7 @@ SERVER_PORT = int(os.environ.get("LOBSTER_PORT", os.environ.get("CLAW_PORT", "88
 
 # Engine: solo Ollama nativo (V1)
 ENGINE_MODE = "ollama"
+CLAW_BINARY = ""  # Non usato in V1, mantenuto per compatibilità dead code
 
 # Sicurezza: limite dimensione request body (10 MB)
 MAX_REQUEST_SIZE = 10 * 1024 * 1024
