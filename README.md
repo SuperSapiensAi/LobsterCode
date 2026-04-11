@@ -54,11 +54,10 @@ MCP tools appear alongside native tools — Ollama uses them like any other tool
 ### Developer Experience
 - **Git integration** — status, log, diff, commit directly from the sidebar
 - **Session memory** — persistent context across sessions via `.lobster/context.md`
-- **File explorer** — browse, preview with syntax highlighting (30+ languages) in the sidebar
 - **Diff preview** — every file modification shows a unified diff before and after
 - **Setup wizard** — checks Ollama, verifies RAM, recommends and downloads the best model
 - **Chat history** — persistent sessions with auto-generated titles
-- **4 sidebar tabs** — Chat, Files, Git, Modified files
+- **4 sidebar tabs** — Chat, Git, Modified files, Session Memory
 
 ## Quick Start
 
