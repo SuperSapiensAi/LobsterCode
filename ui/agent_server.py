@@ -2220,6 +2220,10 @@ class AgentHandler(http.server.SimpleHTTPRequestHandler):
             self._handle_pull_model()
         elif self.path == "/api/git-commit":
             self._handle_git_commit()
+        elif self.path == "/api/git-init":
+            self._handle_git_init()
+        elif self.path == "/api/session-memory":
+            self._handle_session_memory_write()
         elif self.path == "/api/rollback":
             self._handle_rollback()
         elif self.path == "/api/set-engine":
@@ -2270,6 +2274,8 @@ class AgentHandler(http.server.SimpleHTTPRequestHandler):
             self._handle_git_status()
         elif path_component == "/api/git-log":
             self._handle_git_log()
+        elif path_component == "/api/git-diff":
+            self._handle_git_diff(query_params)
         elif path_component == "/api/snapshots":
             self._handle_snapshots()
         elif path_component == "/api/session-memory":
@@ -2769,6 +2775,116 @@ class AgentHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header("Content-Type", "application/json")
             self.end_headers()
             self.wfile.write(json.dumps({"error": "Errore nel commit git"}).encode())
+
+    def _handle_git_init(self):
+        """Inizializza un repository git nel workspace."""
+        try:
+            # Verifica che non sia già un repo
+            is_repo = subprocess.run(
+                ["git", "rev-parse", "--is-inside-work-tree"],
+                capture_output=True, text=True, timeout=5, cwd=WORKSPACE_ROOT
+            )
+            if is_repo.returncode == 0:
+                response = json.dumps({"success": False, "error": "Il workspace è già un repository git."})
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(response.encode())
+                return
+
+            # git init
+            init_result = subprocess.run(
+                ["git", "init"],
+                capture_output=True, text=True, timeout=10, cwd=WORKSPACE_ROOT
+            )
+            if init_result.returncode != 0:
+                response = json.dumps({"success": False, "error": init_result.stderr.strip()})
+            else:
+                # Crea .gitignore base se non esiste
+                gitignore_path = os.path.join(WORKSPACE_ROOT, ".gitignore")
+                if not os.path.isfile(gitignore_path):
+                    with open(gitignore_path, "w", encoding="utf-8") as f:
+                        f.write("node_modules/\n__pycache__/\n.env\n.DS_Store\ndist/\nbuild/\n*.pyc\n.lobster/\n")
+                response = json.dumps({"success": True, "output": init_result.stdout.strip()})
+
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(response.encode())
+        except Exception as e:
+            sys.stderr.write(f"[git-init-error] {e}\n")
+            self.send_response(500)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": str(e)}).encode())
+
+    def _handle_git_diff(self, query_params):
+        """Ritorna il diff di un file o di tutto il workspace."""
+        file_path = query_params.get("file", [""])[0]
+        try:
+            cmd = ["git", "diff"]
+            # Se c'è un file specifico, diff solo quello; altrimenti diff di tutto
+            if file_path:
+                cmd.append("--")
+                cmd.append(file_path)
+
+            result = subprocess.run(
+                cmd, capture_output=True, text=True, timeout=10, cwd=WORKSPACE_ROOT
+            )
+            diff_text = result.stdout
+
+            # Se il file è untracked, mostra il contenuto come "new file"
+            if not diff_text and file_path:
+                status = subprocess.run(
+                    ["git", "status", "--porcelain", "--", file_path],
+                    capture_output=True, text=True, timeout=5, cwd=WORKSPACE_ROOT
+                )
+                if status.stdout.strip().startswith("??"):
+                    try:
+                        full_path = os.path.join(WORKSPACE_ROOT, file_path)
+                        with open(full_path, "r", encoding="utf-8", errors="replace") as f:
+                            content = f.read(10000)
+                        diff_text = f"--- /dev/null\n+++ b/{file_path}\n" + \
+                                    "\n".join(f"+{line}" for line in content.splitlines()[:200])
+                    except Exception:
+                        diff_text = "(file binario o non leggibile)"
+
+            response = json.dumps({"diff": diff_text[:50000], "file": file_path or "(all)"})
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(response.encode())
+        except Exception as e:
+            sys.stderr.write(f"[git-diff-error] {e}\n")
+            self.send_response(500)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": str(e)}).encode())
+
+    def _handle_session_memory_write(self):
+        """Scrivi session memory (.lobster/context.md)."""
+        request = self._read_json_body()
+        if request is None:
+            return
+        content = request.get("content", "")
+        mem_dir = os.path.join(WORKSPACE_ROOT, ".lobster")
+        mem_path = os.path.join(mem_dir, "context.md")
+        try:
+            os.makedirs(mem_dir, exist_ok=True)
+            with _context_lock:
+                with open(mem_path, "w", encoding="utf-8") as f:
+                    f.write(content)
+            response = json.dumps({"success": True, "path": mem_path})
+        except Exception as e:
+            response = json.dumps({"success": False, "error": str(e)})
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+        self.wfile.write(response.encode())
 
     def _handle_snapshots(self):
         """Lista snapshot disponibili."""
