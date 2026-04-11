@@ -82,13 +82,13 @@ Open [http://localhost:8899](http://localhost:8899) in your browser. That's it.
 | Model | Size | Best For | VRAM Needed | Command |
 |-------|------|----------|-------------|---------|
 | **Gemma 4** | 12B | Default, excellent all-round + tool calling | 8GB+ | `ollama pull gemma4:latest` |
+| **Qwen 3** | 8B | Fast reasoning + tool calling | 6GB+ | `ollama pull qwen3:8b` |
 | **Qwen 2.5-Coder** | 14B | Best pure coding performance | 10GB+ | `ollama pull qwen2.5-coder:14b` |
 | **Qwen 2.5-Coder** | 7B | Lightweight, fast coding | 5GB+ | `ollama pull qwen2.5-coder:7b` |
-| **DeepSeek Coder V2** | 16B | Refactoring and deep reasoning | 10GB+ | `ollama pull deepseek-coder-v2` |
+| **Llama 3.3** | 70B | Most capable, deep reasoning | 40GB+ | `ollama pull llama3.3:70b` |
 | **Mistral** | 7B | Versatile, fast, native tool calling | 5GB+ | `ollama pull mistral` |
-| **Code Llama** | 13B | Meta's coding specialist | 8GB+ | `ollama pull codellama:13b` |
 
-The setup wizard recommends the best model based on your available RAM.
+All listed models support **native tool calling**, required for the agent loop. The setup wizard recommends the best model based on your available RAM.
 
 ## Requirements
 
