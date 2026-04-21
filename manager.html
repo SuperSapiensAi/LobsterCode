@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lobster Manager — Il cockpit per vibe-coder. Desktop app per macOS.</title>
+    <meta name="description" content="Lobster Manager — app desktop per macOS. Gestione porte, Docker, terminali, AI advisor, test automatici. Pensata per chi crea con l'AI senza essere tecnico.">
+    <meta name="theme-color" content="#d63a28">
+    <meta property="og:title" content="Lobster Manager — Il cockpit per vibe-coder">
+    <meta property="og:description" content="App desktop macOS per gestire porte, Docker, risorse e AI. Zero terminale, zero gergo tecnico.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://lobstercode.net/manager">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Lobster Manager — Desktop App per Vibe-Coder">
+    <meta name="twitter:description" content="Il cockpit amichevole per chi sviluppa con l'AI. Porte, Docker, test, advisor — tutto in un'app macOS.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦞</text></svg>">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --red: #d63a28;
+            --red-light: #e95a45;
+            --red-dark: #b52d1e;
+            --cream: #faf7f5;
+            --white: #ffffff;
+            --dark: #1c1214;
+            --text: #2a1a17;
+            --text-soft: #7a6560;
+            --text-dim: #b0a09a;
+            --border: #e8e0dc;
+            --ocean: #2a8fb5;
+            --coral: #e87554;
+            --sand: #c4a35a;
+            --green: #2e8b57;
+            --emerald: #10b981;
+            --amber: #f59e0b;
+            --purple: #8b5cf6;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--cream);
+            color: var(--text);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* NAV */
+        nav {
+            position: fixed; top: 0; width: 100%; z-index: 100;
+            padding: 16px 40px;
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(250, 247, 245, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            transition: box-shadow 0.3s;
+        }
+        nav.scrolled { box-shadow: 0 2px 20px rgba(0,0,0,0.06); }
+        .nav-brand {
+            display: flex; align-items: center; gap: 10px;
+            text-decoration: none; color: var(--text);
+        }
+        .nav-brand span { font-size: 28px; }
+        .nav-brand strong {
+            font-size: 18px; font-weight: 700;
+            background: linear-gradient(135deg, var(--red), var(--red-light));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .nav-links { display: flex; align-items: center; gap: 32px; }
+        .nav-links a {
+            text-decoration: none; color: var(--text-soft);
+            font-size: 14px; font-weight: 500; transition: color 0.2s;
+        }
+        .nav-links a:hover { color: var(--red); }
+        .nav-links a.active { color: var(--red); font-weight: 600; }
+        .nav-cta {
+            background: var(--red) !important; color: var(--white) !important;
+            padding: 8px 20px; border-radius: 8px; font-weight: 600 !important;
+            box-shadow: 0 2px 8px rgba(214,58,40,0.2); transition: all 0.2s !important;
+        }
+        .nav-cta:hover {
+            background: var(--red-dark) !important;
+            box-shadow: 0 4px 16px rgba(214,58,40,0.3) !important;
+            transform: translateY(-1px);
+        }
+
+        /* HERO */
+        .hero {
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            padding: 120px 40px 80px; position: relative; overflow: hidden;
+        }
+        .hero::before {
+            content: ''; position: absolute; top: -200px; right: -200px;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .hero::after {
+            content: ''; position: absolute; bottom: -150px; left: -150px;
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(42,143,181,0.05) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .hero-content { max-width: 840px; text-align: center; position: relative; z-index: 1; }
+        .hero-emoji {
+            font-size: 80px; display: block; margin-bottom: 24px;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 8px 32px rgba(139,92,246,0.15));
+        }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+        .hero h1 { font-size: 52px; font-weight: 800; line-height: 1.1; margin-bottom: 20px; letter-spacing: -1px; }
+        .hero h1 .highlight {
+            background: linear-gradient(135deg, var(--purple), var(--ocean));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .hero p { font-size: 20px; color: var(--text-soft); max-width: 640px; margin: 0 auto 16px; line-height: 1.7; }
+        .hero-badges { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            border-radius: 20px; padding: 6px 16px; font-size: 13px; font-weight: 500;
+        }
+        .hero-badge.macos { background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.2); color: var(--purple); }
+        .hero-badge.electron { background: rgba(42,143,181,0.08); border: 1px solid rgba(42,143,181,0.2); color: var(--ocean); }
+        .hero-badge.ai { background: rgba(214,58,40,0.08); border: 1px solid rgba(214,58,40,0.2); color: var(--red); }
+        .hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+        .btn {
+            padding: 14px 32px; border-radius: 12px; font-size: 16px; font-weight: 600;
+            text-decoration: none; transition: all 0.3s; cursor: pointer; border: none;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--purple), var(--ocean)); color: var(--white);
+            box-shadow: 0 4px 20px rgba(139,92,246,0.3);
+        }
+        .btn-primary:hover { box-shadow: 0 8px 32px rgba(139,92,246,0.4); transform: translateY(-2px); }
+        .btn-secondary {
+            background: var(--white); color: var(--text);
+            border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .btn-secondary:hover { border-color: var(--purple); color: var(--purple); transform: translateY(-2px); }
+        .btn-github {
+            background: var(--dark); color: var(--white);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+        .btn-github:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.2); transform: translateY(-2px); }
+
+        /* PREMIUM BANNER */
+        .premium-banner {
+            padding: 40px;
+            background: linear-gradient(135deg, var(--purple), var(--ocean));
+            text-align: center; color: var(--white);
+        }
+        .premium-banner p {
+            font-size: 18px; font-weight: 500; max-width: 700px; margin: 0 auto;
+            opacity: 0.95; line-height: 1.7;
+        }
+
+        /* TRAFFIC LIGHT DEMO */
+        .traffic-demo {
+            padding: 80px 40px; max-width: 900px; margin: 0 auto;
+        }
+        .traffic-demo-inner {
+            background: var(--dark); border-radius: 16px; padding: 32px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+        .traffic-titlebar {
+            display: flex; align-items: center; gap: 8px;
+            padding-bottom: 20px; border-bottom: 1px solid #3a2822; margin-bottom: 24px;
+        }
+        .traffic-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .traffic-dot.r { background: #ff5f57; }
+        .traffic-dot.y { background: #febc2e; }
+        .traffic-dot.g { background: #28c840; }
+        .traffic-titlebar span { flex: 1; text-align: center; font-size: 13px; color: #7a6560; font-weight: 500; }
+        .traffic-projects {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+        }
+        .traffic-card {
+            background: #2a1a17; border-radius: 12px; padding: 20px;
+            border: 1px solid #3a2822;
+        }
+        .traffic-card-head {
+            display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+        }
+        .traffic-light {
+            width: 14px; height: 14px; border-radius: 50%;
+            box-shadow: 0 0 8px currentColor;
+        }
+        .traffic-light.green { background: #28c840; color: #28c840; }
+        .traffic-light.yellow { background: #febc2e; color: #febc2e; }
+        .traffic-light.red { background: #ff5f57; color: #ff5f57; }
+        .traffic-light.gray { background: #5a4a44; color: #5a4a44; }
+        .traffic-card h4 { color: var(--cream); font-size: 14px; font-weight: 600; }
+        .traffic-card-meta { font-size: 11px; color: #7a6560; line-height: 1.8; }
+        .traffic-card-meta span { display: block; }
+
+        /* SECTION STYLES */
+        .section-label {
+            text-align: center; font-size: 13px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 2px;
+            color: var(--purple); margin-bottom: 12px;
+        }
+        .section-title {
+            text-align: center; font-size: 40px; font-weight: 700;
+            margin-bottom: 16px; letter-spacing: -0.5px;
+        }
+        .section-desc {
+            text-align: center; font-size: 18px; color: var(--text-soft);
+            max-width: 640px; margin: 0 auto 60px;
+        }
+
+        /* FEATURES */
+        .features { padding: 100px 40px; max-width: 1200px; margin: 0 auto; }
+        .features-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+        .feature-card {
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: 16px; padding: 32px; transition: all 0.3s;
+            position: relative; overflow: hidden;
+        }
+        .feature-card:hover {
+            border-color: transparent;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+            transform: translateY(-4px);
+        }
+        .feature-card-head {
+            display: flex; align-items: center; gap: 16px; margin-bottom: 16px;
+        }
+        .feature-icon {
+            width: 56px; height: 56px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; flex-shrink: 0;
+        }
+        .feature-icon.purple { background: rgba(139,92,246,0.1); }
+        .feature-icon.ocean { background: rgba(42,143,181,0.1); }
+        .feature-icon.coral { background: rgba(232,117,84,0.1); }
+        .feature-icon.green { background: rgba(46,139,87,0.1); }
+        .feature-icon.red { background: rgba(214,58,40,0.1); }
+        .feature-icon.amber { background: rgba(245,158,11,0.1); }
+        .feature-icon.emerald { background: rgba(16,185,129,0.1); }
+        .feature-icon.dark { background: rgba(42,26,23,0.08); }
+        .feature-card h3 { font-size: 20px; font-weight: 700; }
+        .feature-card .subtitle { font-size: 13px; color: var(--purple); font-weight: 600; margin-top: 2px; }
+        .feature-card p { font-size: 15px; color: var(--text-soft); line-height: 1.7; margin-bottom: 16px; }
+        .feature-highlights {
+            display: flex; flex-wrap: wrap; gap: 8px;
+        }
+        .feature-tag {
+            font-size: 11px; font-weight: 600; padding: 4px 10px;
+            border-radius: 8px; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .feature-tag.purple { background: rgba(139,92,246,0.08); color: var(--purple); }
+        .feature-tag.ocean { background: rgba(42,143,181,0.08); color: var(--ocean); }
+        .feature-tag.green { background: rgba(46,139,87,0.08); color: var(--green); }
+        .feature-tag.coral { background: rgba(232,117,84,0.08); color: var(--coral); }
+        .feature-tag.amber { background: rgba(245,158,11,0.08); color: var(--amber); }
+        .feature-tag.red { background: rgba(214,58,40,0.08); color: var(--red); }
+
+        /* TARGET USER */
+        .target {
+            padding: 100px 40px;
+            background: linear-gradient(135deg, var(--dark) 0%, #2a1a17 100%);
+            color: var(--cream);
+        }
+        .target-inner { max-width: 900px; margin: 0 auto; text-align: center; }
+        .target .section-label { color: var(--coral); }
+        .target .section-title { color: var(--cream); }
+        .target-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+            margin-top: 48px;
+        }
+        .target-card {
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px; padding: 28px; text-align: center;
+            transition: all 0.3s;
+        }
+        .target-card:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.15);
+            transform: translateY(-4px);
+        }
+        .target-card .emoji { font-size: 40px; margin-bottom: 16px; display: block; }
+        .target-card h3 { font-size: 17px; font-weight: 600; margin-bottom: 8px; color: var(--cream); }
+        .target-card p { font-size: 14px; color: rgba(240,230,227,0.6); line-height: 1.6; }
+
+        /* STACK */
+        .stack { padding: 100px 40px; max-width: 1000px; margin: 0 auto; }
+        .stack-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 48px; }
+        .stack-item {
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: 12px; padding: 24px; text-align: center; transition: all 0.2s;
+        }
+        .stack-item:hover { border-color: var(--purple); box-shadow: 0 4px 16px rgba(139,92,246,0.08); }
+        .stack-item .icon { font-size: 32px; margin-bottom: 12px; }
+        .stack-item h4 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+        .stack-item p { font-size: 12px; color: var(--text-soft); }
+
+        /* COMPARISON CODE vs MANAGER */
+        .comparison { padding: 100px 40px; max-width: 900px; margin: 0 auto; }
+        .comparison-table {
+            width: 100%; border-collapse: separate; border-spacing: 0;
+            margin-top: 48px; border-radius: 16px; overflow: hidden;
+            border: 1px solid var(--border); background: var(--white);
+        }
+        .comparison-table th, .comparison-table td {
+            padding: 14px 20px; text-align: left; font-size: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        .comparison-table th { background: var(--cream); font-weight: 600; font-size: 13px; }
+        .comparison-table td:first-child { font-weight: 500; }
+        .comparison-table tr:last-child td { border-bottom: none; }
+        .check { color: var(--green); font-weight: 700; }
+        .cross { color: var(--text-dim); }
+        .highlight-col { background: rgba(139,92,246,0.03); }
+
+        /* PHILOSOPHY */
+        .philosophy {
+            padding: 80px 40px;
+            background: linear-gradient(135deg, var(--dark) 0%, #2a1a17 100%);
+            color: var(--cream); text-align: center;
+        }
+        .philosophy-inner { max-width: 700px; margin: 0 auto; }
+        .philosophy .section-label { color: var(--coral); }
+        .philosophy blockquote {
+            font-size: 24px; font-weight: 300; line-height: 1.7;
+            font-style: italic; margin: 24px 0;
+            color: rgba(240,230,227,0.85);
+        }
+        .philosophy .author { font-size: 14px; color: rgba(240,230,227,0.4); }
+
+        /* CTA */
+        .cta {
+            padding: 100px 40px; text-align: center;
+            background: linear-gradient(180deg, var(--cream) 0%, #f0ebe8 100%);
+        }
+        .cta h2 { font-size: 36px; font-weight: 700; margin-bottom: 16px; }
+        .cta p { font-size: 18px; color: var(--text-soft); max-width: 560px; margin: 0 auto 32px; }
+        .cta-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+        /* FOOTER */
+        footer {
+            padding: 48px 40px; background: var(--dark);
+            color: rgba(240,230,227,0.5); text-align: center;
+        }
+        footer .brand { font-size: 16px; font-weight: 600; color: var(--cream); margin-bottom: 8px; }
+        footer p { font-size: 13px; }
+        footer .links { display: flex; gap: 24px; justify-content: center; margin-top: 16px; }
+        footer .links a {
+            color: rgba(240,230,227,0.5); text-decoration: none;
+            font-size: 13px; transition: color 0.2s;
+        }
+        footer .links a:hover { color: var(--coral); }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 34px; }
+            .hero p { font-size: 16px; }
+            .features-grid { grid-template-columns: 1fr; }
+            .target-grid { grid-template-columns: 1fr; }
+            .stack-grid { grid-template-columns: repeat(2, 1fr); }
+            .traffic-projects { grid-template-columns: 1fr; }
+            nav { padding: 12px 20px; }
+            .nav-links a:not(.nav-cta) { display: none; }
+            .hero, .features, .stack, .cta, .comparison { padding-left: 20px; padding-right: 20px; }
+            .comparison-table { font-size: 12px; }
+            .comparison-table th, .comparison-table td { padding: 10px 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav id="nav">
+    <a href="index.html" class="nav-brand"><span>&#129438;</span><strong>Lobster</strong></a>
+    <div class="nav-links">
+        <a href="index.html">Lobster Code</a>
+        <a href="manager.html" class="active">Manager</a>
+        <a href="#features">Funzionalit&agrave;</a>
+        <a href="#comparison">Confronto</a>
+        <a href="https://github.com/SuperSapiensAi/LobsterCode" target="_blank" class="nav-cta">&#11015; Scarica</a>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-content">
+        <span class="hero-emoji">&#129438;</span>
+        <h1>Il cockpit del<br><span class="highlight">vibe-coder.</span></h1>
+        <p>Un'app desktop per macOS che traduce la complessit&agrave; tecnica in semafori, bottoni e linguaggio umano. Porte, Docker, risorse, AI &mdash; tutto in un'unica finestra.</p>
+        <div class="hero-badges">
+            <div class="hero-badge macos">&#63743; macOS nativo &mdash; Apple Silicon</div>
+            <div class="hero-badge electron">&#9889; Electron + React + TypeScript</div>
+            <div class="hero-badge ai">&#129504; AI locale con Ollama</div>
+        </div>
+        <div class="hero-actions">
+            <a href="https://github.com/SuperSapiensAi/LobsterCode" target="_blank" class="btn btn-primary">
+                Scarica per macOS &rarr;
+            </a>
+            <a href="#features" class="btn btn-secondary">Scopri le funzionalit&agrave;</a>
+        </div>
+    </div>
+</section>
+
+<!-- PREMIUM BANNER -->
+<section class="premium-banner">
+    <p>Lobster Manager &egrave; la soluzione premium dell'ecosistema Lobster. Pensata per chi crea software con l'AI senza essere un tecnico &mdash; il <strong>vibe-coder</strong> che ha bisogno di un cockpit amichevole, non di un terminale.</p>
+</section>
+
+<!-- TRAFFIC LIGHT DEMO -->
+<section class="traffic-demo">
+    <div class="traffic-demo-inner">
+        <div class="traffic-titlebar">
+            <div class="traffic-dot r"></div>
+            <div class="traffic-dot y"></div>
+            <div class="traffic-dot g"></div>
+            <span>Lobster Manager &mdash; Il Mio Mondo</span>
+        </div>
+        <div class="traffic-projects">
+            <div class="traffic-card">
+                <div class="traffic-card-head">
+                    <div class="traffic-light green"></div>
+                    <h4>Urban Leaf</h4>
+                </div>
+                <div class="traffic-card-meta">
+                    <span>&#128994; Porta 3000 &middot; React</span>
+                    <span>&#128051; 2 container Docker attivi</span>
+                    <span>&#128204; branch: main</span>
+                </div>
+            </div>
+            <div class="traffic-card">
+                <div class="traffic-card-head">
+                    <div class="traffic-light yellow"></div>
+                    <h4>Decision Lab</h4>
+                </div>
+                <div class="traffic-card-meta">
+                    <span>&#128993; Porta 8080 &middot; FastAPI</span>
+                    <span>&#128051; 1 container fermo</span>
+                    <span>&#128204; branch: develop</span>
+                </div>
+            </div>
+            <div class="traffic-card">
+                <div class="traffic-card-head">
+                    <div class="traffic-light gray"></div>
+                    <h4>Portfolio</h4>
+                </div>
+                <div class="traffic-card-meta">
+                    <span>&#9899; Nessuna porta attiva</span>
+                    <span>&#128051; Docker fermo</span>
+                    <span>&#128204; branch: redesign</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+    <div class="section-label">8 strumenti in uno</div>
+    <h2 class="section-title">Tutto quello che ti serve, zero gergo tecnico.</h2>
+    <p class="section-desc">Ogni sezione traduce la complessit&agrave; in linguaggio umano. Un click per fare quello che prima richiedeva 5 comandi da terminale.</p>
+
+    <div class="features-grid">
+
+        <!-- 1. Dashboard -->
+        <div class="feature-card">
+            <div class="feature-card-head">
+                <div class="feature-icon purple">&#127968;</div>
+                <div>
+                    <h3>Il Mio Mondo</h3>
+                    <div class="subtitle">Dashboard</div>
+                </div>
+            </div>
+            <p>La vista d'insieme di tutti i tuoi progetti. Ogni progetto ha un semaforo che ti dice al volo lo stato: verde (tutto OK), giallo (qualcosa da controllare), rosso (errore), grigio (fermo). Card con accesso rapido a cartella, terminale, VS Code e browser.</p>
+            <div class="feature-highlights">
+                <span class="feature-tag purple">Semafori</span>
+                <span class="feature-tag ocean">Health Bar</span>
+                <span class="feature-tag green">Quick Stats</span>
+                <span class="feature-tag coral">One-Click</span>
+            </div>
+        </div>
+
+        <!-- 2. Port Monitor -->
+        <div class="feature-card">
+            <div class="feature-card-head">
+                <div class="feature-icon ocean">&#128268;</div>
+                <div>
+                    <h3>Porte</h3>
+                    <div class="subtitle">Port Monitor</div>
+                </div>
+            </div>
+            <p>&ldquo;Chi usa cosa&rdquo; in linguaggio umano. Vedi tutte le porte attive sul tuo Mac con il nome del progetto, il processo e il PID. Puoi chiudere una porta bloccata con un click, copiare l'URL o aprirla direttamente nel browser.</p>
+            <div class="feature-highlights">
+                <span class="feature-tag ocean">Ricerca</span>
+                <span class="feature-tag coral">Kill Process</span>
+                <span class="feature-tag green">Apri Browser</span>
+                <span class="feature-tag amber">Copia URL</span>
+            </div>
+        </div>
+
+        <!-- 3. Docker Monitor -->
+        <div class="feature-card">
+            <div class="feature-card-head">
+                <div class="feature-icon green">&#128051;</div>
+                <div>
+                    <h3>Docker</h3>
+                    <div class="subtitle">Docker Monitor</div>
+                </div>
+            </div>
+            <p>Container raggruppati per progetto Compose. Avvia, ferma o riavvia un singolo container o un intero progetto. Viewer log inline per debugging e metriche CPU/RAM in tempo reale per ogni container.</p>
+            <div class="feature-highlights">
+                <span class="feature-tag green">Per Progetto</span>
+                <span class="feature-tag ocean">Log Viewer</span>
+                <span class="feature-tag coral">CPU/RAM</span>
+                <span class="feature-tag amber">Start/Stop</span>
+            </div>
+        </div>
+
+        <!-- 4. Smart Advisor -->
+        <div class="feature-card">
+            <div class="feature-card-head">
+                <div class="feature-icon coral">&#129504;</div>
+                <div>
+                    <h3>Consulente</h3>
+                    <div class="subtitle">Smart Advisor AI</div>
+                </div>
+            </div>
+            <p>Un consulente AI locale powered by Ollama. Analizza i tuoi progetti e ti d&agrave; suggerimenti in linguaggio naturale. Routing multi-modello automatico: triage rapido con mistral-small, analisi con qwen3, ragionamento profondo con deepseek-r1.</p>
+            <div class="feature-highlights">
+                <span class="feature-tag coral">Multi-Model</span>
+                <span class="feature-tag purple">100% Locale</span>
+                <span class="feature-tag green">Ollama</span>
+                <span class="feature-tag ocean">Auto-Routing</span>
+            </div>
+        </div>
+
+        <!-- 5. UI Test Agent -->
+        <div class="feature-card">
+            <div class="feature-card-head">
+                <div class="feature-icon amber">&#129514;</div>
+                <div>
+                    <h3>Test UI</h3>
+                    <div class="subtitle">UI Test Agent</div>
+                </div>
+            </div>
+            <p>Health check automatici per i tuoi progetti web. Verifica raggiungibilit&agrave;, tempo di risposta, content type, sicurezza HTTPS e pattern di errore nella pagina. Test singolo, per progetto o tutti in un click.</p>
+            <div class="feature-highlights">
+                <span class="feature-tag amber">Health Check</span>
+                <span class="feature-tag green">HTTPS</span>
+                <span class="feature-tag red">Error Detection</span>
+                <span class="feature-tag ocean">Response Time</span>
+            </div>
+        </div>
+
+        <!-- 6. MNEMO -->
+        <div class="feature-card">
+            <div class="feature-card-head">
+                <div class="feature-icon emerald">&#129504;</div>
+                <div>
+                    <h3>MNEMO</h3>
+                    <div class="subtitle">Context Multiplier</div>
+                </div>
+            </div>
+            <p>Dashboard per monitorare MNEMO, il proxy che moltiplica il contesto di Ollama. Visualizza lo stato della connessione, le metriche di utilizzo e la gestione della memoria contestuale per le tue sessioni AI.</p>
+            <div class="feature-highlights">
+                <span class="feature-tag emerald">Proxy Monitor</span>
+                <span class="feature-tag purple">Context</span>
+                <span class="feature-tag ocean">Metriche</span>
+            </div>
+        </div>
+
+        <!-- 7. LobsterCode -->
+        <div class="feature-card">
+            <div class="feature-card-head">
+                <div class="feature-icon red">&#129438;</div>
+                <div>
+                    <h3>LobsterCode</h3>
+                    <div class="subtitle">Coding Assistant integrato</div>
+                </div>
+            </div>
+            <p>L'agente AI di coding Lobster Code, integrato direttamente nell'app. Modifica file, gestisce git, traccia le modifiche &mdash; tutto senza uscire da Lobster Manager. La potenza di un coding agent dentro il tuo cockpit.</p>
+            <div class="feature-highlights">
+                <span class="feature-tag red">Agent AI</span>
+                <span class="feature-tag green">Git</span>
+                <span class="feature-tag ocean">File Ops</span>
+                <span class="feature-tag amber">Tracking</span>
+            </div>
+        </div>
+
+        <!-- 8. Settings -->
+        <div class="feature-card">
+            <div class="feature-card-head">
+                <div class="feature-icon dark">&#9881;</div>
+                <div>
+                    <h3>Impostazioni</h3>
+                    <div class="subtitle">Configurazione</div>
+                </div>
+            </div>
+            <p>Personalizza tutto: cartelle da scansionare, modelli Ollama preferiti, soglie per i semafori (CPU, RAM, disco), endpoint MNEMO e preferenze di notifica. Tutto salvato in modo persistente tra le sessioni.</p>
+            <div class="feature-highlights">
+                <span class="feature-tag purple">Modelli AI</span>
+                <span class="feature-tag coral">Soglie</span>
+                <span class="feature-tag green">Cartelle</span>
+                <span class="feature-tag ocean">Persistenza</span>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- TARGET USER -->
+<section class="target">
+    <div class="target-inner">
+        <div class="section-label">Per chi &egrave;</div>
+        <h2 class="section-title">Pensato per il vibe-coder.</h2>
+        <div class="target-grid">
+            <div class="target-card">
+                <span class="emoji">&#129302;</span>
+                <h3>Crei con l'AI</h3>
+                <p>Usi Claude, Cursor o ChatGPT per scrivere codice. Non sai cosa sia un PID o un container, ma hai 5 progetti che girano.</p>
+            </div>
+            <div class="target-card">
+                <span class="emoji">&#128640;</span>
+                <h3>Multi-progetto</h3>
+                <p>Gestisci pi&ugrave; progetti in parallelo e hai bisogno di sapere al volo quali funzionano, quali sono fermi e quali hanno problemi.</p>
+            </div>
+            <div class="target-card">
+                <span class="emoji">&#128161;</span>
+                <h3>Zero terminale</h3>
+                <p>Non vuoi aprire il terminale per capire se Docker &egrave; partito o quale porta &egrave; occupata. Vuoi un bottone e un semaforo.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- STACK -->
+<section class="stack">
+    <div class="section-label">Tecnologia</div>
+    <h2 class="section-title">Costruito con il meglio</h2>
+    <p class="section-desc">Stack moderno, performante e nativo per macOS.</p>
+    <div class="stack-grid">
+        <div class="stack-item">
+            <div class="icon">&#9883;</div>
+            <h4>Electron</h4>
+            <p>App nativa con accesso al sistema</p>
+        </div>
+        <div class="stack-item">
+            <div class="icon">&#9883;</div>
+            <h4>React 18</h4>
+            <p>UI reattiva con Zustand</p>
+        </div>
+        <div class="stack-item">
+            <div class="icon">&#129438;</div>
+            <h4>Ollama</h4>
+            <p>AI locale, zero cloud</p>
+        </div>
+        <div class="stack-item">
+            <div class="icon">&#128051;</div>
+            <h4>Docker API</h4>
+            <p>Dockerode per gestione container</p>
+        </div>
+    </div>
+</section>
+
+<!-- COMPARISON -->
+<section class="comparison" id="comparison">
+    <div class="section-label">Confronto</div>
+    <h2 class="section-title">Lobster Code vs. Lobster Manager</h2>
+    <p class="section-desc">Due prodotti, due esigenze. Scegli quello che fa per te.</p>
+    <table class="comparison-table">
+        <thead>
+            <tr>
+                <th></th>
+                <th>&#129438; Lobster Code</th>
+                <th class="highlight-col">&#129438; Lobster Manager</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Tipo</td>
+                <td>Web UI + Agent CLI</td>
+                <td class="highlight-col"><strong>App desktop macOS</strong></td>
+            </tr>
+            <tr>
+                <td>Target</td>
+                <td>Developer</td>
+                <td class="highlight-col"><strong>Vibe-coder</strong></td>
+            </tr>
+            <tr>
+                <td>Coding Agent AI</td>
+                <td><span class="check">&#10003;</span></td>
+                <td class="highlight-col"><span class="check">&#10003; Integrato</span></td>
+            </tr>
+            <tr>
+                <td>Dashboard progetti</td>
+                <td><span class="cross">&#10007;</span></td>
+                <td class="highlight-col"><span class="check">&#10003; Con semafori</span></td>
+            </tr>
+            <tr>
+                <td>Port Monitor</td>
+                <td><span class="cross">&#10007;</span></td>
+                <td class="highlight-col"><span class="check">&#10003;</span></td>
+            </tr>
+            <tr>
+                <td>Docker Monitor</td>
+                <td><span class="cross">&#10007;</span></td>
+                <td class="highlight-col"><span class="check">&#10003;</span></td>
+            </tr>
+            <tr>
+                <td>Smart Advisor AI</td>
+                <td><span class="cross">&#10007;</span></td>
+                <td class="highlight-col"><span class="check">&#10003; Multi-model</span></td>
+            </tr>
+            <tr>
+                <td>UI Test Agent</td>
+                <td><span class="cross">&#10007;</span></td>
+                <td class="highlight-col"><span class="check">&#10003;</span></td>
+            </tr>
+            <tr>
+                <td>MNEMO Context</td>
+                <td><span class="cross">&#10007;</span></td>
+                <td class="highlight-col"><span class="check">&#10003;</span></td>
+            </tr>
+            <tr>
+                <td>100% Locale</td>
+                <td><span class="check">&#10003;</span></td>
+                <td class="highlight-col"><span class="check">&#10003;</span></td>
+            </tr>
+            <tr>
+                <td>Notifiche macOS</td>
+                <td><span class="cross">&#10007;</span></td>
+                <td class="highlight-col"><span class="check">&#10003;</span></td>
+            </tr>
+            <tr>
+                <td>Prezzo</td>
+                <td>Gratis (MIT)</td>
+                <td class="highlight-col"><strong>Premium</strong></td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+
+<!-- PHILOSOPHY -->
+<section class="philosophy">
+    <div class="philosophy-inner">
+        <div class="section-label">La filosofia</div>
+        <blockquote>"A prova di imbecille. Zero gergo tecnico. Un click per tutto. Se devi aprire il terminale per capire cosa sta succedendo, abbiamo fallito."</blockquote>
+        <p class="author">&mdash; Il principio di design di Lobster Manager</p>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+    <h2>Pronto a semplificarti la vita?</h2>
+    <p>Lobster Manager &egrave; il cockpit che traduce la complessit&agrave; in semafori. Scarica, installa, e vedi i tuoi progetti prendere vita.</p>
+    <div class="cta-actions">
+        <a href="https://github.com/SuperSapiensAi/LobsterCode" target="_blank" class="btn btn-primary">
+            Scarica per macOS &rarr;
+        </a>
+        <a href="index.html" class="btn btn-secondary">Scopri Lobster Code (gratuito)</a>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <div class="brand">&#129438; Lobster</div>
+    <p>Lobster Code (open source) &middot; Lobster Manager (premium desktop app)</p>
+    <div class="links">
+        <a href="index.html">Lobster Code</a>
+        <a href="manager.html">Lobster Manager</a>
+        <a href="https://github.com/SuperSapiensAi/LobsterCode" target="_blank">GitHub</a>
+        <a href="https://github.com/SuperSapiensAi/LobsterCode/issues" target="_blank">Segnala bug</a>
+    </div>
+</footer>
+
+<script>
+    window.addEventListener('scroll', () => {
+        document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 20);
+    });
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+        a.addEventListener('click', e => {
+            e.preventDefault();
+            const t = document.querySelector(a.getAttribute('href'));
+            if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    });
+</script>
+</body>
+</html>
