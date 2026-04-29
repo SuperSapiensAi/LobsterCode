@@ -381,36 +381,75 @@
             .comparison-table th, .comparison-table td { padding: 10px 12px; }
         }
 
-        /* ─── LOBSTER MANAGER SECTION ─── */
-        .manager-hero {
-            padding: 140px 40px 80px;
-            background: linear-gradient(180deg, var(--cream) 0%, #fff 50%, var(--cream) 100%);
-            text-align: center;
-            position: relative;
-            overflow: hidden;
+        /* ─── BRAND HERO ─── */
+        .brand-hero {
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            padding: 120px 40px 80px; position: relative; overflow: hidden;
+            background: linear-gradient(180deg, var(--cream) 0%, #fff 40%, var(--cream) 100%);
         }
-        .manager-hero::before {
-            content: ''; position: absolute; top: -100px; right: -100px;
-            width: 500px; height: 500px;
-            background: radial-gradient(circle, rgba(214,58,40,0.08) 0%, transparent 70%);
+        .brand-hero::before {
+            content: ''; position: absolute; top: -200px; right: -200px;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(214,58,40,0.06) 0%, transparent 70%);
             border-radius: 50%;
         }
-        .manager-hero .section-label { margin-bottom: 16px; }
-        .manager-hero h2 {
-            font-size: 48px; font-weight: 800; line-height: 1.1;
-            margin-bottom: 20px; color: var(--text);
+        .brand-hero::after {
+            content: ''; position: absolute; bottom: -150px; left: -150px;
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(42,143,181,0.05) 0%, transparent 70%);
+            border-radius: 50%;
         }
-        .manager-hero h2 .highlight {
+        .brand-content { max-width: 900px; text-align: center; position: relative; z-index: 1; }
+        .brand-emoji {
+            font-size: 80px; display: block; margin-bottom: 24px;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 8px 32px rgba(214,58,40,0.15));
+        }
+        .brand-content h1 { font-size: 56px; font-weight: 800; line-height: 1.1; margin-bottom: 24px; letter-spacing: -1px; }
+        .brand-content h1 .highlight {
             background: linear-gradient(135deg, var(--red), var(--coral));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
-        .manager-hero .manager-desc {
+        .brand-subtitle { font-size: 20px; color: var(--text-soft); max-width: 700px; margin: 0 auto 40px; line-height: 1.7; }
+        .product-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 800px; margin: 0 auto 40px; }
+        .product-card {
+            background: var(--white); border: 2px solid var(--border); border-radius: 20px;
+            padding: 32px 28px; text-align: left; transition: all 0.3s; cursor: pointer;
+            text-decoration: none; color: var(--text); display: block;
+        }
+        .product-card:hover { border-color: var(--red); box-shadow: 0 12px 40px rgba(214,58,40,0.1); transform: translateY(-4px); }
+        .product-card .pc-emoji { font-size: 36px; margin-bottom: 12px; display: block; }
+        .product-card .pc-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--red); margin-bottom: 4px; }
+        .product-card h3 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+        .product-card p { font-size: 14px; color: var(--text-soft); line-height: 1.6; margin-bottom: 12px; }
+        .product-card .pc-arrow { font-size: 14px; font-weight: 600; color: var(--red); }
+        .brand-badges { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .brand-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            border-radius: 20px; padding: 6px 16px; font-size: 13px; font-weight: 500;
+        }
+        .brand-badge.open { background: rgba(46,139,87,0.08); border: 1px solid rgba(46,139,87,0.2); color: var(--green); }
+        .brand-badge.local { background: rgba(42,143,181,0.08); border: 1px solid rgba(42,143,181,0.2); color: var(--ocean); }
+
+        /* ─── LOBSTER MANAGER SECTION ─── */
+        .manager-section {
+            padding: 100px 40px; max-width: 1200px; margin: 0 auto;
+        }
+        .manager-header { text-align: center; margin-bottom: 60px; }
+        .manager-header h2 {
+            font-size: 44px; font-weight: 800; line-height: 1.1; margin-bottom: 20px;
+        }
+        .manager-header h2 .highlight {
+            background: linear-gradient(135deg, var(--red), var(--coral));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .manager-header .manager-desc {
             font-size: 18px; color: var(--text-soft);
             max-width: 700px; margin: 0 auto 30px; line-height: 1.7;
         }
         .manager-badges {
             display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
-            margin-bottom: 36px;
+            margin-bottom: 24px;
         }
         .manager-badge {
             display: inline-flex; align-items: center; gap: 6px;
@@ -421,7 +460,6 @@
         .manager-badge.free { background: rgba(139,92,246,0.1); color: var(--purple); }
         .manager-actions {
             display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
-            margin-bottom: 60px;
         }
         .btn-download {
             display: inline-flex; align-items: center; gap: 10px;
@@ -446,9 +484,54 @@
             border-color: var(--red); color: var(--red);
             transform: translateY(-2px);
         }
+
+        /* Manager mockup */
+        .manager-mockup {
+            max-width: 900px; margin: 0 auto 60px;
+            background: var(--dark); border-radius: 16px; overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+        .mockup-titlebar {
+            display: flex; align-items: center; gap: 8px;
+            padding: 12px 16px; background: #1a1210; border-bottom: 1px solid #3a2822;
+        }
+        .mockup-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .mockup-dot.r { background: #ff5f57; }
+        .mockup-dot.y { background: #febc2e; }
+        .mockup-dot.g { background: #28c840; }
+        .mockup-titlebar span { flex: 1; text-align: center; font-size: 13px; color: #7a6560; font-weight: 500; }
+        .mockup-body { padding: 24px; display: grid; grid-template-columns: 200px 1fr; gap: 16px; min-height: 300px; }
+        .mockup-sidebar { border-right: 1px solid #3a2822; padding-right: 16px; }
+        .mockup-nav-item {
+            padding: 10px 14px; border-radius: 8px; font-size: 13px;
+            color: #7a6560; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;
+        }
+        .mockup-nav-item.active { background: rgba(214,58,40,0.15); color: var(--coral); }
+        .mockup-main { padding: 0 8px; }
+        .mockup-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+        .mockup-stat {
+            background: #2a1a17; border-radius: 10px; padding: 14px;
+            text-align: center;
+        }
+        .mockup-stat .ms-val { font-size: 24px; font-weight: 700; color: var(--cream); }
+        .mockup-stat .ms-label { font-size: 11px; color: #7a6560; margin-top: 2px; }
+        .mockup-projects { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .mockup-project {
+            background: #2a1a17; border-radius: 10px; padding: 14px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .mockup-project .mp-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .mockup-project .mp-dot.green { background: #28c840; }
+        .mockup-project .mp-dot.yellow { background: #febc2e; }
+        .mockup-project .mp-dot.red { background: #ff5f57; }
+        .mockup-project .mp-info { flex: 1; }
+        .mockup-project .mp-name { font-size: 13px; font-weight: 600; color: var(--cream); }
+        .mockup-project .mp-stack { font-size: 11px; color: #7a6560; }
+
+        /* Manager feature grid */
         .manager-features-grid {
             display: grid; grid-template-columns: repeat(3, 1fr);
-            gap: 20px; max-width: 1000px; margin: 0 auto;
+            gap: 20px; max-width: 1100px; margin: 0 auto;
         }
         .mf-card {
             background: var(--white); border-radius: 16px;
@@ -465,21 +548,24 @@
         .mf-card h4 { font-size: 16px; font-weight: 700; margin-bottom: 6px; color: var(--text); }
         .mf-card p { font-size: 13px; color: var(--text-soft); line-height: 1.5; }
 
-        .manager-divider {
-            text-align: center; padding: 40px; color: var(--text-dim);
-            font-size: 14px; font-weight: 500; position: relative;
+        .section-divider {
+            text-align: center; padding: 60px 40px; color: var(--text-dim);
+            font-size: 15px; font-weight: 500; position: relative;
+            background: linear-gradient(180deg, var(--cream) 0%, var(--white) 50%, var(--cream) 100%);
         }
-        .manager-divider::before, .manager-divider::after {
-            content: ''; position: absolute; top: 50%; height: 1px;
-            width: calc(50% - 120px); background: var(--border);
+        .section-divider .divider-line {
+            width: 60px; height: 3px; background: var(--border);
+            margin: 0 auto 16px; border-radius: 2px;
         }
-        .manager-divider::before { left: 0; }
-        .manager-divider::after { right: 0; }
 
         @media (max-width: 768px) {
-            .manager-hero { padding: 120px 20px 60px; }
-            .manager-hero h2 { font-size: 32px; }
+            .brand-content h1 { font-size: 36px; }
+            .product-cards { grid-template-columns: 1fr; }
+            .manager-header h2 { font-size: 32px; }
             .manager-features-grid { grid-template-columns: 1fr; }
+            .mockup-body { grid-template-columns: 1fr; }
+            .mockup-sidebar { display: none; }
+            .mockup-stats { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
@@ -488,97 +574,56 @@
 <nav id="nav">
     <a href="#" class="nav-brand"><span>🦞</span><strong>Lobster</strong></a>
     <div class="nav-links">
+        <a href="#code">Lobster Code</a>
         <a href="#manager">Manager</a>
-        <a href="#features">Lobster Code</a>
-        <a href="#models">Modelli</a>
         <a href="#comparison">Confronto</a>
         <a href="https://github.com/SuperSapiensAi/LobsterCode" target="_blank">GitHub</a>
-        <a href="https://github.com/SuperSapiensAi/LobsterCode/releases" target="_blank" class="nav-cta">&#11015; Scarica Ora</a>
+        <a href="https://github.com/SuperSapiensAi/LobsterCode/releases" target="_blank" class="nav-cta">&#11015; Scarica</a>
     </div>
 </nav>
 
-<!-- LOBSTER MANAGER — FLAGSHIP -->
-<section class="manager-hero" id="manager">
-    <div class="section-label">&#127942; Prodotto principale</div>
-    <h2>Lobster Manager<br><span class="highlight">Il tuo centro di controllo per lo sviluppo.</span></h2>
-    <p class="manager-desc">App desktop nativa per macOS. Gestisci tutti i tuoi progetti, porte, container Docker e AI — tutto in un'unica interfaccia. Open source, 100% locale, zero cloud.</p>
-
-    <div class="manager-badges">
-        <span class="manager-badge open">&#10022; Open Source &mdash; MIT License</span>
-        <span class="manager-badge local">&#128274; 100% Locale &mdash; Zero Cloud</span>
-        <span class="manager-badge free">&#9889; Gratuito per sempre</span>
-    </div>
-
-    <div class="manager-actions">
-        <a href="https://github.com/SuperSapiensAi/LobsterCode/releases" target="_blank" class="btn-download">
-            &#11015; Scarica Ora per macOS
-        </a>
-        <a href="https://github.com/SuperSapiensAi/LobsterCode/tree/main/lobster-utility" target="_blank" class="btn-source">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-            Codice Sorgente
-        </a>
-    </div>
-
-    <div class="manager-features-grid">
-        <div class="mf-card">
-            <div class="mf-icon">&#128269;</div>
-            <h4>Auto-Discovery Progetti</h4>
-            <p>Rileva automaticamente tutti i tuoi progetti, il loro stack, framework, porte e container.</p>
+<!-- ═══════════════════════════════════════════ -->
+<!-- BRAND HERO — DUE PRODOTTI                  -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="brand-hero">
+    <div class="brand-content">
+        <span class="brand-emoji">🦞</span>
+        <h1>Due tool. <span class="highlight">Un ecosistema.</span><br>Tutto locale, tutto gratis.</h1>
+        <p class="brand-subtitle">Lobster &egrave; una suite open source per sviluppatori. Un coding agent AI e un desktop manager per i tuoi progetti — entrambi 100% locali, zero cloud, zero abbonamenti.</p>
+        <div class="product-cards">
+            <a href="#code" class="product-card">
+                <span class="pc-emoji">&#128187;</span>
+                <div class="pc-label">Coding Agent</div>
+                <h3>Lobster Code</h3>
+                <p>Agente AI che scrive codice, gestisce file, usa git e automatizza il lavoro. Web UI + Ollama, pronto in 2 minuti.</p>
+                <span class="pc-arrow">Scopri &rarr;</span>
+            </a>
+            <a href="#manager" class="product-card">
+                <span class="pc-emoji">&#128640;</span>
+                <div class="pc-label">Desktop App</div>
+                <h3>Lobster Manager</h3>
+                <p>App Electron per gestire progetti, Docker, porte, notifiche e AI advisor. Dashboard real-time per il tuo ambiente dev.</p>
+                <span class="pc-arrow">Scopri &rarr;</span>
+            </a>
         </div>
-        <div class="mf-card">
-            <div class="mf-icon">&#128678;</div>
-            <h4>Dashboard Real-Time</h4>
-            <p>Semaforo verde/giallo/rosso per ogni progetto. Stato porte, container e git in tempo reale.</p>
-        </div>
-        <div class="mf-card">
-            <div class="mf-icon">&#128051;</div>
-            <h4>Docker Manager</h4>
-            <p>Start, stop, restart e log dei container. Gestisci Docker Compose con un click.</p>
-        </div>
-        <div class="mf-card">
-            <div class="mf-icon">&#128268;</div>
-            <h4>Port Monitor</h4>
-            <p>Chi usa quale porta? Rileva conflitti e termina processi direttamente dalla UI.</p>
-        </div>
-        <div class="mf-card">
-            <div class="mf-icon">&#129504;</div>
-            <h4>Smart Advisor AI</h4>
-            <p>Analisi intelligente dei progetti con suggerimenti, triage e report — powered by Ollama.</p>
-        </div>
-        <div class="mf-card">
-            <div class="mf-icon">&#129438;</div>
-            <h4>LobsterCode AI Integrato</h4>
-            <p>Coding assistant con tool calling, git, snapshot e rollback — direttamente nell'app.</p>
-        </div>
-        <div class="mf-card">
-            <div class="mf-icon">&#128221;</div>
-            <h4>.lobster.md per Progetto</h4>
-            <p>Note, stack, diario e istruzioni AI per ogni progetto. Generate automaticamente.</p>
-        </div>
-        <div class="mf-card">
-            <div class="mf-icon">&#128100;</div>
-            <h4>MY-PROFILE.md</h4>
-            <p>Il tuo profilo personale per le AI: chi sei, come lavori, i tuoi progetti attivi.</p>
-        </div>
-        <div class="mf-card">
-            <div class="mf-icon">&#128276;</div>
-            <h4>Notifiche Real-Time</h4>
-            <p>Avvisi quando un progetto si avvia, si ferma o entra in stato di errore.</p>
+        <div class="brand-badges">
+            <div class="brand-badge open">&#10022; Open Source &mdash; MIT License</div>
+            <div class="brand-badge local">&#128274; 100% Locale &mdash; Zero Cloud</div>
         </div>
     </div>
 </section>
 
-<div class="manager-divider">&#11015; Scopri anche Lobster Code &#11015;</div>
-
-<!-- HERO — LOBSTER CODE -->
-<section class="hero">
+<!-- ═══════════════════════════════════════════ -->
+<!-- LOBSTER CODE — SEZIONE 1                   -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="hero" id="code">
     <div class="hero-content">
-        <span class="hero-emoji">🦞</span>
-        <h1>AI locale, zero costi.<br><span class="highlight">Il coding agent che vive sul tuo computer.</span></h1>
-        <p>Un agente AI che scrive codice, gestisce file, usa git e automatizza il lavoro. 100% locale, zero cloud, zero costi. Il tuo codice resta sul tuo computer.</p>
+        <span class="hero-emoji">&#128187;</span>
+        <h1>Lobster Code<br><span class="highlight">Il coding agent che vive sul tuo computer.</span></h1>
+        <p>Un agente AI che scrive codice, gestisce file, usa git e automatizza il lavoro. Web UI leggera, backend Python, modelli locali via Ollama. Pronto in 2 minuti, nessun account richiesto.</p>
         <div class="hero-badges">
             <div class="hero-badge open">&#10022; Open Source &mdash; MIT License</div>
-            <div class="hero-badge engine-list">&#9889; Powered by Ollama &mdash; 100% locale, zero configurazione</div>
+            <div class="hero-badge engine-list">&#9889; Powered by Ollama &mdash; 100% locale</div>
         </div>
         <div class="hero-actions">
             <a href="https://github.com/SuperSapiensAi/LobsterCode" target="_blank" class="btn btn-github">
@@ -586,7 +631,7 @@
                 Scarica da GitHub
             </a>
             <a href="#install" class="btn btn-primary">Installazione rapida &rarr;</a>
-            <a href="#features" class="btn btn-secondary">Scopri le funzionalit&agrave;</a>
+            <a href="#features" class="btn btn-secondary">Funzionalit&agrave;</a>
         </div>
     </div>
 </section>
@@ -970,6 +1015,139 @@
     </div>
 </section>
 
+<!-- ═══════════════════════════════════════════ -->
+<!-- DIVIDER CODE → MANAGER                    -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="section-divider">
+    <div class="divider-line"></div>
+    &#128640; Scopri anche Lobster Manager
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- LOBSTER MANAGER — SEZIONE 2               -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="manager-section" id="manager">
+    <div class="manager-header">
+        <div class="section-label">&#128640; Desktop App</div>
+        <h2>Lobster Manager<br><span class="highlight">Il centro di controllo per il tuo dev environment.</span></h2>
+        <p class="manager-desc">App desktop nativa per macOS. Gestisci tutti i tuoi progetti, porte, container Docker e AI — tutto in un'unica interfaccia. Electron + React + TypeScript. Open source, 100% locale.</p>
+        <div class="manager-badges">
+            <span class="manager-badge open">&#10022; Open Source &mdash; MIT</span>
+            <span class="manager-badge local">&#128274; 100% Locale</span>
+            <span class="manager-badge free">&#9889; Gratuito per sempre</span>
+        </div>
+        <div class="manager-actions">
+            <a href="https://github.com/SuperSapiensAi/LobsterCode/releases" target="_blank" class="btn-download">
+                &#11015; Scarica per macOS
+            </a>
+            <a href="https://github.com/SuperSapiensAi/LobsterCode/tree/main/lobster-utility" target="_blank" class="btn-source">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                Codice Sorgente
+            </a>
+        </div>
+    </div>
+
+    <!-- Mockup UI -->
+    <div class="manager-mockup">
+        <div class="mockup-titlebar">
+            <div class="mockup-dot r"></div>
+            <div class="mockup-dot y"></div>
+            <div class="mockup-dot g"></div>
+            <span>Lobster Manager &mdash; Dashboard</span>
+        </div>
+        <div class="mockup-body">
+            <div class="mockup-sidebar">
+                <div class="mockup-nav-item active">&#128200; Dashboard</div>
+                <div class="mockup-nav-item">&#128268; Porte</div>
+                <div class="mockup-nav-item">&#128051; Docker</div>
+                <div class="mockup-nav-item">&#129504; Advisor</div>
+                <div class="mockup-nav-item">&#128187; LobsterCode</div>
+                <div class="mockup-nav-item">&#9881; Settings</div>
+            </div>
+            <div class="mockup-main">
+                <div class="mockup-stats">
+                    <div class="mockup-stat"><div class="ms-val" style="color:#28c840;">7</div><div class="ms-label">Progetti Attivi</div></div>
+                    <div class="mockup-stat"><div class="ms-val" style="color:#febc2e;">3</div><div class="ms-label">Container Docker</div></div>
+                    <div class="mockup-stat"><div class="ms-val" style="color:var(--coral);">12</div><div class="ms-label">Porte Occupate</div></div>
+                    <div class="mockup-stat"><div class="ms-val" style="color:var(--ocean);">2.1 GB</div><div class="ms-label">RAM Usata</div></div>
+                </div>
+                <div class="mockup-projects">
+                    <div class="mockup-project"><div class="mp-dot green"></div><div class="mp-info"><div class="mp-name">my-saas-app</div><div class="mp-stack">Next.js &middot; :3000 &middot; main</div></div></div>
+                    <div class="mockup-project"><div class="mp-dot green"></div><div class="mp-info"><div class="mp-name">api-gateway</div><div class="mp-stack">FastAPI &middot; :8000 &middot; dev</div></div></div>
+                    <div class="mockup-project"><div class="mp-dot yellow"></div><div class="mp-info"><div class="mp-name">mobile-backend</div><div class="mp-stack">Express &middot; :4000 &middot; feat/auth</div></div></div>
+                    <div class="mockup-project"><div class="mp-dot red"></div><div class="mp-info"><div class="mp-name">data-pipeline</div><div class="mp-stack">Python &middot; stopped &middot; main</div></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature grid -->
+    <div class="manager-features-grid">
+        <div class="mf-card">
+            <div class="mf-icon">&#128269;</div>
+            <h4>Auto-Discovery Progetti</h4>
+            <p>Rileva automaticamente tutti i tuoi progetti, il loro stack, framework, porte e container associati.</p>
+        </div>
+        <div class="mf-card">
+            <div class="mf-icon">&#128678;</div>
+            <h4>Dashboard Real-Time</h4>
+            <p>Semaforo verde/giallo/rosso per ogni progetto. Stato porte, container e git aggiornato in tempo reale.</p>
+        </div>
+        <div class="mf-card">
+            <div class="mf-icon">&#128051;</div>
+            <h4>Docker Manager</h4>
+            <p>Start, stop, restart e log dei container. Gestisci Docker Compose con un click. Niente pi&ugrave; terminale.</p>
+        </div>
+        <div class="mf-card">
+            <div class="mf-icon">&#128268;</div>
+            <h4>Port Monitor</h4>
+            <p>Chi usa quale porta? Rileva conflitti, mostra il processo e puoi terminarlo direttamente dalla UI.</p>
+        </div>
+        <div class="mf-card">
+            <div class="mf-icon">&#129504;</div>
+            <h4>Smart Advisor AI</h4>
+            <p>Analisi intelligente dei progetti con suggerimenti, triage e report di sicurezza &mdash; powered by Ollama.</p>
+        </div>
+        <div class="mf-card">
+            <div class="mf-icon">&#129438;</div>
+            <h4>LobsterCode Integrato</h4>
+            <p>Il coding agent direttamente nell'app. Tool calling, git, snapshot e rollback senza uscire dal Manager.</p>
+        </div>
+        <div class="mf-card">
+            <div class="mf-icon">&#128221;</div>
+            <h4>.lobster.md per Progetto</h4>
+            <p>Note, stack, diario e istruzioni AI per ogni progetto. Generate e aggiornate automaticamente.</p>
+        </div>
+        <div class="mf-card">
+            <div class="mf-icon">&#128100;</div>
+            <h4>MY-PROFILE.md</h4>
+            <p>Il tuo profilo personale per le AI: chi sei, come lavori, i tuoi progetti attivi. Auto-generato.</p>
+        </div>
+        <div class="mf-card">
+            <div class="mf-icon">&#128276;</div>
+            <h4>Notifiche e Monitoraggio</h4>
+            <p>Avvisi in tempo reale quando un progetto si avvia, si ferma o un container entra in stato di errore.</p>
+        </div>
+    </div>
+
+    <!-- Quick install Manager -->
+    <div style="max-width:700px;margin:60px auto 0;">
+        <div class="install-box">
+            <button class="install-copy" onclick="copyManager()">Copia</button>
+            <div><span class="comment"># Clona e avvia Lobster Manager</span></div>
+            <div><span class="cmd">git clone</span> https://github.com/SuperSapiensAi/LobsterCode.git</div>
+            <div><span class="cmd">cd</span> LobsterCode/lobster-utility</div>
+            <br>
+            <div><span class="comment"># Installa dipendenze e avvia in dev</span></div>
+            <div><span class="cmd">npm install</span></div>
+            <div><span class="cmd">npm run</span> <span class="flag">dev</span></div>
+            <br>
+            <div><span class="comment"># Oppure builda l'app per macOS</span></div>
+            <div><span class="cmd">bash</span> build-app.sh</div>
+        </div>
+    </div>
+</section>
+
 <!-- PHILOSOPHY -->
 <section class="philosophy">
     <div class="philosophy-inner">
@@ -982,13 +1160,14 @@
 <!-- CTA -->
 <section class="cta">
     <h2>Pronto per iniziare?</h2>
-    <p>Lobster Code &egrave; gratuito, open source e pronto in 2 minuti. Zero configurazione, nessun account richiesto.</p>
+    <p>Lobster Code e Lobster Manager sono gratuiti, open source e pronti all'uso. Zero configurazione, nessun account, nessun abbonamento.</p>
     <div class="cta-actions">
         <a href="https://github.com/SuperSapiensAi/LobsterCode" target="_blank" class="btn btn-github">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-            Scarica da GitHub
+            Repo su GitHub
         </a>
-        <a href="#install" class="btn btn-primary">Guida installazione &rarr;</a>
+        <a href="#code" class="btn btn-primary">Lobster Code &rarr;</a>
+        <a href="#manager" class="btn btn-secondary">Lobster Manager &rarr;</a>
     </div>
 </section>
 
@@ -997,8 +1176,8 @@
     <div class="brand">&#129438; Lobster</div>
     <p>Made with &#129438; by SuperSapiens AI &mdash; 100% Open Source, MIT License</p>
     <div class="links">
+        <a href="#code">Lobster Code</a>
         <a href="#manager">Lobster Manager</a>
-        <a href="#features">Lobster Code</a>
         <a href="https://github.com/SuperSapiensAi/LobsterCode/releases" target="_blank">Download</a>
         <a href="https://github.com/SuperSapiensAi/LobsterCode" target="_blank">GitHub</a>
         <a href="https://github.com/SuperSapiensAi/LobsterCode/issues" target="_blank">Segnala bug</a>
@@ -1019,7 +1198,15 @@
     function copyInstall() {
         const text = 'git clone https://github.com/SuperSapiensAi/LobsterCode.git\ncd LobsterCode/ui\nollama pull gemma4:latest\nbash start-agent.command';
         navigator.clipboard.writeText(text).then(() => {
-            const btn = document.querySelector('.install-copy');
+            const btn = document.querySelector('#install .install-copy');
+            btn.textContent = 'Copiato!';
+            setTimeout(() => btn.textContent = 'Copia', 2000);
+        });
+    }
+    function copyManager() {
+        const text = 'git clone https://github.com/SuperSapiensAi/LobsterCode.git\ncd LobsterCode/lobster-utility\nnpm install\nnpm run dev';
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.querySelector('#manager .install-copy');
             btn.textContent = 'Copiato!';
             setTimeout(() => btn.textContent = 'Copia', 2000);
         });
