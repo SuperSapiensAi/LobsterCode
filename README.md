@@ -1,14 +1,19 @@
-# 🦞 Lobster Code
+# 🦞 Lobster — Code + Manager
 
-**The open-source AI coding agent that runs entirely on your machine.**
+**Two open-source developer tools that run entirely on your machine.**
 
-Like Cursor and Claude Code — but free, local, and private. Powered by [Ollama](https://ollama.com).
+**Lobster Code** — AI coding agent. Like Cursor and Claude Code, but free, local, and private.  
+**Lobster Manager** — Desktop app to manage projects, Docker, ports, and system resources.
+
+Both are 100% local, zero cloud, zero cost. Powered by [Ollama](https://ollama.com).
 
 <p align="center">
-  <img src="assets/claw-hero.jpeg" alt="Lobster Code" width="300" />
+  <img src="assets/claw-hero.jpeg" alt="Lobster" width="300" />
 </p>
 
-## What is Lobster Code?
+---
+
+## 🦞 Lobster Code — AI Coding Agent
 
 Lobster Code is a local AI coding agent with a web UI. It connects to Ollama running on your machine — no API keys, no cloud, no subscriptions. Your code never leaves your computer.
 
@@ -148,16 +153,81 @@ MCP servers are configured in `.lobster/mcp.json` in your workspace — same for
 
 ```
 LobsterCode/
-├── ui/
-│   ├── agent_server.py    # Backend server (Python stdlib only)
-│   ├── agent.html         # Web UI (single file)
-│   ├── landing.html       # Landing page
-│   └── start-agent.command # Quick launcher
-├── index.html             # GitHub Pages (lobstercode.net)
-├── CNAME                  # Custom domain config
-├── LICENSE                # MIT
+├── ui/                        # Lobster Code
+│   ├── agent_server.py        # Backend server (Python stdlib only)
+│   ├── agent.html             # Web UI (single file)
+│   └── start-agent.command    # Quick launcher
+├── lobster-utility/           # Lobster Manager
+│   ├── src/
+│   │   ├── main/              # Electron main process
+│   │   │   ├── services/      # Core services (Docker, ports, discovery, AI)
+│   │   │   └── index.ts       # Main entry point
+│   │   ├── renderer/          # React UI
+│   │   │   ├── components/    # Dashboard, ProjectDetail, Settings, etc.
+│   │   │   └── App.tsx        # Root component
+│   │   ├── shared/            # Shared types and constants
+│   │   └── preload/           # IPC bridge
+│   ├── build-app.sh           # macOS build script
+│   └── package.json
+├── index.html                 # GitHub Pages — IT (lobstercode.net)
+├── en.html                    # GitHub Pages — EN
+├── CNAME                      # Custom domain config
+├── LICENSE                    # MIT
 └── README.md
 ```
+
+---
+
+## 🦞 Lobster Manager — Desktop Dev Environment
+
+Lobster Manager is a native desktop app (Electron + React + TypeScript) for macOS. It's your control center for managing development projects, Docker containers, ports, and system resources — all from a single UI.
+
+### Key Features
+
+**Auto-Discovery** — Automatically scans your filesystem and detects all software projects with their stack, framework, active ports, and associated Docker containers. Supports Node.js, Python, Rust, Go, Java, and major frameworks.
+
+**Real-Time Dashboard** — Traffic-light status (green/yellow/red) for every project. See active ports, running containers, git branch, and system health at a glance. Auto-refreshes in real time.
+
+**Docker Manager** — Start, stop, restart containers and view logs. Manage Docker Compose stacks with one click. Health checks, resource monitoring, and error alerts — no terminal needed.
+
+**Port Monitor** — See who's using which port, detect conflicts, identify the responsible process, and kill it from the UI. Never wonder "what's running on port 3000" again.
+
+**Smart Advisor AI** — Powered by Ollama. Analyzes your projects and provides intelligent suggestions: resource optimization, security issues, dependency updates, and priority triage. Generates actionable reports.
+
+**LobsterCode Built-in** — The full AI coding agent integrated directly into the Manager. Tool calling, git operations, snapshot & rollback — all without leaving the app.
+
+**.lobster.md per Project** — Auto-generated context files for each project containing stack info, dependencies, notes, and AI instructions. Keeps your project documentation always up to date.
+
+**MY-PROFILE.md** — A personal developer profile auto-generated from your projects. Who you are, how you work, your active projects — ready for any AI tool to understand your context.
+
+**Notifications & Monitoring** — Real-time alerts when projects start/stop, containers error out, or resource usage spikes. CPU, RAM, and disk monitoring with configurable thresholds.
+
+### Quick Start — Manager
+
+```bash
+# Clone and run in dev mode
+git clone https://github.com/SuperSapiensAi/LobsterCode.git
+cd LobsterCode/lobster-utility
+npm install
+npm run dev
+
+# Or build the native macOS app
+bash build-app.sh
+```
+
+### Manager Tech Stack
+
+| Component | Technology |
+|-----------|-----------|
+| Framework | Electron 35 |
+| UI | React 19 + TypeScript |
+| Styling | CSS Modules |
+| State | React Context + IPC |
+| Docker | Dockerode (Docker SDK) |
+| AI | Ollama (local LLMs) |
+| Build | Electron Builder |
+
+---
 
 ## Contributing
 

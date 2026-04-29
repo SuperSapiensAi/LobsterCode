@@ -1,18 +1,18 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lobster — Manager + Code AI | Open Source, 100% Locale, Gratuito</title>
-    <meta name="description" content="Lobster Manager — desktop app open source per gestire progetti, Docker, porte e AI. Lobster Code — coding agent locale. 100% gratuito, zero cloud.">
+    <title>Lobster — Manager + Code AI | Open Source, 100% Local, Free</title>
+    <meta name="description" content="Lobster Manager — open source desktop app to manage projects, Docker, ports and AI. Lobster Code — local coding agent. 100% free, zero cloud.">
     <meta name="theme-color" content="#d63a28">
-    <meta property="og:title" content="Lobster Code — Agente AI per sviluppo, gratuito e open source">
-    <meta property="og:description" content="Come Cursor e Claude Code, ma locale e gratuito. 100% locale, zero cloud, zero costi. Powered by Ollama.">
+    <meta property="og:title" content="Lobster Code — AI Agent for Development, Free and Open Source">
+    <meta property="og:description" content="Like Cursor and Claude Code, but local and free. 100% local, zero cloud, zero cost. Powered by Ollama.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://github.com/SuperSapiensAi/LobsterCode">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Lobster Code — Agente AI per sviluppo">
-    <meta name="twitter:description" content="Come Cursor e Claude Code, ma locale e gratuito. 7 tool nativi, agent loop multi-turn, git integrato. Powered by Ollama.">
+    <meta name="twitter:title" content="Lobster Code — AI Agent for Development">
+    <meta name="twitter:description" content="Like Cursor and Claude Code, but local and free. 7 native tools, multi-turn agent loop, built-in git. Powered by Ollama.">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦞</text></svg>">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -81,6 +81,13 @@
             box-shadow: 0 4px 16px rgba(214,58,40,0.3) !important;
             transform: translateY(-1px);
         }
+        .lang-switch {
+            text-decoration: none; font-size: 12px; font-weight: 700;
+            color: var(--text-soft); background: rgba(214,58,40,0.08);
+            padding: 4px 10px; border-radius: 6px; transition: all 0.2s;
+            letter-spacing: 0.5px;
+        }
+        .lang-switch:hover { background: rgba(214,58,40,0.15); color: var(--red); }
 
         /* HERO */
         .hero {
@@ -368,14 +375,6 @@
         footer .links a:hover { color: var(--coral); }
 
         /* RESPONSIVE */
-        .lang-switch {
-            text-decoration: none; font-size: 12px; font-weight: 700;
-            color: var(--text-soft); background: rgba(214,58,40,0.08);
-            padding: 4px 10px; border-radius: 6px; transition: all 0.2s;
-            letter-spacing: 0.5px;
-        }
-        .lang-switch:hover { background: rgba(214,58,40,0.15); color: var(--red); }
-
         @media (max-width: 768px) {
             .hero h1 { font-size: 36px; }
             .hero p { font-size: 16px; }
@@ -494,34 +493,34 @@
 <body>
 
 <nav id="nav">
-    <a href="#" class="nav-brand"><span>🦞</span><strong>Lobster</strong></a>
-    <a href="en.html" class="lang-switch" title="English">EN</a>
+    <a href="#" class="nav-brand"><span>&#129438;</span><strong>Lobster</strong></a>
+    <a href="index.html" class="lang-switch" title="Italiano">IT</a>
     <div class="nav-links">
         <a href="#features">Lobster Code</a>
         <a href="#manager">Manager</a>
-        <a href="#comparison">Confronto</a>
+        <a href="#comparison">Compare</a>
         <a href="https://github.com/SuperSapiensAi/LobsterCode" target="_blank">GitHub</a>
-        <a href="https://github.com/SuperSapiensAi/LobsterCode" target="_blank" class="nav-cta">&#11015; Scarica</a>
+        <a href="https://github.com/SuperSapiensAi/LobsterCode" target="_blank" class="nav-cta">&#11015; Download</a>
     </div>
 </nav>
 
 <!-- HERO — LOBSTER CODE -->
 <section class="hero">
     <div class="hero-content">
-        <span class="hero-emoji">🦞</span>
-        <h1>Lobster Code<br><span class="highlight">Il coding agent AI che vive sul tuo computer.</span></h1>
-        <p>Un agente AI che scrive codice, gestisce file, usa git e automatizza il lavoro. 100% locale, zero cloud, zero costi. Web UI + Ollama, pronto in 2 minuti.</p>
+        <span class="hero-emoji">&#129438;</span>
+        <h1>Lobster Code<br><span class="highlight">The AI coding agent that lives on your computer.</span></h1>
+        <p>An AI agent that writes code, manages files, uses git and automates your work. 100% local, zero cloud, zero cost. Web UI + Ollama, ready in 2 minutes.</p>
         <div class="hero-badges">
             <div class="hero-badge open">&#10022; Open Source &mdash; MIT License</div>
-            <div class="hero-badge engine-list">&#9889; Powered by Ollama &mdash; 100% locale</div>
+            <div class="hero-badge engine-list">&#9889; Powered by Ollama &mdash; 100% local</div>
         </div>
         <div class="hero-actions">
             <a href="https://github.com/SuperSapiensAi/LobsterCode" target="_blank" class="btn btn-github">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                Scarica da GitHub
+                Download from GitHub
             </a>
-            <a href="#install" class="btn btn-primary">Installazione rapida &rarr;</a>
-            <a href="#features" class="btn btn-secondary">Funzionalit&agrave;</a>
+            <a href="#install" class="btn btn-primary">Quick install &rarr;</a>
+            <a href="#features" class="btn btn-secondary">Features</a>
         </div>
     </div>
 </section>
@@ -529,15 +528,15 @@
 <!-- INSTALL -->
 <section class="install" id="install">
     <div class="install-box">
-        <button class="install-copy" onclick="copyInstall()">Copia</button>
-        <div><span class="comment"># Clona il repository</span></div>
+        <button class="install-copy" onclick="copyInstall()">Copy</button>
+        <div><span class="comment"># Clone the repository</span></div>
         <div><span class="cmd">git clone</span> https://github.com/SuperSapiensAi/LobsterCode.git</div>
         <div><span class="cmd">cd</span> LobsterCode/ui</div>
         <br>
-        <div><span class="comment"># Installa Ollama (ollama.ai) e scarica un modello con tool calling</span></div>
+        <div><span class="comment"># Install Ollama and pull a model with tool calling</span></div>
         <div><span class="cmd">ollama pull</span> <span class="flag">gemma4:latest</span></div>
         <br>
-        <div><span class="comment"># Avvia Lobster Code</span></div>
+        <div><span class="comment"># Launch Lobster Code</span></div>
         <div><span class="cmd">bash</span> start-agent.command</div>
     </div>
 </section>
@@ -547,74 +546,74 @@
 
 <!-- FEATURES -->
 <section class="features" id="features">
-    <div class="section-label">Funzionalit&agrave;</div>
-    <h2 class="section-title">Non un chatbot. Un agente che lavora davvero.</h2>
-    <p class="section-desc">Scrive codice, esegue comandi, versiona, protegge i tuoi file e impara il tuo progetto.</p>
+    <div class="section-label">Features</div>
+    <h2 class="section-title">Not a chatbot. An agent that actually works.</h2>
+    <p class="section-desc">Writes code, runs commands, versions, protects your files and learns your project.</p>
     <div class="features-grid">
         <div class="feature-card">
             <div class="feature-icon red">&#129516;</div>
             <h3>Project DNA</h3>
-            <p>Scansiona il tuo progetto e ne costruisce un profilo persistente: stack, convenzioni, linter, test framework, struttura. L'agente scrive codice che rispetta il tuo stile.</p>
+            <p>Scans your project and builds a persistent profile: stack, conventions, linter, test framework, structure. The agent writes code that respects your style.</p>
         </div>
         <div class="feature-card">
             <div class="feature-icon ocean">&#9889;</div>
             <h3>Prompt Templates</h3>
-            <p>Template intelligenti che si adattano al tuo stack. React? Ti suggerisce componenti. Python? Ti offre venv e test. Zero configurazione.</p>
+            <p>Smart templates that adapt to your stack. React? It suggests components. Python? It offers venv and tests. Zero configuration.</p>
         </div>
         <div class="feature-card">
             <div class="feature-icon coral">&#128640;</div>
-            <h3>Agent Loop Multi-Turn</h3>
-            <p>Non si ferma alla prima risposta. Esegue fino a 10 turni consecutivi di tool calling per completare task complessi in autonomia.</p>
+            <h3>Multi-Turn Agent Loop</h3>
+            <p>It doesn't stop at the first response. Executes up to 10 consecutive tool-calling turns to complete complex tasks autonomously.</p>
         </div>
         <div class="feature-card">
             <div class="feature-icon green">&#128028;</div>
-            <h3>Git integrato</h3>
-            <p>Status, diff, commit e log direttamente dalla sidebar. Niente terminale, niente context switch.</p>
+            <h3>Built-in Git</h3>
+            <p>Status, diff, commit and log right from the sidebar. No terminal, no context switching.</p>
         </div>
         <div class="feature-card">
             <div class="feature-icon sand">&#9199;</div>
             <h3>Snapshot &amp; Rollback</h3>
-            <p>Ogni azione crea uno snapshot automatico. Se qualcosa va storto, torni indietro con un click. Zero rischio.</p>
+            <p>Every action creates an automatic snapshot. If something goes wrong, roll back with one click. Zero risk.</p>
         </div>
         <div class="feature-card">
             <div class="feature-icon emerald">&#128274;</div>
             <h3>Workspace Isolation</h3>
-            <p>L'agente accede solo alle cartelle che gli concedi tu. Tre livelli di permesso con enforcement reale: scrittura limitata al workspace, tool MCP solo in full-access, anti-escalation integrato.</p>
+            <p>The agent only accesses the folders you grant. Three permission levels with real enforcement: writes limited to workspace, MCP tools only in full-access, built-in anti-escalation.</p>
         </div>
         <div class="feature-card">
             <div class="feature-icon dark">&#128736;</div>
-            <h3>7 Tool nativi</h3>
-            <p>bash, read_file, write_file, edit_file, list_directory, search_files, glob_search. Tutto il necessario per lavorare sul codice.</p>
+            <h3>7 Native Tools</h3>
+            <p>bash, read_file, write_file, edit_file, list_directory, search_files, glob_search. Everything you need to work on code.</p>
         </div>
         <div class="feature-card">
             <div class="feature-icon purple">&#129504;</div>
             <h3>Session Memory</h3>
-            <p>Salva note e contesto in <code>.lobster/context.md</code> nel tuo workspace. Appunti, decisioni e preferenze persistono tra le sessioni.</p>
+            <p>Saves notes and context in <code>.lobster/context.md</code> within your workspace. Notes, decisions and preferences persist across sessions.</p>
         </div>
         <div class="feature-card">
             <div class="feature-icon amber">&#128203;</div>
             <h3>Diff Preview</h3>
-            <p>Ogni modifica mostra un diff riga per riga. Sai sempre cosa cambia, prima e dopo.</p>
+            <p>Every change shows a line-by-line diff. You always know what changed, before and after.</p>
         </div>
         <div class="feature-card">
             <div class="feature-icon purple">&#128268;</div>
             <h3>MCP Protocol</h3>
-            <p>Connetti tool esterni via Model Context Protocol. Database, GitHub, Slack, browser &mdash; un file JSON e l'agente li usa come tool nativi.</p>
+            <p>Connect external tools via Model Context Protocol. Database, GitHub, Slack, browser &mdash; one JSON file and the agent uses them as native tools.</p>
         </div>
         <div class="feature-card">
             <div class="feature-icon red">&#128737;</div>
-            <h3>Sicurezza nativa</h3>
-            <p>Path di sistema protetti, comandi distruttivi bloccati, scritture atomiche, anti-escalation. L'agente non pu&ograve; auto-promuoversi n&eacute; rompere il tuo OS.</p>
+            <h3>Native Security</h3>
+            <p>Protected system paths, blocked destructive commands, atomic writes, anti-escalation. The agent cannot self-promote or break your OS.</p>
         </div>
         <div class="feature-card">
             <div class="feature-icon ocean">&#128065;</div>
-            <h3>Streaming in tempo reale</h3>
-            <p>Le risposte arrivano parola per parola via Server-Sent Events. Vedi l'agente pensare e agire in tempo reale.</p>
+            <h3>Real-Time Streaming</h3>
+            <p>Responses arrive word by word via Server-Sent Events. Watch the agent think and act in real time.</p>
         </div>
         <div class="feature-card">
             <div class="feature-icon coral">&#128302;</div>
             <h3>Setup Wizard</h3>
-            <p>Verifica Ollama, controlla la RAM, consiglia il modello migliore e lo scarica con un click. Operativo in 2 minuti.</p>
+            <p>Checks Ollama, verifies RAM, recommends the best model and downloads it with one click. Up and running in 2 minutes.</p>
         </div>
     </div>
 </section>
@@ -622,9 +621,9 @@
 <!-- DEMO -->
 <section class="demo" id="demo">
     <div class="demo-inner">
-        <div class="section-label">In azione</div>
-        <h2 class="section-title">Guarda come lavora</h2>
-        <p class="section-desc">Agent loop reale con tool calling, diff preview e snapshot automatico.</p>
+        <div class="section-label">In action</div>
+        <h2 class="section-title">See how it works</h2>
+        <p class="section-desc">Real agent loop with tool calling, diff preview and automatic snapshots.</p>
         <div class="demo-window">
             <div class="demo-titlebar">
                 <div class="demo-dot r"></div>
@@ -633,14 +632,14 @@
                 <span>Lobster Code &mdash; &#129438; Ollama &middot; gemma4:latest</span>
             </div>
             <div class="demo-body">
-                <div class="demo-line demo-engine">&#128640; Ollama &middot; gemma4:latest &middot; Permessi: workspace-write</div>
-                <div class="demo-line demo-user">&#128100;  Crea un componente React counter con TypeScript e test</div>
-                <div class="demo-line demo-comment">   # L'agente rileva: React + TypeScript + Jest</div>
+                <div class="demo-line demo-engine">&#128640; Ollama &middot; gemma4:latest &middot; Permissions: workspace-write</div>
+                <div class="demo-line demo-user">&#128100;  Create a React counter component with TypeScript and tests</div>
+                <div class="demo-line demo-comment">   # Agent detects: React + TypeScript + Jest</div>
                 <div class="demo-line demo-tool">&#128295;  bash &rarr; mkdir -p src/components</div>
-                <div class="demo-line demo-tool">&#128295;  write_file &rarr; src/components/Counter.tsx (38 righe)</div>
+                <div class="demo-line demo-tool">&#128295;  write_file &rarr; src/components/Counter.tsx (38 lines)</div>
                 <div class="demo-line demo-diff-add">   + export const Counter: React.FC = () =&gt; { ... }</div>
                 <div class="demo-line demo-tool">&#128295;  write_file &rarr; src/components/Counter.test.tsx</div>
-                <div class="demo-line demo-result">&#9989;  Componente creato! Snapshot salvato (3 file) &middot; Rollback disponibile</div>
+                <div class="demo-line demo-result">&#9989;  Component created! Snapshot saved (3 files) &middot; Rollback available</div>
             </div>
         </div>
     </div>
@@ -648,29 +647,29 @@
 
 <!-- STACK -->
 <section class="stack" id="stack">
-    <div class="section-label">Architettura</div>
-    <h2 class="section-title">Architettura minima, massima potenza</h2>
-    <p class="section-desc">Web UI in vanilla JS, backend Python stdlib, Ollama per l'AI.</p>
+    <div class="section-label">Architecture</div>
+    <h2 class="section-title">Minimal architecture, maximum power</h2>
+    <p class="section-desc">Vanilla JS web UI, Python stdlib backend, Ollama for AI.</p>
     <div class="stack-grid">
         <div class="stack-item">
             <div class="icon">&#128013;</div>
             <h4>Python</h4>
-            <p>Backend puro stdlib, zero pip install</p>
+            <p>Pure stdlib backend, zero pip install</p>
         </div>
         <div class="stack-item">
             <div class="icon">&#129438;</div>
             <h4>Ollama</h4>
-            <p>LLM locali con tool calling nativo</p>
+            <p>Local LLMs with native tool calling</p>
         </div>
         <div class="stack-item">
             <div class="icon">&#127760;</div>
             <h4>Vanilla JS</h4>
-            <p>Frontend senza framework, streaming SSE</p>
+            <p>No-framework frontend, SSE streaming</p>
         </div>
         <div class="stack-item">
             <div class="icon">&#128274;</div>
-            <h4>3 livelli di permesso</h4>
-            <p>Read-only, workspace-write (con enforcement path), full-access (con conferma)</p>
+            <h4>3 Permission Levels</h4>
+            <p>Read-only, workspace-write (path enforcement), full-access (with confirmation)</p>
         </div>
     </div>
 </section>
@@ -678,16 +677,16 @@
 <!-- MODELS -->
 <section class="models" id="models">
     <div class="models-inner">
-        <div class="section-label">Modelli supportati</div>
-        <h2 class="section-title">Scegli il cervello che preferisci</h2>
-        <p class="section-desc">Solo modelli con tool calling nativo verificato. Il wizard suggerisce il migliore per la tua RAM.</p>
+        <div class="section-label">Supported Models</div>
+        <h2 class="section-title">Choose your brain</h2>
+        <p class="section-desc">Only models with verified native tool calling. The wizard suggests the best one for your RAM.</p>
 
         <div class="models-grid">
             <div class="model-card">
                 <div class="model-badge-icon" style="background:rgba(46,139,87,0.1);">&#127942;</div>
                 <div class="model-card-info">
                     <h4>Qwen 2.5 Coder 14B</h4>
-                    <p>Il migliore per coding. Tool calling nativo, veloce e preciso.</p>
+                    <p>The best for coding. Native tool calling, fast and accurate.</p>
                 </div>
                 <div class="model-card-tags">
                     <span class="model-tag coding">Coding</span>
@@ -698,10 +697,10 @@
                 <div class="model-badge-icon" style="background:rgba(139,92,246,0.1);">&#128142;</div>
                 <div class="model-card-info">
                     <h4>Gemma 4 12B</h4>
-                    <p>Di Google. Multilingua eccellente, tool calling nativo, 128K contesto.</p>
+                    <p>By Google. Excellent multilingual, native tool calling, 128K context.</p>
                 </div>
                 <div class="model-card-tags">
-                    <span class="model-tag general">Generale</span>
+                    <span class="model-tag general">General</span>
                     <span class="model-tag tools">Tools</span>
                     <span class="model-tag context">128K</span>
                 </div>
@@ -710,22 +709,22 @@
                 <div class="model-badge-icon" style="background:rgba(196,163,90,0.1);">&#127754;</div>
                 <div class="model-card-info">
                     <h4>Mistral 7B</h4>
-                    <p>Versatile e veloce. Tool calling nativo, ottimo bilanciamento.</p>
+                    <p>Versatile and fast. Native tool calling, great balance of speed and quality.</p>
                 </div>
                 <div class="model-card-tags">
-                    <span class="model-tag general">Generale</span>
+                    <span class="model-tag general">General</span>
                     <span class="model-tag tools">Tools</span>
-                    <span class="model-tag fast">Veloce</span>
+                    <span class="model-tag fast">Fast</span>
                 </div>
             </div>
             <div class="model-card">
                 <div class="model-badge-icon" style="background:rgba(42,143,181,0.1);">&#129302;</div>
                 <div class="model-card-info">
                     <h4>Llama 3.3 70B</h4>
-                    <p>Di Meta. Tool calling nativo, potente e versatile. Richiede 48GB+ RAM.</p>
+                    <p>By Meta. Native tool calling, powerful and versatile. Requires 48GB+ RAM.</p>
                 </div>
                 <div class="model-card-tags">
-                    <span class="model-tag general">Generale</span>
+                    <span class="model-tag general">General</span>
                     <span class="model-tag tools">Tools</span>
                     <span class="model-tag context">128K</span>
                 </div>
@@ -734,7 +733,7 @@
                 <div class="model-badge-icon" style="background:rgba(46,139,87,0.1);">&#128302;</div>
                 <div class="model-card-info">
                     <h4>Codestral 22B</h4>
-                    <p>Di Mistral AI, specializzato coding. 80+ linguaggi supportati.</p>
+                    <p>By Mistral AI, specialized for coding. Supports 80+ programming languages.</p>
                 </div>
                 <div class="model-card-tags">
                     <span class="model-tag coding">Coding</span>
@@ -747,9 +746,9 @@
 
 <!-- COMPARISON -->
 <section class="comparison" id="comparison">
-    <div class="section-label">Confronto</div>
-    <h2 class="section-title">Lobster Code vs. altri tool</h2>
-    <p class="section-desc">Cosa ottieni scegliendo un agente locale, gratuito e open source.</p>
+    <div class="section-label">Comparison</div>
+    <h2 class="section-title">Lobster Code vs. other tools</h2>
+    <p class="section-desc">What you get by choosing a local, free and open source agent.</p>
     <table class="comparison-table">
         <thead>
             <tr>
@@ -762,21 +761,21 @@
         </thead>
         <tbody>
             <tr>
-                <td>Costo</td>
-                <td class="highlight-col"><span class="check">Gratis</span></td>
-                <td>$20/mese</td>
+                <td>Cost</td>
+                <td class="highlight-col"><span class="check">Free</span></td>
+                <td>$20/mo</td>
                 <td>Pay-per-use</td>
-                <td><span class="check">Gratis</span></td>
+                <td><span class="check">Free</span></td>
             </tr>
             <tr>
-                <td>Privacy (locale)</td>
+                <td>Privacy (local)</td>
                 <td class="highlight-col"><span class="check">&#10003;</span></td>
                 <td><span class="cross">&#10007;</span></td>
                 <td><span class="cross">&#10007;</span></td>
                 <td><span class="check">&#10003;</span></td>
             </tr>
             <tr>
-                <td>Agent loop con tool</td>
+                <td>Agent loop with tools</td>
                 <td class="highlight-col"><span class="check">&#10003;</span></td>
                 <td><span class="check">&#10003;</span></td>
                 <td><span class="check">&#10003;</span></td>
@@ -790,7 +789,7 @@
                 <td><span class="check">&#10003;</span></td>
             </tr>
             <tr>
-                <td>Git integrato</td>
+                <td>Built-in Git</td>
                 <td class="highlight-col"><span class="check">&#10003;</span></td>
                 <td><span class="check">&#10003;</span></td>
                 <td><span class="check">&#10003;</span></td>
@@ -825,7 +824,7 @@
                 <td><span class="cross">&#10007;</span></td>
             </tr>
             <tr>
-                <td>MCP / Estensibilit&agrave;</td>
+                <td>MCP / Extensibility</td>
                 <td class="highlight-col"><span class="check">&#10003;</span></td>
                 <td><span class="cross">&#10007;</span></td>
                 <td><span class="check">&#10003;</span></td>
@@ -837,69 +836,69 @@
 
 <!-- USE CASES -->
 <section class="usecases" id="usecases">
-    <div class="section-label">Come usarlo</div>
-    <h2 class="section-title">Dalla riga di comando al progetto completo</h2>
-    <p class="section-desc">Non &egrave; un chatbot. &Egrave; un collega che esegue, versiona e protegge il tuo lavoro.</p>
+    <div class="section-label">How to use it</div>
+    <h2 class="section-title">From the command line to complete projects</h2>
+    <p class="section-desc">Not a chatbot. A colleague that executes, versions and protects your work.</p>
 
     <div class="usecases-grid">
         <div class="usecase">
             <div class="usecase-head">
                 <span class="usecase-emoji">&#127959;</span>
-                <h3>Scaffolding progetti</h3>
+                <h3>Project Scaffolding</h3>
             </div>
-            <p>Crea strutture complete con context-awareness. L'agente rileva lo stack e adatta le sue azioni.</p>
+            <p>Creates complete structures with context-awareness. The agent detects the stack and adapts its actions accordingly.</p>
             <div class="usecase-example">
-                <span class="dim">&rarr;</span> "Crea un'API REST in FastAPI con auth JWT e test pytest"
+                <span class="dim">&rarr;</span> "Create a REST API in FastAPI with JWT auth and pytest tests"
             </div>
         </div>
         <div class="usecase">
             <div class="usecase-head">
                 <span class="usecase-emoji">&#128027;</span>
-                <h3>Debug e fix</h3>
+                <h3>Debug &amp; Fix</h3>
             </div>
-            <p>Legge il codice, trova il bug, lo corregge con diff preview e crea uno snapshot per rollback.</p>
+            <p>Reads the code, finds the bug, fixes it with a diff preview and creates a snapshot for rollback.</p>
             <div class="usecase-example">
-                <span class="dim">&rarr;</span> "Il login non funziona, controlla auth.py e fixalo"
+                <span class="dim">&rarr;</span> "Login is broken, check auth.py and fix it"
             </div>
         </div>
         <div class="usecase">
             <div class="usecase-head">
                 <span class="usecase-emoji">&#128194;</span>
-                <h3>Refactoring sicuro</h3>
+                <h3>Safe Refactoring</h3>
             </div>
-            <p>Snapshot automatico prima di ogni modifica. Se non ti piace il risultato, rollback con un click.</p>
+            <p>Automatic snapshot before every change. If you don't like the result, roll back with one click.</p>
             <div class="usecase-example">
-                <span class="dim">&rarr;</span> "Refactora utils/ separando le funzioni per dominio"
+                <span class="dim">&rarr;</span> "Refactor utils/ by splitting functions into domain modules"
             </div>
         </div>
         <div class="usecase">
             <div class="usecase-head">
                 <span class="usecase-emoji">&#128200;</span>
-                <h3>Analisi dati</h3>
+                <h3>Data Analysis</h3>
             </div>
-            <p>Elabora CSV, genera grafici, calcola statistiche. Tutto locale, i tuoi dati restano tuoi.</p>
+            <p>Processes CSV files, generates charts, computes statistics. All local — your data stays yours.</p>
             <div class="usecase-example">
-                <span class="dim">&rarr;</span> "Analizza vendite.csv, mostra trend mensile e top 5 prodotti"
+                <span class="dim">&rarr;</span> "Analyze sales.csv, show monthly trend and top 5 products"
             </div>
         </div>
         <div class="usecase">
             <div class="usecase-head">
                 <span class="usecase-emoji">&#128028;</span>
-                <h3>Git workflow</h3>
+                <h3>Git Workflow</h3>
             </div>
-            <p>Commit, branch, log dalla UI. Genera changelog automatici analizzando i commit recenti.</p>
+            <p>Commit, branch, log from the UI. Automatically generates changelogs by analyzing recent commits.</p>
             <div class="usecase-example">
-                <span class="dim">&rarr;</span> "Genera un changelog dal branch develop e committalo"
+                <span class="dim">&rarr;</span> "Generate a changelog from the develop branch and commit it"
             </div>
         </div>
         <div class="usecase">
             <div class="usecase-head">
                 <span class="usecase-emoji">&#127912;</span>
-                <h3>Frontend da zero</h3>
+                <h3>Frontend from Scratch</h3>
             </div>
-            <p>HTML, CSS, JS &mdash; componenti, animazioni, responsive. Vede il diff di ogni file che tocca.</p>
+            <p>HTML, CSS, JS &mdash; components, animations, responsive. Shows a diff for every file it touches.</p>
             <div class="usecase-example">
-                <span class="dim">&rarr;</span> "Crea una landing page per il mio portfolio con dark mode"
+                <span class="dim">&rarr;</span> "Create a landing page for my portfolio with dark mode"
             </div>
         </div>
     </div>
@@ -908,91 +907,91 @@
 <!-- PHILOSOPHY -->
 <section class="philosophy">
     <div class="philosophy-inner">
-        <div class="section-label">La filosofia</div>
-        <blockquote>"Il miglior tool &egrave; quello che non ti chiede mai di uscire dal tuo flusso. Lobster vive dove lavori tu &mdash; nei tuoi file, con i tuoi dati, tutto locale. Nessun cloud che ti spia, nessun abbonamento che ti frena."</blockquote>
-        <p class="author">&mdash; Il team di Lobster</p>
+        <div class="section-label">The philosophy</div>
+        <blockquote>"The best tool is one that never asks you to leave your flow. Lobster lives where you work &mdash; in your files, with your data, all local. No cloud spying on you, no subscription holding you back."</blockquote>
+        <p class="author">&mdash; The Lobster team</p>
     </div>
 </section>
 
 <!-- ═══════════════════════════════════════════ -->
 <!-- DIVIDER CODE → MANAGER                    -->
 <!-- ═══════════════════════════════════════════ -->
-<div class="manager-divider">&#128640; Scopri anche Lobster Manager</div>
+<div class="manager-divider">&#128640; Discover Lobster Manager too</div>
 
 <!-- LOBSTER MANAGER -->
 <section class="manager-hero" id="manager">
-    <div class="section-label">&#128640; Desktop App per macOS</div>
-    <h2>Lobster Manager<br><span class="highlight">Il centro di controllo del tuo dev environment.</span></h2>
-    <p class="manager-desc">App desktop nativa Electron + React + TypeScript. Gestisci progetti, Docker, porte, risorse di sistema e AI advisor — tutto in un'unica interfaccia. Open source, 100% locale, zero cloud.</p>
+    <div class="section-label">&#128640; Desktop App for macOS</div>
+    <h2>Lobster Manager<br><span class="highlight">The control center for your dev environment.</span></h2>
+    <p class="manager-desc">Native desktop app built with Electron + React + TypeScript. Manage projects, Docker, ports, system resources and AI advisor — all in one interface. Open source, 100% local, zero cloud.</p>
 
     <div class="manager-badges">
         <span class="manager-badge open">&#10022; Open Source &mdash; MIT License</span>
-        <span class="manager-badge local">&#128274; 100% Locale &mdash; Zero Cloud</span>
-        <span class="manager-badge free">&#9889; Gratuito per sempre</span>
+        <span class="manager-badge local">&#128274; 100% Local &mdash; Zero Cloud</span>
+        <span class="manager-badge free">&#9889; Free forever</span>
     </div>
 
     <div class="manager-actions">
         <a href="https://github.com/SuperSapiensAi/LobsterCode" target="_blank" class="btn-download">
-            &#11015; Scarica per macOS
+            &#11015; Download for macOS
         </a>
         <a href="https://github.com/SuperSapiensAi/LobsterCode/tree/main/lobster-utility" target="_blank" class="btn-source">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-            Codice Sorgente
+            Source Code
         </a>
     </div>
 
     <div class="manager-features-grid">
         <div class="mf-card">
             <div class="mf-icon">&#128269;</div>
-            <h4>Auto-Discovery Progetti</h4>
-            <p>Rileva automaticamente tutti i tuoi progetti, il loro stack, framework, porte attive e container Docker associati.</p>
+            <h4>Auto-Discovery Projects</h4>
+            <p>Automatically detects all your projects, their stack, framework, active ports and associated Docker containers.</p>
         </div>
         <div class="mf-card">
             <div class="mf-icon">&#128678;</div>
-            <h4>Dashboard Real-Time</h4>
-            <p>Semaforo verde/giallo/rosso per ogni progetto. Stato porte, container e git branch aggiornato in tempo reale.</p>
+            <h4>Real-Time Dashboard</h4>
+            <p>Green/yellow/red traffic light for each project. Port status, containers and git branch updated in real time.</p>
         </div>
         <div class="mf-card">
             <div class="mf-icon">&#128051;</div>
             <h4>Docker Manager</h4>
-            <p>Start, stop, restart e log dei container. Gestisci Docker Compose con un click. Niente pi&ugrave; terminale.</p>
+            <p>Start, stop, restart and view container logs. Manage Docker Compose with one click. No more terminal.</p>
         </div>
         <div class="mf-card">
             <div class="mf-icon">&#128268;</div>
             <h4>Port Monitor</h4>
-            <p>Chi usa quale porta? Rileva conflitti, mostra il processo responsabile e puoi terminarlo dalla UI.</p>
+            <p>Who's using which port? Detects conflicts, shows the responsible process and lets you kill it from the UI.</p>
         </div>
         <div class="mf-card">
             <div class="mf-icon">&#129504;</div>
             <h4>Smart Advisor AI</h4>
-            <p>Analisi intelligente dei progetti con suggerimenti, triage priorit&agrave; e report di sicurezza &mdash; powered by Ollama.</p>
+            <p>Intelligent project analysis with suggestions, priority triage and security reports &mdash; powered by Ollama.</p>
         </div>
         <div class="mf-card">
             <div class="mf-icon">&#129438;</div>
-            <h4>LobsterCode Integrato</h4>
-            <p>Il coding agent direttamente nell'app. Tool calling, git, snapshot e rollback senza uscire dal Manager.</p>
+            <h4>LobsterCode Built-in</h4>
+            <p>The coding agent right inside the app. Tool calling, git, snapshot and rollback without leaving the Manager.</p>
         </div>
         <div class="mf-card">
             <div class="mf-icon">&#128221;</div>
-            <h4>.lobster.md per Progetto</h4>
-            <p>Note, stack, diario e istruzioni AI per ogni progetto. Generate e aggiornate automaticamente.</p>
+            <h4>.lobster.md per Project</h4>
+            <p>Notes, stack, diary and AI instructions for each project. Auto-generated and kept up to date.</p>
         </div>
         <div class="mf-card">
             <div class="mf-icon">&#128100;</div>
             <h4>MY-PROFILE.md</h4>
-            <p>Il tuo profilo personale per le AI: chi sei, come lavori, i tuoi progetti attivi. Auto-generato.</p>
+            <p>Your personal profile for AI: who you are, how you work, your active projects. Auto-generated.</p>
         </div>
         <div class="mf-card">
             <div class="mf-icon">&#128276;</div>
-            <h4>Notifiche e Monitoraggio</h4>
-            <p>Avvisi in tempo reale quando un progetto si avvia, si ferma o un container entra in stato di errore.</p>
+            <h4>Notifications &amp; Monitoring</h4>
+            <p>Real-time alerts when a project starts, stops or a container enters an error state.</p>
         </div>
     </div>
 
     <!-- MANAGER DEMO -->
     <div style="max-width:800px;margin:60px auto 0;">
-        <div class="section-label" style="text-align:center;">In azione</div>
-        <h3 style="text-align:center;font-size:22px;font-weight:700;margin-bottom:24px;color:var(--text);">Guarda cosa fa il Manager</h3>
+        <div class="section-label" style="text-align:center;">In Action</div>
+        <h3 style="text-align:center;font-size:22px;font-weight:700;margin-bottom:24px;color:var(--text);">See what the Manager does</h3>
         <div class="demo-window">
             <div class="demo-titlebar">
                 <div class="demo-dot r"></div>
@@ -1001,109 +1000,109 @@
                 <span>Lobster Manager &mdash; &#129438; Dashboard</span>
             </div>
             <div class="demo-body">
-                <div class="demo-line demo-engine">&#128640; Auto-Discovery &middot; Trovati 5 progetti &middot; 3 attivi</div>
-                <div class="demo-line demo-user">&#128269;  Scan ~/Developer &mdash; React, FastAPI, Go rilevati</div>
+                <div class="demo-line demo-engine">&#128640; Auto-Discovery &middot; Found 5 projects &middot; 3 active</div>
+                <div class="demo-line demo-user">&#128269;  Scan ~/Developer &mdash; React, FastAPI, Go detected</div>
                 <div class="demo-line demo-tool">&#128268;  Port Monitor &rarr; :3000 (next-app) &middot; :8080 (api) &middot; :5432 (postgres)</div>
-                <div class="demo-line demo-tool">&#128051;  Docker &rarr; 4 container running &middot; 1 warning (high memory)</div>
-                <div class="demo-line demo-comment">   # Smart Advisor analizza il progetto &ldquo;e-commerce&rdquo;</div>
-                <div class="demo-line demo-tool">&#129504;  Advisor &rarr; 2 conflitti porta rilevati &middot; 1 container da riavviare</div>
-                <div class="demo-line demo-diff-add">   + .lobster.md generato per &ldquo;e-commerce&rdquo; (stack, dipendenze, note)</div>
-                <div class="demo-line demo-result">&#9989;  Dashboard aggiornata &middot; Notifiche: 1 alert &middot; Sistema stabile</div>
+                <div class="demo-line demo-tool">&#128051;  Docker &rarr; 4 containers running &middot; 1 warning (high memory)</div>
+                <div class="demo-line demo-comment">   # Smart Advisor analyzes the &ldquo;e-commerce&rdquo; project</div>
+                <div class="demo-line demo-tool">&#129504;  Advisor &rarr; 2 port conflicts detected &middot; 1 container needs restart</div>
+                <div class="demo-line demo-diff-add">   + .lobster.md generated for &ldquo;e-commerce&rdquo; (stack, deps, notes)</div>
+                <div class="demo-line demo-result">&#9989;  Dashboard updated &middot; Notifications: 1 alert &middot; System stable</div>
             </div>
         </div>
     </div>
 
     <!-- MANAGER STACK -->
     <div style="max-width:900px;margin:60px auto 0;">
-        <div class="section-label" style="text-align:center;">Tecnologia</div>
-        <h3 style="text-align:center;font-size:22px;font-weight:700;margin-bottom:24px;color:var(--text);">Stack nativo, prestazioni native</h3>
+        <div class="section-label" style="text-align:center;">Technology</div>
+        <h3 style="text-align:center;font-size:22px;font-weight:700;margin-bottom:24px;color:var(--text);">Native stack, native performance</h3>
         <div class="stack-grid">
             <div class="stack-item">
                 <div class="icon">&#9889;</div>
                 <h4>Electron</h4>
-                <p>App desktop nativa cross-platform</p>
+                <p>Native cross-platform desktop app</p>
             </div>
             <div class="stack-item">
                 <div class="icon">&#9883;</div>
                 <h4>React + TypeScript</h4>
-                <p>UI moderna, type-safe, component-based</p>
+                <p>Modern, type-safe, component-based UI</p>
             </div>
             <div class="stack-item">
                 <div class="icon">&#128051;</div>
                 <h4>Docker SDK</h4>
-                <p>Gestione container senza terminale</p>
+                <p>Container management without terminal</p>
             </div>
             <div class="stack-item">
                 <div class="icon">&#129438;</div>
                 <h4>Ollama</h4>
-                <p>AI advisor e LobsterCode integrato</p>
+                <p>AI advisor and built-in LobsterCode</p>
             </div>
         </div>
     </div>
 
     <!-- MANAGER USE CASES -->
     <div style="max-width:900px;margin:60px auto 0;">
-        <div class="section-label" style="text-align:center;">Come usarlo</div>
-        <h3 style="text-align:center;font-size:22px;font-weight:700;margin-bottom:24px;color:var(--text);">Scenari reali, ogni giorno</h3>
+        <div class="section-label" style="text-align:center;">How to use it</div>
+        <h3 style="text-align:center;font-size:22px;font-weight:700;margin-bottom:24px;color:var(--text);">Real scenarios, every day</h3>
         <div class="usecases-grid">
             <div class="usecase">
                 <div class="usecase-head">
                     <span class="usecase-emoji">&#128269;</span>
-                    <h3>Discovery automatica</h3>
+                    <h3>Auto discovery</h3>
                 </div>
-                <p>Apri il Manager e vedi subito tutti i tuoi progetti con stack, porte attive e container Docker associati.</p>
+                <p>Open the Manager and instantly see all your projects with stack, active ports and associated Docker containers.</p>
                 <div class="usecase-example">
-                    <span class="dim">&rarr;</span> Trova i 12 progetti in ~/Developer in 3 secondi
+                    <span class="dim">&rarr;</span> Finds 12 projects in ~/Developer in 3 seconds
                 </div>
             </div>
             <div class="usecase">
                 <div class="usecase-head">
                     <span class="usecase-emoji">&#128268;</span>
-                    <h3>Conflitti porte</h3>
+                    <h3>Port conflicts</h3>
                 </div>
-                <p>Un servizio non parte? Il Manager ti mostra chi sta usando quella porta e puoi terminare il processo con un click.</p>
+                <p>A service won't start? The Manager shows you who's using that port and you can kill the process with one click.</p>
                 <div class="usecase-example">
-                    <span class="dim">&rarr;</span> :3000 occupata da node &mdash; kill e riavvia
+                    <span class="dim">&rarr;</span> :3000 occupied by node &mdash; kill and restart
                 </div>
             </div>
             <div class="usecase">
                 <div class="usecase-head">
                     <span class="usecase-emoji">&#128051;</span>
-                    <h3>Docker senza terminale</h3>
+                    <h3>Docker without terminal</h3>
                 </div>
-                <p>Start, stop, restart, log e health check dei container. Docker Compose con un click. Niente pi&ugrave; <code>docker ps</code>.</p>
+                <p>Start, stop, restart, logs and health checks for containers. Docker Compose with one click. No more <code>docker ps</code>.</p>
                 <div class="usecase-example">
-                    <span class="dim">&rarr;</span> Restart del database quando i test falliscono
+                    <span class="dim">&rarr;</span> Restart the database when tests fail
                 </div>
             </div>
             <div class="usecase">
                 <div class="usecase-head">
                     <span class="usecase-emoji">&#129504;</span>
-                    <h3>AI che capisce i tuoi progetti</h3>
+                    <h3>AI that understands your projects</h3>
                 </div>
-                <p>Lo Smart Advisor analizza ogni progetto, suggerisce ottimizzazioni, rileva problemi di sicurezza e genera report.</p>
+                <p>The Smart Advisor analyzes each project, suggests optimizations, detects security issues and generates reports.</p>
                 <div class="usecase-example">
-                    <span class="dim">&rarr;</span> &ldquo;Il container redis usa troppa RAM, consiglio: imposta maxmemory&rdquo;
+                    <span class="dim">&rarr;</span> &ldquo;Redis container using too much RAM, suggestion: set maxmemory&rdquo;
                 </div>
             </div>
             <div class="usecase">
                 <div class="usecase-head">
                     <span class="usecase-emoji">&#128221;</span>
-                    <h3>Documentazione automatica</h3>
+                    <h3>Automatic documentation</h3>
                 </div>
-                <p>Ogni progetto ha il suo <code>.lobster.md</code> con stack, dipendenze, note e istruzioni AI. Auto-generato e aggiornabile.</p>
+                <p>Every project gets its own <code>.lobster.md</code> with stack, dependencies, notes and AI instructions. Auto-generated and updatable.</p>
                 <div class="usecase-example">
-                    <span class="dim">&rarr;</span> Context file pronto per qualsiasi AI o nuovo sviluppatore
+                    <span class="dim">&rarr;</span> Context file ready for any AI or new developer
                 </div>
             </div>
             <div class="usecase">
                 <div class="usecase-head">
                     <span class="usecase-emoji">&#128200;</span>
-                    <h3>Monitoraggio risorse</h3>
+                    <h3>Resource monitoring</h3>
                 </div>
-                <p>CPU, RAM e disco in tempo reale. Alert quando un container o processo consuma troppo. Dashboard con semaforo verde/giallo/rosso.</p>
+                <p>CPU, RAM and disk in real time. Alerts when a container or process consumes too much. Dashboard with green/yellow/red traffic lights.</p>
                 <div class="usecase-example">
-                    <span class="dim">&rarr;</span> Notifica: postgres usa il 90% della RAM allocata
+                    <span class="dim">&rarr;</span> Alert: postgres using 90% of allocated RAM
                 </div>
             </div>
         </div>
@@ -1111,16 +1110,16 @@
 
     <!-- Quick Deploy Manager -->
     <div style="max-width:700px;margin:60px auto 0;">
-        <h3 style="text-align:center;font-size:20px;font-weight:700;margin-bottom:20px;color:var(--text);">Installa Lobster Manager</h3>
+        <h3 style="text-align:center;font-size:20px;font-weight:700;margin-bottom:20px;color:var(--text);">Install Lobster Manager</h3>
         <div class="install-box">
-            <button class="install-copy" onclick="copyManager()">Copia</button>
-            <div><span class="comment"># Clona e avvia in modalit&agrave; sviluppo</span></div>
+            <button class="install-copy" onclick="copyManager()">Copy</button>
+            <div><span class="comment"># Clone and run in dev mode</span></div>
             <div><span class="cmd">git clone</span> https://github.com/SuperSapiensAi/LobsterCode.git</div>
             <div><span class="cmd">cd</span> LobsterCode/lobster-utility</div>
             <div><span class="cmd">npm install</span></div>
             <div><span class="cmd">npm run</span> <span class="flag">dev</span></div>
             <br>
-            <div><span class="comment"># Oppure builda l'app nativa per macOS</span></div>
+            <div><span class="comment"># Or build the native macOS app</span></div>
             <div><span class="cmd">bash</span> build-app.sh</div>
         </div>
     </div>
@@ -1128,15 +1127,15 @@
 
 <!-- CTA -->
 <section class="cta">
-    <h2>Pronto per iniziare?</h2>
-    <p>Lobster Code e Lobster Manager sono gratuiti, open source e pronti all'uso. Zero configurazione, nessun account, nessun abbonamento.</p>
+    <h2>Ready to get started?</h2>
+    <p>Lobster Code and Lobster Manager are free, open source and ready to use. Zero configuration, no account, no subscription.</p>
     <div class="cta-actions">
         <a href="https://github.com/SuperSapiensAi/LobsterCode" target="_blank" class="btn btn-github">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-            Repo su GitHub
+            GitHub Repo
         </a>
-        <a href="#install" class="btn btn-primary">Installa Code &rarr;</a>
-        <a href="#manager" class="btn btn-secondary">Installa Manager &rarr;</a>
+        <a href="#install" class="btn btn-primary">Install Code &rarr;</a>
+        <a href="#manager" class="btn btn-secondary">Install Manager &rarr;</a>
     </div>
 </section>
 
@@ -1149,7 +1148,7 @@
         <a href="#manager">Lobster Manager</a>
         <a href="https://github.com/SuperSapiensAi/LobsterCode" target="_blank">Download</a>
         <a href="https://github.com/SuperSapiensAi/LobsterCode" target="_blank">GitHub</a>
-        <a href="https://github.com/SuperSapiensAi/LobsterCode/issues" target="_blank">Segnala bug</a>
+        <a href="https://github.com/SuperSapiensAi/LobsterCode/issues" target="_blank">Report a bug</a>
     </div>
 </footer>
 
@@ -1168,16 +1167,16 @@
         const text = 'git clone https://github.com/SuperSapiensAi/LobsterCode.git\ncd LobsterCode/ui\nollama pull gemma4:latest\nbash start-agent.command';
         navigator.clipboard.writeText(text).then(() => {
             const btn = document.querySelector('#install .install-copy');
-            btn.textContent = 'Copiato!';
-            setTimeout(() => btn.textContent = 'Copia', 2000);
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = 'Copy', 2000);
         });
     }
     function copyManager() {
         const text = 'git clone https://github.com/SuperSapiensAi/LobsterCode.git\ncd LobsterCode/lobster-utility\nnpm install\nnpm run dev';
         navigator.clipboard.writeText(text).then(() => {
             const btn = document.querySelector('#manager .install-copy');
-            btn.textContent = 'Copiato!';
-            setTimeout(() => btn.textContent = 'Copia', 2000);
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = 'Copy', 2000);
         });
     }
 </script>
