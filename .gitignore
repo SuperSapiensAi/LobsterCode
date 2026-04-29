@@ -38,3 +38,9 @@ archive/
 .clawd-agents/
 .claude/settings.local.json
 .claude/sessions/
+
+# Lobster Manager build artifacts
+lobster-utility/node_modules/
+lobster-utility/dist/
+lobster-utility/out/
+lobster-utility/.DS_Store

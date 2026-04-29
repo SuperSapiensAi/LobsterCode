@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#d63a28"/>
+      <stop offset="100%" style="stop-color:#b52d1e"/>
+    </linearGradient>
+    <linearGradient id="body" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#e95a45"/>
+      <stop offset="100%" style="stop-color:#d63a28"/>
+    </linearGradient>
+    <linearGradient id="claw" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#e95a45"/>
+      <stop offset="50%" style="stop-color:#d63a28"/>
+      <stop offset="100%" style="stop-color:#b52d1e"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="512" cy="512" r="512" fill="url(#bg)"/>
+  
+  <!-- Subtle inner shadow -->
+  <circle cx="512" cy="512" r="480" fill="none" stroke="rgba(0,0,0,0.08)" stroke-width="4"/>
+  
+  <!-- Antennae -->
+  <line x1="420" y1="260" x2="350" y2="180" stroke="#ffd4c4" stroke-width="14" stroke-linecap="round"/>
+  <line x1="604" y1="260" x2="674" y2="180" stroke="#ffd4c4" stroke-width="14" stroke-linecap="round"/>
+  <circle cx="345" cy="175" r="18" fill="#ffd4c4"/>
+  <circle cx="679" cy="175" r="18" fill="#ffd4c4"/>
+  
+  <!-- Left claw arm -->
+  <path d="M 380 420 Q 280 380 220 340" stroke="url(#claw)" stroke-width="28" fill="none" stroke-linecap="round"/>
+  <!-- Left claw (pincer shape) -->
+  <path d="M 220 340 Q 160 290 140 260 Q 130 240 150 230 Q 170 220 190 240 Q 205 255 220 260" fill="#e95a45" stroke="#d63a28" stroke-width="4"/>
+  <path d="M 220 340 Q 180 350 150 370 Q 130 385 145 395 Q 160 400 180 385 Q 200 368 220 355" fill="#e95a45" stroke="#d63a28" stroke-width="4"/>
+
+  <!-- Right claw arm -->
+  <path d="M 644 420 Q 744 380 804 340" stroke="url(#claw)" stroke-width="28" fill="none" stroke-linecap="round"/>
+  <!-- Right claw (pincer shape) -->
+  <path d="M 804 340 Q 864 290 884 260 Q 894 240 874 230 Q 854 220 834 240 Q 819 255 804 260" fill="#e95a45" stroke="#d63a28" stroke-width="4"/>
+  <path d="M 804 340 Q 844 350 874 370 Q 894 385 879 395 Q 864 400 844 385 Q 824 368 804 355" fill="#e95a45" stroke="#d63a28" stroke-width="4"/>
+  
+  <!-- Body (main oval) -->
+  <ellipse cx="512" cy="450" rx="140" ry="180" fill="#ffd4c4"/>
+  <ellipse cx="512" cy="450" rx="120" ry="160" fill="#ffe8de"/>
+  
+  <!-- Head -->
+  <ellipse cx="512" cy="310" rx="110" ry="90" fill="#ffd4c4"/>
+  <ellipse cx="512" cy="310" rx="95" ry="78" fill="#ffe8de"/>
+  
+  <!-- Eyes -->
+  <ellipse cx="470" cy="300" rx="24" ry="28" fill="white"/>
+  <ellipse cx="554" cy="300" rx="24" ry="28" fill="white"/>
+  <circle cx="475" cy="305" r="14" fill="#1c1214"/>
+  <circle cx="559" cy="305" r="14" fill="#1c1214"/>
+  <!-- Eye highlights -->
+  <circle cx="480" cy="298" r="5" fill="white"/>
+  <circle cx="564" cy="298" r="5" fill="white"/>
+  
+  <!-- Mouth (smile) -->
+  <path d="M 485 345 Q 512 365 539 345" stroke="#d63a28" stroke-width="5" fill="none" stroke-linecap="round"/>
+  
+  <!-- Tail segments -->
+  <ellipse cx="512" cy="640" rx="90" ry="30" fill="#ffd4c4"/>
+  <ellipse cx="512" cy="685" rx="72" ry="25" fill="#ffd4c4"/>
+  <ellipse cx="512" cy="725" rx="55" ry="20" fill="#ffd4c4"/>
+  
+  <!-- Tail fan -->
+  <path d="M 460 760 Q 440 810 420 830 Q 460 820 480 790 Q 490 770 512 760" fill="#ffd4c4"/>
+  <path d="M 564 760 Q 584 810 604 830 Q 564 820 544 790 Q 534 770 512 760" fill="#ffd4c4"/>
+  <path d="M 512 760 Q 512 810 512 840 Q 500 820 490 790 M 512 840 Q 524 820 534 790" fill="#ffd4c4"/>
+  
+  <!-- Legs (small, on the sides) -->
+  <line x1="395" y1="460" x2="340" y2="500" stroke="#ffd4c4" stroke-width="10" stroke-linecap="round"/>
+  <line x1="390" y1="510" x2="335" y2="550" stroke="#ffd4c4" stroke-width="10" stroke-linecap="round"/>
+  <line x1="395" y1="560" x2="345" y2="600" stroke="#ffd4c4" stroke-width="10" stroke-linecap="round"/>
+  <line x1="629" y1="460" x2="684" y2="500" stroke="#ffd4c4" stroke-width="10" stroke-linecap="round"/>
+  <line x1="634" y1="510" x2="689" y2="550" stroke="#ffd4c4" stroke-width="10" stroke-linecap="round"/>
+  <line x1="629" y1="560" x2="679" y2="600" stroke="#ffd4c4" stroke-width="10" stroke-linecap="round"/>
+  
+  <!-- Chest detail lines -->
+  <path d="M 470 420 Q 512 430 554 420" stroke="rgba(214,58,40,0.15)" stroke-width="3" fill="none"/>
+  <path d="M 465 450 Q 512 462 559 450" stroke="rgba(214,58,40,0.15)" stroke-width="3" fill="none"/>
+  <path d="M 465 480 Q 512 492 559 480" stroke="rgba(214,58,40,0.15)" stroke-width="3" fill="none"/>
+</svg>

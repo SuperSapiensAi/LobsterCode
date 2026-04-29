@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lobster Code — Agente AI per sviluppo, gratuito e open source</title>
-    <meta name="description" content="Lobster Code — agente AI locale e open source per sviluppo. Come Cursor e Claude Code, ma gratuito e privato. Powered by Ollama.">
+    <title>Lobster — Manager + Code AI | Open Source, 100% Locale, Gratuito</title>
+    <meta name="description" content="Lobster Manager — desktop app open source per gestire progetti, Docker, porte e AI. Lobster Code — coding agent locale. 100% gratuito, zero cloud.">
     <meta name="theme-color" content="#d63a28">
     <meta property="og:title" content="Lobster Code — Agente AI per sviluppo, gratuito e open source">
     <meta property="og:description" content="Come Cursor e Claude Code, ma locale e gratuito. 100% locale, zero cloud, zero costi. Powered by Ollama.">
@@ -380,6 +380,107 @@
             .comparison-table { font-size: 12px; }
             .comparison-table th, .comparison-table td { padding: 10px 12px; }
         }
+
+        /* ─── LOBSTER MANAGER SECTION ─── */
+        .manager-hero {
+            padding: 140px 40px 80px;
+            background: linear-gradient(180deg, var(--cream) 0%, #fff 50%, var(--cream) 100%);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .manager-hero::before {
+            content: ''; position: absolute; top: -100px; right: -100px;
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(214,58,40,0.08) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .manager-hero .section-label { margin-bottom: 16px; }
+        .manager-hero h2 {
+            font-size: 48px; font-weight: 800; line-height: 1.1;
+            margin-bottom: 20px; color: var(--text);
+        }
+        .manager-hero h2 .highlight {
+            background: linear-gradient(135deg, var(--red), var(--coral));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .manager-hero .manager-desc {
+            font-size: 18px; color: var(--text-soft);
+            max-width: 700px; margin: 0 auto 30px; line-height: 1.7;
+        }
+        .manager-badges {
+            display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+            margin-bottom: 36px;
+        }
+        .manager-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;
+        }
+        .manager-badge.open { background: rgba(46,139,87,0.1); color: var(--green); }
+        .manager-badge.local { background: rgba(42,143,181,0.1); color: var(--ocean); }
+        .manager-badge.free { background: rgba(139,92,246,0.1); color: var(--purple); }
+        .manager-actions {
+            display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+            margin-bottom: 60px;
+        }
+        .btn-download {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: linear-gradient(135deg, var(--red), var(--red-light));
+            color: #fff; padding: 16px 36px; border-radius: 12px;
+            font-size: 17px; font-weight: 700; text-decoration: none;
+            box-shadow: 0 4px 20px rgba(214,58,40,0.3);
+            transition: all 0.2s;
+        }
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(214,58,40,0.4);
+        }
+        .btn-source {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: var(--white); color: var(--text); padding: 16px 36px;
+            border-radius: 12px; font-size: 17px; font-weight: 600;
+            text-decoration: none; border: 2px solid var(--border);
+            transition: all 0.2s;
+        }
+        .btn-source:hover {
+            border-color: var(--red); color: var(--red);
+            transform: translateY(-2px);
+        }
+        .manager-features-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 20px; max-width: 1000px; margin: 0 auto;
+        }
+        .mf-card {
+            background: var(--white); border-radius: 16px;
+            padding: 28px 24px; text-align: left;
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+        }
+        .mf-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+            border-color: rgba(214,58,40,0.2);
+        }
+        .mf-card .mf-icon { font-size: 28px; margin-bottom: 12px; }
+        .mf-card h4 { font-size: 16px; font-weight: 700; margin-bottom: 6px; color: var(--text); }
+        .mf-card p { font-size: 13px; color: var(--text-soft); line-height: 1.5; }
+
+        .manager-divider {
+            text-align: center; padding: 40px; color: var(--text-dim);
+            font-size: 14px; font-weight: 500; position: relative;
+        }
+        .manager-divider::before, .manager-divider::after {
+            content: ''; position: absolute; top: 50%; height: 1px;
+            width: calc(50% - 120px); background: var(--border);
+        }
+        .manager-divider::before { left: 0; }
+        .manager-divider::after { right: 0; }
+
+        @media (max-width: 768px) {
+            .manager-hero { padding: 120px 20px 60px; }
+            .manager-hero h2 { font-size: 32px; }
+            .manager-features-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -387,15 +488,89 @@
 <nav id="nav">
     <a href="#" class="nav-brand"><span>🦞</span><strong>Lobster</strong></a>
     <div class="nav-links">
-        <a href="manager.html">&#129438; Manager <small style="font-size:10px;background:linear-gradient(135deg,#8b5cf6,#2a8fb5);color:#fff;padding:2px 6px;border-radius:4px;margin-left:4px;">PREMIUM</small></a>
-        <a href="#features">Funzionalit&agrave;</a>
+        <a href="#manager">Manager</a>
+        <a href="#features">Lobster Code</a>
         <a href="#models">Modelli</a>
         <a href="#comparison">Confronto</a>
-        <a href="https://github.com/SuperSapiensAi/LobsterCode" target="_blank" class="nav-cta">&#11015; Scarica</a>
+        <a href="https://github.com/SuperSapiensAi/LobsterCode" target="_blank">GitHub</a>
+        <a href="https://github.com/SuperSapiensAi/LobsterCode/releases" target="_blank" class="nav-cta">&#11015; Scarica Ora</a>
     </div>
 </nav>
 
-<!-- HERO -->
+<!-- LOBSTER MANAGER — FLAGSHIP -->
+<section class="manager-hero" id="manager">
+    <div class="section-label">&#127942; Prodotto principale</div>
+    <h2>Lobster Manager<br><span class="highlight">Il tuo centro di controllo per lo sviluppo.</span></h2>
+    <p class="manager-desc">App desktop nativa per macOS. Gestisci tutti i tuoi progetti, porte, container Docker e AI — tutto in un'unica interfaccia. Open source, 100% locale, zero cloud.</p>
+
+    <div class="manager-badges">
+        <span class="manager-badge open">&#10022; Open Source &mdash; MIT License</span>
+        <span class="manager-badge local">&#128274; 100% Locale &mdash; Zero Cloud</span>
+        <span class="manager-badge free">&#9889; Gratuito per sempre</span>
+    </div>
+
+    <div class="manager-actions">
+        <a href="https://github.com/SuperSapiensAi/LobsterCode/releases" target="_blank" class="btn-download">
+            &#11015; Scarica Ora per macOS
+        </a>
+        <a href="https://github.com/SuperSapiensAi/LobsterCode/tree/main/lobster-utility" target="_blank" class="btn-source">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            Codice Sorgente
+        </a>
+    </div>
+
+    <div class="manager-features-grid">
+        <div class="mf-card">
+            <div class="mf-icon">&#128269;</div>
+            <h4>Auto-Discovery Progetti</h4>
+            <p>Rileva automaticamente tutti i tuoi progetti, il loro stack, framework, porte e container.</p>
+        </div>
+        <div class="mf-card">
+            <div class="mf-icon">&#128678;</div>
+            <h4>Dashboard Real-Time</h4>
+            <p>Semaforo verde/giallo/rosso per ogni progetto. Stato porte, container e git in tempo reale.</p>
+        </div>
+        <div class="mf-card">
+            <div class="mf-icon">&#128051;</div>
+            <h4>Docker Manager</h4>
+            <p>Start, stop, restart e log dei container. Gestisci Docker Compose con un click.</p>
+        </div>
+        <div class="mf-card">
+            <div class="mf-icon">&#128268;</div>
+            <h4>Port Monitor</h4>
+            <p>Chi usa quale porta? Rileva conflitti e termina processi direttamente dalla UI.</p>
+        </div>
+        <div class="mf-card">
+            <div class="mf-icon">&#129504;</div>
+            <h4>Smart Advisor AI</h4>
+            <p>Analisi intelligente dei progetti con suggerimenti, triage e report — powered by Ollama.</p>
+        </div>
+        <div class="mf-card">
+            <div class="mf-icon">&#129438;</div>
+            <h4>LobsterCode AI Integrato</h4>
+            <p>Coding assistant con tool calling, git, snapshot e rollback — direttamente nell'app.</p>
+        </div>
+        <div class="mf-card">
+            <div class="mf-icon">&#128221;</div>
+            <h4>.lobster.md per Progetto</h4>
+            <p>Note, stack, diario e istruzioni AI per ogni progetto. Generate automaticamente.</p>
+        </div>
+        <div class="mf-card">
+            <div class="mf-icon">&#128100;</div>
+            <h4>MY-PROFILE.md</h4>
+            <p>Il tuo profilo personale per le AI: chi sei, come lavori, i tuoi progetti attivi.</p>
+        </div>
+        <div class="mf-card">
+            <div class="mf-icon">&#128276;</div>
+            <h4>Notifiche Real-Time</h4>
+            <p>Avvisi quando un progetto si avvia, si ferma o entra in stato di errore.</p>
+        </div>
+    </div>
+</section>
+
+<div class="manager-divider">&#11015; Scopri anche Lobster Code &#11015;</div>
+
+<!-- HERO — LOBSTER CODE -->
 <section class="hero">
     <div class="hero-content">
         <span class="hero-emoji">🦞</span>
@@ -820,11 +995,11 @@
 <!-- FOOTER -->
 <footer>
     <div class="brand">&#129438; Lobster</div>
-    <p>Lobster Code (open source) &middot; Lobster Manager (premium desktop app)</p>
+    <p>Made with &#129438; by SuperSapiens AI &mdash; 100% Open Source, MIT License</p>
     <div class="links">
-        <a href="#features">Funzionalit&agrave;</a>
-        <a href="#comparison">Confronto</a>
-        <a href="manager.html">Lobster Manager</a>
+        <a href="#manager">Lobster Manager</a>
+        <a href="#features">Lobster Code</a>
+        <a href="https://github.com/SuperSapiensAi/LobsterCode/releases" target="_blank">Download</a>
         <a href="https://github.com/SuperSapiensAi/LobsterCode" target="_blank">GitHub</a>
         <a href="https://github.com/SuperSapiensAi/LobsterCode/issues" target="_blank">Segnala bug</a>
     </div>
