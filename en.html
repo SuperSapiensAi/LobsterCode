@@ -82,12 +82,14 @@
             transform: translateY(-1px);
         }
         .lang-switch {
-            text-decoration: none; font-size: 12px; font-weight: 700;
+            text-decoration: none; font-size: 13px; font-weight: 600;
             color: var(--text-soft); background: rgba(214,58,40,0.08);
-            padding: 4px 10px; border-radius: 6px; transition: all 0.2s;
-            letter-spacing: 0.5px;
+            padding: 6px 12px; border-radius: 8px; transition: all 0.2s;
+            letter-spacing: 0.3px; display: inline-flex; align-items: center; gap: 5px;
+            border: 1px solid var(--border); margin-left: 8px;
         }
-        .lang-switch:hover { background: rgba(214,58,40,0.15); color: var(--red); }
+        .lang-switch:hover { background: rgba(214,58,40,0.15); color: var(--red); border-color: var(--red-light); }
+        .lang-switch .globe { font-size: 14px; }
 
         /* HERO */
         .hero {
@@ -382,7 +384,7 @@
             .stack-grid { grid-template-columns: repeat(2, 1fr); }
             .models-grid, .usecases-grid { grid-template-columns: 1fr; }
             nav { padding: 12px 20px; }
-            .nav-links a:not(.nav-cta) { display: none; }
+            .nav-links a:not(.nav-cta):not(.lang-switch) { display: none; }
             .hero, .features, .stack, .cta, .comparison { padding-left: 20px; padding-right: 20px; }
             .comparison-table { font-size: 12px; }
             .comparison-table th, .comparison-table td { padding: 10px 12px; }
@@ -494,13 +496,13 @@
 
 <nav id="nav">
     <a href="#" class="nav-brand"><span>&#129438;</span><strong>Lobster</strong></a>
-    <a href="index.html" class="lang-switch" title="Italiano">IT</a>
     <div class="nav-links">
         <a href="#features">Lobster Code</a>
         <a href="#manager">Manager</a>
         <a href="#comparison">Compare</a>
         <a href="https://github.com/SuperSapiensAi/LobsterCode" target="_blank">GitHub</a>
         <a href="https://github.com/SuperSapiensAi/LobsterCode" target="_blank" class="nav-cta">&#11015; Download</a>
+        <a href="index.html" class="lang-switch" title="Passa all'italiano"><span class="globe">&#127760;</span> IT</a>
     </div>
 </nav>
 
